@@ -1,0 +1,38 @@
+{
+  "name": "playlist-manager",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@9",
+  "engines": { "node": ">=18.18" },
+  "scripts": {
+    "lint:api": "redocly lint openapi.yaml",
+    "gen:types": "openapi-typescript openapi.yaml -o packages/contracts/src/api.types.ts",
+    "mock:api": "prism mock openapi.yaml",
+
+    // Option A (requires oasdiff CLI installed separately):
+    "check:breaking": "oasdiff breaking origin:openapi.yaml openapi.yaml --warn-added",
+
+    // Option B (use Redocly diff instead; comment out Option A and uncomment below):
+    // "check:breaking": "redocly diff origin/main:openapi.yaml openapi.yaml --fail-on-major --fail-on-patch",
+
+    // NOTE: Schemathesis is a Python tool. See notes below.
+    "contract:test": "schemathesis run openapi.yaml --checks all --hypothesis-deadline=1000",
+
+    "prisma:generate": "pnpm -F @app/db prisma generate",
+    "prisma:migrate:dev": "pnpm -F @app/db prisma migrate dev",
+    "prisma:migrate:deploy": "pnpm -F @app/db prisma migrate deploy",
+    "prisma:studio": "pnpm -F @app/db prisma studio",
+
+    // Use tsx to run TS directly:
+    "db:health": "tsx packages/db/src/healthcheck.ts",
+
+    // Keep generated types up to date in CI:
+    "check:gen": "pnpm run gen:types && git diff --exit-code -- packages/contracts/src/api.types.ts"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^1.25.0",
+    "@stoplight/prism-cli": "^5.7.0",
+    "openapi-typescript": "^7.5.2",
+    "tsx": "^4.16.0"
+  }
+}

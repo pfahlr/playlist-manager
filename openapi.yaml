@@ -1,0 +1,373 @@
+openapi: 3.1.0
+info:
+  title: Tunemymusic-Alt API
+  version: 1.0.0
+  description: >
+    v1 API for playlist migration, artist basics, and exports. This spec is the source of truth.
+servers:
+  - url: https://api.example.com/api/v1
+security:
+  - bearerAuth: []
+paths:
+  /playlists:
+    get:
+      summary: List user playlists
+      parameters:
+        - in: query
+          name: provider
+          schema: { type: string, enum: [spotify, deezer, tidal, youtube] }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 500, default: 100 }
+        - in: query
+          name: cursor
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PagedPlaylists' }
+  /playlists/{id}:
+    get:
+      summary: Get a playlist
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Playlist' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /playlists/{id}/items:
+    get:
+      summary: List playlist items (effective fields by default)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+        - in: query
+          name: effective
+          schema: { type: boolean, default: true }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 500, default: 100 }
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: order
+          schema: { type: string, enum: [position, added_at], default: position }
+      responses:
+        '200':
+          description: OK
+          headers: { ETag: { schema: { type: string } } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PagedPlaylistItems' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /active-playlist:
+    get:
+      summary: Get the active playlist pointer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ActivePlaylist' }
+    put:
+      summary: Set the active playlist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [playlist_id]
+              properties:
+                playlist_id: { type: integer }
+      responses:
+        '204': { description: No Content }
+  /active-playlist/items:
+    post:
+      summary: Append item to active playlist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  required: [recording_id]
+                  properties: { recording_id: { type: integer }, position: { type: string, enum: [append, head], default: append } }
+                - type: object
+                  required: [isrc]
+                  properties: { isrc: { type: string }, position: { type: string, enum: [append, head], default: append } }
+                - type: object
+                  required: [title, primary_artist]
+                  properties:
+                    title: { type: string }
+                    primary_artist: { type: string }
+                    position: { type: string, enum: [append, head], default: append }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlaylistItemEffective' }
+  /active-playlist/items/{itemId}:
+    delete:
+      summary: Remove item from active playlist
+      parameters:
+        - in: path
+          name: itemId
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: No Content }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /jobs/migrate:
+    post:
+      summary: Migrate a playlist between providers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [source_provider, source_playlist_id, dest_provider]
+              properties:
+                source_provider: { type: string, enum: [spotify, deezer, tidal, youtube] }
+                source_playlist_id: { type: integer }
+                dest_provider: { type: string, enum: [spotify, deezer, tidal, youtube] }
+                dest_playlist_name: { type: string }
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/JobRef' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /jobs/{id}:
+    get:
+      summary: Get job status/report
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Job' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /exports/file:
+    post:
+      summary: Export a playlist to file
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [playlist_id, format]
+              properties:
+                playlist_id: { type: integer }
+                format: { type: string, enum: [m3u, xspf, csv] }
+                variant: { type: string, enum: [lean, verbose], default: lean }
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/JobRef' }
+  /artists/follow:
+    post:
+      summary: Follow an artist by MBID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mb_artist_id]
+              properties:
+                mb_artist_id: { type: string, pattern: '^[0-9a-fA-F-]{36}$' }
+      responses:
+        '204': { description: No Content }
+  /artists/follow/{mbid}:
+    delete:
+      summary: Unfollow artist
+      parameters:
+        - in: path
+          name: mbid
+          required: true
+          schema: { type: string, pattern: '^[0-9a-fA-F-]{36}$' }
+      responses:
+        '204': { description: No Content }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /artists/{mbid}:
+    get:
+      summary: Get artist basics (bio + links)
+      parameters:
+        - in: path
+          name: mbid
+          required: true
+          schema: { type: string, pattern: '^[0-9a-fA-F-]{36}$' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Artist' }
+  /artists/{mbid}/relations:
+    get:
+      summary: Get artist relations
+      parameters:
+        - in: path
+          name: mbid
+          required: true
+          schema: { type: string, pattern: '^[0-9a-fA-F-]{36}$' }
+        - in: query
+          name: types
+          schema:
+            type: array
+            items: { type: string, enum: [influences, influenced_by, collaborated_with, member_of, has_members] }
+            uniqueItems: true
+          style: form
+          explode: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ArtistRelation' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    NotFound:
+      description: Not found
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    BadRequest:
+      description: Bad request
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+  schemas:
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error: { type: string }
+        message: { type: string }
+    PagedPlaylists:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Playlist' }
+        next_cursor: { type: [ 'string', 'null' ] }
+    Playlist:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: integer }
+        name: { type: [ 'string', 'null' ] }
+        provider: { type: [ 'string', 'null' ] }
+        provider_playlist_id: { type: [ 'string', 'null' ] }
+        updated_at: { type: [ 'string', 'null' ], format: date-time }
+    PagedPlaylistItems:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/PlaylistItemEffective' }
+        next_cursor: { type: [ 'string', 'null' ] }
+    PlaylistItemEffective:
+      type: object
+      required: [id, position, title, artists]
+      properties:
+        id: { type: integer }
+        position: { type: [ 'integer', 'null' ] }
+        title: { type: string }
+        artists: { type: string }
+        album: { type: [ 'string', 'null' ] }
+        duration_ms: { type: [ 'integer', 'null' ] }
+        recording_id: { type: [ 'integer', 'null' ] }
+        isrc: { type: [ 'string', 'null' ] }
+        mb_recording_id: { type: [ 'string', 'null' ], pattern: '^[0-9a-fA-F-]{36}$' }
+        mb_release_id: { type: [ 'string', 'null' ], pattern: '^[0-9a-fA-F-]{36}$' }
+        provider_track_id: { type: [ 'string', 'null' ] }
+    ActivePlaylist:
+      type: object
+      required: [playlist_id, updated_at]
+      properties:
+        playlist_id: { type: [ 'integer', 'null' ] }
+        updated_at: { type: string, format: date-time }
+    JobRef:
+      type: object
+      required: [job_id, status]
+      properties:
+        job_id: { type: integer }
+        status: { type: string, enum: [queued, running, succeeded, failed] }
+    Job:
+      type: object
+      required: [id, status, created_at]
+      properties:
+        id: { type: integer }
+        status: { type: string, enum: [queued, running, succeeded, failed] }
+        report:
+          type: object
+          properties:
+            matched_isrc_pct: { type: number }
+            matched_fuzzy_pct: { type: number }
+            unresolved: { type: array, items: { type: object } }
+        artifact_url: { type: [ 'string', 'null' ], format: uri }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: [ 'string', 'null' ], format: date-time }
+    Artist:
+      type: object
+      required: [mbid, name]
+      properties:
+        mbid: { type: string, pattern: '^[0-9a-fA-F-]{36}$' }
+        name: { type: string }
+        bio:
+          type: [ 'object', 'null' ]
+          properties:
+            source: { type: string }
+            summary: { type: [ 'string', 'null' ] }
+            url: { type: [ 'string', 'null' ], format: uri }
+        links:
+          type: array
+          items:
+            type: object
+            required: [kind, url]
+            properties:
+              kind: { type: string }
+              url: { type: string, format: uri }
+        updated_at: { type: [ 'string', 'null' ], format: date-time }
+    ArtistRelation:
+      type: object
+      required: [type, artist]
+      properties:
+        type: { type: string, enum: [influences, influenced_by, collaborated_with, member_of, has_members] }
+        artist:
+          type: object
+          required: [mbid, name]
+          properties:
+            mbid: { type: string, pattern: '^[0-9a-fA-F-]{36}$' }
+            name: { type: string }

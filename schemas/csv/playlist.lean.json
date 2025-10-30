@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/csv/playlist.lean.json",
+  "title": "CSV (Lean) Row",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["position", "title", "artists", "album", "duration_ms", "isrc"],
+  "x-csv": { "columnOrder": ["position","title","artists","album","duration_ms","isrc"], "quoting": "RFC4180" },
+  "properties": {
+    "position": { "type": "integer", "minimum": 1 },
+    "title": { "type": "string" },
+    "artists": { "type": "string", "description": "Semicolon-separated" },
+    "album": { "type": "string" },
+    "duration_ms": { "type": "integer", "minimum": 0 },
+    "isrc": { "type": ["string", "null"] }
+  }
+}

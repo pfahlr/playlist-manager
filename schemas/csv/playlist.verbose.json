@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/csv/playlist.verbose.json",
+  "title": "CSV (Verbose) Row",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["position","title","artists","album","duration_ms"],
+  "x-csv": {
+    "columnOrder": [
+      "position","title","artists","album","release_date","disc_number","track_number",
+      "duration_ms","explicit","isrc","mb_recording_id","mb_release_id","mb_release_group_id",
+      "mb_artist_ids","spotify_track_id","spotify_album_id","deezer_track_id","deezer_album_id",
+      "tidal_track_id","tidal_album_id","youtube_video_id","amazon_track_id","upc","iswc",
+      "genres","source_service","source_playlist_id"
+    ],
+    "quoting": "RFC4180"
+  },
+  "properties": {
+    "position": { "type": "integer", "minimum": 1 },
+    "title": { "type": "string" },
+    "artists": { "type": "string", "description": "Semicolon-separated" },
+    "album": { "type": ["string","null"] },
+    "release_date": { "type": ["string","null"], "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$" },
+    "disc_number": { "type": ["integer","null"], "minimum": 1 },
+    "track_number": { "type": ["integer","null"], "minimum": 1 },
+    "duration_ms": { "type": ["integer","null"], "minimum": 0 },
+    "explicit": { "type": ["boolean","null"] },
+    "isrc": { "type": ["string","null"] },
+    "mb_recording_id": { "type": ["string","null"], "pattern": "^[0-9a-fA-F-]{36}$" },
+    "mb_release_id": { "type": ["string","null"], "pattern": "^[0-9a-fA-F-]{36}$" },
+    "mb_release_group_id": { "type": ["string","null"], "pattern": "^[0-9a-fA-F-]{36}$" },
+    "mb_artist_ids": { "type": ["string","null"], "description": "Semicolon-separated MBIDs" },
+    "spotify_track_id": { "type": ["string","null"] },
+    "spotify_album_id": { "type": ["string","null"] },
+    "deezer_track_id": { "type": ["string","null"] },
+    "deezer_album_id": { "type": ["string","null"] },
+    "tidal_track_id": { "type": ["string","null"] },
+    "tidal_album_id": { "type": ["string","null"] },
+    "youtube_video_id": { "type": ["string","null"] },
+    "amazon_track_id": { "type": ["string","null"] },
+    "upc": { "type": ["string","null"] },
+    "iswc": { "type": ["string","null"] },
+    "genres": { "type": ["string","null"], "description": "Semicolon-separated" },
+    "source_service": { "type": ["string","null"], "enum": ["spotify","deezer","tidal","youtube","amazon",null] },
+    "source_playlist_id": { "type": ["string","null"] }
+  }
+}

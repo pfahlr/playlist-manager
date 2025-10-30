@@ -1,0 +1,280 @@
+// Prisma Client + Postgres
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+generator client { provider = "prisma-client-js" }
+
+/* ===================== Users & Accounts ===================== */
+
+model User {
+  id          Int       @id @default(autoincrement())
+  email       String?   @unique
+  created_at  DateTime  @default(now()) @db.Timestamptz
+
+  accounts    Account[]
+  playlists   Playlist[]
+  follows     ArtistFollow[]
+  active      ActivePlaylist?
+  jobs        Job[]
+
+  @@map("app_user")
+}
+
+model Account {
+  id               Int       @id @default(autoincrement())
+  user_id          Int
+  provider         String
+  provider_user_id String
+  access_token     String?
+  refresh_token    String?
+  expires_at       DateTime? @db.Timestamptz
+  created_at       DateTime  @default(now()) @db.Timestamptz
+
+  user             User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([provider, provider_user_id])
+  @@map("account")
+}
+
+/* ===================== Playlists ===================== */
+
+model Playlist {
+  id                    Int       @id @default(autoincrement())
+  user_id               Int
+  provider              String?
+  provider_playlist_id  String?
+  name                  String?
+  description           String?
+  snapshot_hash         String?
+  created_at            DateTime  @default(now()) @db.Timestamptz
+  updated_at            DateTime  @default(now()) @db.Timestamptz
+
+  user                  User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  items                 PlaylistItem[]
+  provider_maps         ProviderPlaylistMap[]
+  jobs                  Job[]
+
+  @@unique([provider, provider_playlist_id])
+  @@map("playlist")
+}
+
+model ActivePlaylist {
+  user_id     Int     @id
+  playlist_id Int
+  updated_at  DateTime @default(now()) @db.Timestamptz
+
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  playlist    Playlist @relation(fields: [playlist_id], references: [id], onDelete: Cascade)
+
+  @@map("active_playlist")
+}
+
+/* ===================== Catalog (Artist / Album / Recording) ===================== */
+
+model Artist {
+  id             Int       @id @default(autoincrement())
+  mbid           String?   @db.Uuid @unique
+  name           String
+  disambiguation String?
+  area           String?
+  begin_year     Int?
+  end_year       Int?
+  updated_at     DateTime  @default(now()) @db.Timestamptz
+
+  bios           ArtistBio[]
+  links          ArtistLink[]
+  relations_from ArtistRelation[] @relation("rel_from")
+  relations_to   ArtistRelation[] @relation("rel_to")
+  follows        ArtistFollow[]
+  albums_primary Album[]          @relation("album_primary_artist")
+  recording_roles RecordingArtist[]
+
+  @@map("artist")
+}
+
+model Album {
+  id                   Int       @id @default(autoincrement())
+  mb_release_id        String?   @db.Uuid @unique
+  mb_release_group_id  String?   @db.Uuid
+  title                String
+  primary_artist_id    Int?
+  updated_at           DateTime  @default(now()) @db.Timestamptz
+
+  primary_artist       Artist?   @relation("album_primary_artist", fields: [primary_artist_id], references: [id])
+  recordings           Recording[]
+
+  @@map("album")
+}
+
+model Recording {
+  id              Int       @id @default(autoincrement())
+  mb_recording_id String?   @db.Uuid @unique
+  title           String
+  duration_ms     Int?
+  isrc            String?
+  album_id        Int?
+  updated_at      DateTime  @default(now()) @db.Timestamptz
+
+  album           Album?    @relation(fields: [album_id], references: [id])
+  provider_maps   ProviderTrackMap[]
+  playlist_items  PlaylistItem[]
+  artists         RecordingArtist[]
+
+  @@map("recording")
+}
+
+/* Join: who performed on a recording (enables normalized artists list) */
+model RecordingArtist {
+  recording_id Int
+  artist_id    Int
+  role         String?  // primary|featuring|remixer...
+  ordinal      Int?     // display order (0..n)
+
+  recording    Recording @relation(fields: [recording_id], references: [id], onDelete: Cascade)
+  artist       Artist    @relation(fields: [artist_id], references: [id], onDelete: Cascade)
+
+  @@id([recording_id, artist_id, ordinal, role])
+  @@index([artist_id])
+  @@map("recording_artist")
+}
+
+/* ===================== Provider Mappings ===================== */
+
+model ProviderTrackMap {
+  id                Int       @id @default(autoincrement())
+  provider          String
+  provider_track_id String
+  recording_id      Int
+
+  recording         Recording  @relation(fields: [recording_id], references: [id], onDelete: Cascade)
+
+  @@unique([provider, provider_track_id])
+  @@index([recording_id])
+  @@map("provider_track_map")
+}
+
+model ProviderPlaylistMap {
+  id                     Int       @id @default(autoincrement())
+  provider               String
+  provider_playlist_id   String
+  playlist_id            Int
+
+  playlist               Playlist  @relation(fields: [playlist_id], references: [id], onDelete: Cascade)
+
+  @@unique([provider, provider_playlist_id])
+  @@unique([playlist_id])
+  @@map("provider_playlist_map")
+}
+
+/* ===================== Playlist Items (sparse snapshots) ===================== */
+
+model PlaylistItem {
+  id                Int       @id @default(autoincrement())
+  playlist_id       Int
+  position          Int?
+  recording_id      Int?
+  duration_ms       Int?
+  isrc              String?
+  mb_recording_id   String?   @db.Uuid
+  mb_release_id     String?   @db.Uuid
+  provider_track_id String?
+
+  // Sparse, non-indexed snapshot fields (only when unmatched/mismatched)
+  snapshot_title     String?
+  snapshot_artists   String?
+  snapshot_album     String?
+  snapshot_expires_at DateTime? @db.Timestamptz
+
+  playlist          Playlist  @relation(fields: [playlist_id], references: [id], onDelete: Cascade)
+  recording         Recording? @relation(fields: [recording_id], references: [id])
+
+  @@unique([playlist_id, position])
+  @@index([playlist_id])
+  @@index([isrc])
+  @@index([mb_recording_id])
+  @@index([provider_track_id])
+  @@map("playlist_item")
+}
+
+/* ===================== Artist Knowledge & Follows ===================== */
+
+model ArtistBio {
+  id         Int       @id @default(autoincrement())
+  artist_id  Int
+  source     String
+  summary    String?
+  url        String?
+  updated_at DateTime  @default(now()) @db.Timestamptz
+
+  artist     Artist    @relation(fields: [artist_id], references: [id], onDelete: Cascade)
+
+  @@unique([artist_id, source])
+  @@map("artist_bio")
+}
+
+model ArtistLink {
+  id         Int       @id @default(autoincrement())
+  artist_id  Int
+  kind       String
+  url        String
+  confidence Float?
+  source     String?
+  updated_at DateTime  @default(now()) @db.Timestamptz
+
+  artist     Artist    @relation(fields: [artist_id], references: [id], onDelete: Cascade)
+
+  @@unique([artist_id, kind, url])
+  @@map("artist_link")
+}
+
+model ArtistRelation {
+  id            Int       @id @default(autoincrement())
+  src_artist_id Int
+  rel_type      String
+  dst_artist_id Int
+  confidence    Float?
+  updated_at    DateTime  @default(now()) @db.Timestamptz
+
+  from          Artist    @relation("rel_from", fields: [src_artist_id], references: [id], onDelete: Cascade)
+  to            Artist    @relation("rel_to", fields: [dst_artist_id], references: [id], onDelete: Cascade)
+
+  @@unique([src_artist_id, rel_type, dst_artist_id])
+  @@index([src_artist_id])
+  @@index([dst_artist_id])
+  @@map("artist_relation")
+}
+
+model ArtistFollow {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  artist_id  Int
+  created_at DateTime  @default(now()) @db.Timestamptz
+
+  user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  artist     Artist    @relation(fields: [artist_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, artist_id])
+  @@map("artist_follow")
+}
+
+/* ===================== Jobs ===================== */
+
+model Job {
+  id            Int       @id @default(autoincrement())
+  user_id       Int
+  kind          String    // export_file | import_service | migrate
+  status        String    // queued|running|succeeded|failed
+  provider_from String?
+  provider_to   String?
+  playlist_id   Int?
+  artifact_url  String?
+  report_json   Json?
+  created_at    DateTime  @default(now()) @db.Timestamptz
+  updated_at    DateTime  @default(now()) @db.Timestamptz
+
+  user          User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  playlist      Playlist? @relation(fields: [playlist_id], references: [id])
+
+  @@map("job")
+}

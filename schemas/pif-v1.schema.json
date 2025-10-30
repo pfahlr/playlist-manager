@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/pif-v1.schema.json",
+  "title": "Playlist Interchange Format (PIF) v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "tracks"],
+  "properties": {
+    "name": { "type": "string" },
+    "description": { "type": ["string", "null"] },
+    "source_service": { "type": ["string", "null"], "enum": ["spotify", "deezer", "tidal", "youtube", "amazon", null] },
+    "source_playlist_id": { "type": ["string", "null"] },
+    "tracks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/track" }
+    }
+  },
+  "$defs": {
+    "uuid": { "type": "string", "pattern": "^[0-9a-fA-F-]{36}$" },
+    "track": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["position", "title", "artists"],
+      "properties": {
+        "position": { "type": "integer", "minimum": 1 },
+        "title": { "type": "string" },
+        "artists": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "album": { "type": ["string", "null"] },
+        "duration_ms": { "type": ["integer", "null"], "minimum": 0 },
+        "explicit": { "type": ["boolean", "null"] },
+        "release_date": { "type": ["string", "null"], "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$" },
+        "isrc": { "type": ["string", "null"] },
+        "mb_recording_id": { "anyOf": [ { "$ref": "#/$defs/uuid" }, { "type": "null" } ] },
+        "mb_release_id": { "anyOf": [ { "$ref": "#/$defs/uuid" }, { "type": "null" } ] },
+        "provider_ids": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "spotify_track_id": { "type": ["string", "null"] },
+            "deezer_track_id": { "type": ["string", "null"] },
+            "tidal_track_id": { "type": ["string", "null"] },
+            "youtube_video_id": { "type": ["string", "null"] },
+            "amazon_track_id": { "type": ["string", "null"] }
+          }
+        }
+      }
+    }
+  }
+}
