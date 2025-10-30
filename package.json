@@ -7,11 +7,11 @@
     "node": ">=18.18"
   },
   "scripts": {
-    "lint:api": "redocly lint openapi.yaml",
+    "lint:api": "redocly lint openapi.yaml --extends recommended",
     "gen:types": "openapi-typescript openapi.yaml -o packages/contracts/src/api.types.ts",
     "mock:api": "prism mock openapi.yaml",
     "api:dev": "tsx apps/api/src/dev/start.ts",
-    "check:breaking": "oasdiff breaking origin:openapi.yaml openapi.yaml --warn-added",
+    "check:breaking": "node ./scripts/check-breaking.mjs",
     "contract:test": "node ./scripts/schemathesis.mjs run openapi.yaml --checks all --hypothesis-deadline=1000",
     "prisma:generate": "pnpm -F @app/db prisma generate",
     "prisma:migrate:dev": "pnpm -F @app/db prisma migrate dev",
@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@redocly/cli": "^1.25.0",
+    "@useoptic/optic": "^1.0.9",
     "@stoplight/prism-cli": "^5.7.0",
     "concurrently": "^9.2.1",
     "dredd": "^14.1.0",
