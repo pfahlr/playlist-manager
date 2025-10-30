@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: playlist-manager API
   version: 1.0.0
@@ -460,8 +460,9 @@ components:
           type: array
           items: { $ref: '#/components/schemas/Playlist' }
         next_cursor:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
 
     Playlist:
       type: object
@@ -469,18 +470,22 @@ components:
       properties:
         id: { type: integer }
         name:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
         provider:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
         provider_playlist_id:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
         updated_at:
-          type: string
+          type:
+            - string
+            - 'null'
           format: date-time
-          nullable: true
 
     PagedPlaylistItems:
       type: object
@@ -489,8 +494,9 @@ components:
           type: array
           items: { $ref: '#/components/schemas/PlaylistItemEffective' }
         next_cursor:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
 
     PlaylistItemEffective:
       type: object
@@ -498,43 +504,52 @@ components:
       properties:
         id: { type: integer }
         position:
-          type: integer
-          nullable: true
+          type:
+            - integer
+            - 'null'
         title: { type: string }
         artists: { type: string }
         album:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
         duration_ms:
-          type: integer
-          nullable: true
+          type:
+            - integer
+            - 'null'
         recording_id:
-          type: integer
-          nullable: true
+          type:
+            - integer
+            - 'null'
         isrc:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
         mb_recording_id:
-          type: string
+          type:
+            - string
+            - 'null'
           pattern: '^[0-9a-fA-F-]{36}$'
-          nullable: true
           example: 'b8d0d7c0-8e1c-4b34-8bc3-38d78a0c2b1f'
         mb_release_id:
-          type: string
+          type:
+            - string
+            - 'null'
           pattern: '^[0-9a-fA-F-]{36}$'
-          nullable: true
           example: 'b7a6d2e4-1c77-4a9f-9d5b-0c3b2ea0f4a1'
         provider_track_id:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
 
     ActivePlaylist:
       type: object
       required: [playlist_id, updated_at]
       properties:
         playlist_id:
-          type: integer
-          nullable: true
+          type:
+            - integer
+            - 'null'
         updated_at: { type: string, format: date-time }
 
     JobRef:
@@ -557,14 +572,16 @@ components:
             matched_fuzzy_pct: { type: number }
             unresolved: { type: array, items: { type: object } }
         artifact_url:
-          type: string
+          type:
+            - string
+            - 'null'
           format: uri
-          nullable: true
         created_at: { type: string, format: date-time }
         updated_at:
-          type: string
+          type:
+            - string
+            - 'null'
           format: date-time
-          nullable: true
 
     Artist:
       type: object
@@ -576,17 +593,20 @@ components:
           example: '123e4567-e89b-12d3-a456-426614174000'
         name: { type: string }
         bio:
-          type: object
-          nullable: true
+          type:
+            - object
+            - 'null'
           properties:
             source: { type: string }
             summary:
-              type: string
-              nullable: true
+              type:
+                - string
+                - 'null'
             url:
-              type: string
+              type:
+                - string
+                - 'null'
               format: uri
-              nullable: true
         links:
           type: array
           items:
@@ -596,9 +616,10 @@ components:
               kind: { type: string }
               url: { type: string, format: uri }
         updated_at:
-          type: string
+          type:
+            - string
+            - 'null'
           format: date-time
-          nullable: true
 
     ArtistRelation:
       type: object
