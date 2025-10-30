@@ -43,6 +43,14 @@ export async function makeServer(): Promise<Server> {
 
   // JSON parsing is built-in; add other plugins here if needed.
 
+  app.addHook('onSend', async (_request, reply, payload) => {
+    const current = reply.getHeader('content-type');
+    if (typeof current === 'string' && current.startsWith('application/json')) {
+      reply.header('content-type', 'application/json');
+    }
+    return payload;
+  });
+
   app.addHook('preHandler', async (request, reply) => {
     const auth = request.headers['authorization'];
     const expected = 'Bearer test-token';
