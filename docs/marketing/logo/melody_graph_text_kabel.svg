@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="60mm"
+   viewBox="0 0 210 60"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
+   sodipodi:docname="melody_graph_text_kabel.svg"
+   inkscape:export-filename="melody_graph_text_kabel.png"
+   inkscape:export-xdpi="300"
+   inkscape:export-ydpi="300"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="0.51758558"
+     inkscape:cx="397.03579"
+     inkscape:cy="561.25984"
+     inkscape:window-width="1440"
+     inkscape:window-height="832"
+     inkscape:window-x="1024"
+     inkscape:window-y="380"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1">
+    <rect
+       x="268.81372"
+       y="263.38312"
+       width="391.90686"
+       height="129.42883"
+       id="rect408" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g408"
+       transform="matrix(0.26458333,0,0,0.26458333,-6.6384788,-60.983573)">
+      <ellipse
+         style="opacity:1;fill:#07bdd2;fill-opacity:1;stroke:#2e255f;stroke-width:10.0853;stroke-dasharray:none"
+         id="path404"
+         cx="99.177216"
+         cy="398.73273"
+         rx="25.916628"
+         ry="25.809866" />
+      <ellipse
+         style="fill:#07bdd2;fill-opacity:1;stroke:#2e255f;stroke-width:10.0853;stroke-dasharray:none"
+         id="path404-3"
+         cx="211.00206"
+         cy="380.74539"
+         rx="25.916628"
+         ry="25.809866" />
+      <ellipse
+         style="fill:#07bdd2;fill-opacity:1;stroke:#2e255f;stroke-width:7.56399;stroke-dasharray:none"
+         id="path404-0"
+         cx="151.61462"
+         cy="377.15179"
+         rx="16.6754"
+         ry="16.606707" />
+      <ellipse
+         style="fill:#07bdd2;fill-opacity:1;stroke:#2e255f;stroke-width:6.22543;stroke-dasharray:none"
+         id="path404-0-2"
+         cx="126.51622"
+         cy="317.26138"
+         rx="13.724442"
+         ry="13.667906" />
+      <path
+         style="opacity:1;fill:none;fill-opacity:1;stroke:#2e255f;stroke-width:10.0853;stroke-dasharray:none"
+         d="m 110.61102,372.92285 c -0.32106,-32.1375 0.43882,-60.10669 0.15787,-84.23792 0.32444,-1.77049 106.60673,-25.56234 106.33439,-23.48647 l 0.22326,91.02389"
+         id="path405"
+         sodipodi:nodetypes="cccc" />
+      <path
+         style="opacity:1;fill:none;fill-opacity:1;stroke:#2e255f;stroke-width:9.24487;stroke-dasharray:none"
+         d="M 111.27831,304.43198 217.46028,280.54552"
+         id="path406" />
+      <path
+         style="opacity:1;fill:none;fill-opacity:1;stroke:#2e255f;stroke-width:9.24487;stroke-dasharray:none"
+         d="m 139.30604,313.35586 78.42374,-16.64001"
+         id="path407" />
+      <path
+         style="opacity:1;fill:none;fill-opacity:1;stroke:#2e255f;stroke-width:9.24487;stroke-dasharray:none"
+         d="m 132.02961,331.00232 12.39688,31.13292"
+         id="path408"
+         sodipodi:nodetypes="cc" />
+    </g>
+    <text
+       xml:space="preserve"
+       id="text408"
+       style="font-size:85.3333px;line-height:109.938px;font-family:InterstatePlus;-inkscape-font-specification:InterstatePlus;text-align:start;letter-spacing:-0.49px;word-spacing:-2.59px;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect408);display:inline;fill:none;fill-opacity:1;stroke:#2e255f;stroke-width:12;stroke-dasharray:none"
+       transform="matrix(0.33055734,0,0,0.3002571,-25.489325,-63.376144)"><tspan
+         x="268.81445"
+         y="339.22753"
+         id="tspan4"><tspan
+           style="font-family:'Kabel LT Std';-inkscape-font-specification:'Kabel LT Std';fill:#2e255f;stroke:none"
+           id="tspan2">Melody</tspan></tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:26.3042px;line-height:33.8886px;font-family:TodaySHOP-MediumItalic;-inkscape-font-specification:TodaySHOP-MediumItalic;text-align:start;letter-spacing:-0.151043px;word-spacing:-0.798372px;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#0ebbd1;fill-opacity:1;stroke:none;stroke-width:3.69903;stroke-dasharray:none"
+       x="131.95396"
+       y="40.969494"
+       id="text409"
+       transform="scale(1.0685862,0.93581594)"><tspan
+         sodipodi:role="line"
+         id="tspan409"
+         x="131.95396"
+         y="40.969494"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kabel LT Std';-inkscape-font-specification:'Kabel LT Std';stroke-width:3.69903">Graph</tspan></text>
+  </g>
+</svg>
