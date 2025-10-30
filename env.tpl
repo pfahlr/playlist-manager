@@ -1,5 +1,0 @@
-PROVIDERS_SPOTIFY=true
-PROVIDERS_DEEZER=true
-PROVIDERS_TIDAL=true
-PROVIDERS_YOUTUBE=true
-# PROVIDERS_AMAZON=false   # (kept out of factory for now)
