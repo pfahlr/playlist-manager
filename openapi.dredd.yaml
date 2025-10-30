@@ -1,0 +1,532 @@
+swagger: '2.0'
+info:
+  title: playlist-manager API (Dredd compatibility)
+  version: 1.0.0
+  description: Narrowed OpenAPI definition used only for Dredd contract tests.
+basePath: /
+schemes:
+  - http
+produces:
+  - application/json
+  - application/json; charset=utf-8
+consumes:
+  - application/json
+paths:
+  /playlists:
+    get:
+      summary: List user playlists
+      operationId: playlists_list
+      parameters:
+        - name: provider
+          in: query
+          type: string
+          enum: [spotify, deezer, tidal, youtube]
+        - name: limit
+          in: query
+          type: integer
+          minimum: 1
+          maximum: 500
+          default: 100
+        - name: cursor
+          in: query
+          type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/PagedPlaylists'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error'
+  /playlists/{id}:
+    get:
+      summary: Get a playlist
+      operationId: playlists_get
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+          x-example: 101
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/Playlist'
+        '404':
+          description: Not found
+          schema:
+            $ref: '#/definitions/Error'
+  /playlists/{id}/items:
+    get:
+      summary: List playlist items
+      operationId: playlists_items_list
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+          x-example: 101
+        - name: effective
+          in: query
+          type: boolean
+          default: true
+        - name: limit
+          in: query
+          type: integer
+          minimum: 1
+          maximum: 500
+          default: 100
+        - name: cursor
+          in: query
+          type: string
+        - name: order
+          in: query
+          type: string
+          enum: [position, added_at]
+          default: position
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              type: string
+          schema:
+            $ref: '#/definitions/PagedPlaylistItems'
+        '404':
+          description: Not found
+          schema:
+            $ref: '#/definitions/Error'
+  /active-playlist:
+    get:
+      summary: Get active playlist pointer
+      operationId: activePlaylist_get
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/ActivePlaylist'
+        '404':
+          description: Not found
+          schema:
+            $ref: '#/definitions/Error'
+    put:
+      summary: Set active playlist
+      operationId: activePlaylist_set
+      produces: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required: [playlist_id]
+            properties:
+              playlist_id:
+                type: integer
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error'
+  /active-playlist/items:
+    post:
+      summary: Append item to active playlist
+      operationId: activePlaylist_addItem
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required: [recording_id]
+            properties:
+              recording_id:
+                type: integer
+              isrc:
+                type: string
+              title:
+                type: string
+              primary_artist:
+                type: string
+              position:
+                type: string
+                enum: [append, head]
+                default: append
+            example:
+              recording_id: 5551
+              position: append
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/PlaylistItemEffective'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error'
+  /active-playlist/items/{itemId}:
+    delete:
+      summary: Remove item from active playlist
+      operationId: activePlaylist_removeItem
+      consumes: []
+      produces: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          type: integer
+          x-example: 4001
+      responses:
+        '204':
+          description: No Content
+        '404':
+          description: Not found
+          schema:
+            $ref: '#/definitions/Error'
+  /jobs/migrate:
+    post:
+      summary: Migrate a playlist between providers
+      operationId: jobs_requestMigration
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required: [source_provider, source_playlist_id, dest_provider]
+            properties:
+              source_provider:
+                type: string
+                enum: [spotify, deezer, tidal, youtube]
+              source_playlist_id:
+                type: integer
+              dest_provider:
+                type: string
+                enum: [spotify, deezer, tidal, youtube]
+              dest_playlist_name:
+                type: string
+      responses:
+        '202':
+          description: Accepted
+          schema:
+            $ref: '#/definitions/JobRef'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error'
+  /jobs/{id}:
+    get:
+      summary: Get job status/report
+      operationId: jobs_get
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+          x-example: 5001
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/Job'
+        '404':
+          description: Not found
+          schema:
+            $ref: '#/definitions/Error'
+  /exports/file:
+    post:
+      summary: Export a playlist to file
+      operationId: exports_enqueueFile
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required: [playlist_id, format]
+            properties:
+              playlist_id:
+                type: integer
+              format:
+                type: string
+                enum: [m3u, xspf, csv]
+              variant:
+                type: string
+                enum: [lean, verbose]
+                default: lean
+      responses:
+        '202':
+          description: Accepted
+          schema:
+            $ref: '#/definitions/JobRef'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error'
+  /artists/{mbid}/follow:
+    post:
+      summary: Follow an artist by MBID
+      operationId: artists_follow
+      consumes: []
+      produces: []
+      parameters:
+        - name: mbid
+          in: path
+          required: true
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+          x-example: '123e4567-e89b-12d3-a456-426614174000'
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error'
+    delete:
+      summary: Unfollow artist
+      operationId: artists_unfollow
+      consumes: []
+      produces: []
+      parameters:
+        - name: mbid
+          in: path
+          required: true
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+          x-example: '123e4567-e89b-12d3-a456-426614174000'
+      responses:
+        '204':
+          description: No Content
+        '404':
+          description: Not found
+          schema:
+            $ref: '#/definitions/Error'
+  /artists/{mbid}:
+    get:
+      summary: Get artist basics
+      operationId: artists_get
+      parameters:
+        - name: mbid
+          in: path
+          required: true
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+          x-example: '123e4567-e89b-12d3-a456-426614174000'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/Artist'
+        '404':
+          description: Not found
+          schema:
+            $ref: '#/definitions/Error'
+  /artists/{mbid}/relations:
+    get:
+      summary: Get artist relations
+      operationId: artists_relations
+      parameters:
+        - name: mbid
+          in: path
+          required: true
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+          x-example: '123e4567-e89b-12d3-a456-426614174000'
+        - name: types
+          in: query
+          type: string
+          description: Comma separated relation types
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/definitions/ArtistRelation'
+        '404':
+          description: Not found
+          schema:
+            $ref: '#/definitions/Error'
+
+definitions:
+  Error:
+    type: object
+    required: [error, message]
+    properties:
+      error:
+        type: string
+      message:
+        type: string
+  PagedPlaylists:
+    type: object
+    properties:
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/Playlist'
+      next_cursor:
+        type: string
+        x-nullable: true
+  Playlist:
+    type: object
+    required: [id, name]
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      provider:
+        type: string
+      provider_playlist_id:
+        type: string
+      updated_at:
+        type: string
+        format: date-time
+  PagedPlaylistItems:
+    type: object
+    properties:
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/PlaylistItemEffective'
+      next_cursor:
+        type: string
+        x-nullable: true
+  PlaylistItemEffective:
+    type: object
+    required: [id, position, title, artists]
+    properties:
+      id:
+        type: integer
+      position:
+        type: integer
+      title:
+        type: string
+      artists:
+        type: string
+      album:
+        type: string
+        x-nullable: true
+      duration_ms:
+        type: integer
+        x-nullable: true
+      recording_id:
+        type: integer
+      isrc:
+        type: string
+        x-nullable: true
+      mb_recording_id:
+        type: string
+        pattern: '^[0-9a-fA-F-]{36}$'
+        x-nullable: true
+      mb_release_id:
+        type: string
+        pattern: '^[0-9a-fA-F-]{36}$'
+        x-nullable: true
+      provider_track_id:
+        type: string
+        x-nullable: true
+  ActivePlaylist:
+    type: object
+    required: [playlist_id, updated_at]
+    properties:
+      playlist_id:
+        type: integer
+      updated_at:
+        type: string
+        format: date-time
+  JobRef:
+    type: object
+    required: [job_id, status]
+    properties:
+      job_id:
+        type: integer
+      status:
+        type: string
+        enum: [queued, running, succeeded, failed]
+  Job:
+    type: object
+    required: [id, status, created_at]
+    properties:
+      id:
+        type: integer
+      status:
+        type: string
+        enum: [queued, running, succeeded, failed]
+      report:
+        type: object
+        properties:
+          matched_isrc_pct:
+            type: number
+          matched_fuzzy_pct:
+            type: number
+          unresolved:
+            type: array
+            items:
+              type: object
+      artifact_url:
+        type: string
+        format: uri
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+  Artist:
+    type: object
+    required: [mbid, name]
+    properties:
+      mbid:
+        type: string
+        pattern: '^[0-9a-fA-F-]{36}$'
+      name:
+        type: string
+      bio:
+        type: object
+        properties:
+          source:
+            type: string
+          summary:
+            type: string
+          url:
+            type: string
+            format: uri
+      links:
+        type: array
+        items:
+          type: object
+          required: [kind, url]
+          properties:
+            kind:
+              type: string
+            url:
+              type: string
+              format: uri
+      updated_at:
+        type: string
+        format: date-time
+  ArtistRelation:
+    type: object
+    required: [type, artist]
+    properties:
+      type:
+        type: string
+        enum: [influences, influenced_by, collaborated_with, member_of, has_members]
+      artist:
+        type: object
+        required: [mbid, name]
+        properties:
+          mbid:
+            type: string
+            pattern: '^[0-9a-fA-F-]{36}$'
+          name:
+            type: string

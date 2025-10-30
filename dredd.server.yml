@@ -1,6 +1,11 @@
-swagger: ./openapi.yaml
-endpoint: http://127.0.0.1:3101
+# Dredd config for your Fastify dev server
 color: true
-dry-run: false
-hookfiles: []
+loglevel: warning
 language: nodejs
+blueprint: ./openapi.dredd.yaml
+path:
+  - ./openapi.dredd.yaml
+endpoint: http://127.0.0.1:3101
+hookfiles: []
+header:
+  - 'Authorization: Bearer test-token'

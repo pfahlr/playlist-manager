@@ -3,11 +3,14 @@
   "private": true,
   "version": "0.1.0",
   "packageManager": "pnpm@9.12.3",
-  "engines": { "node": ">=18.18" },
+  "engines": {
+    "node": ">=18.18"
+  },
   "scripts": {
     "lint:api": "redocly lint openapi.yaml",
     "gen:types": "openapi-typescript openapi.yaml -o packages/contracts/src/api.types.ts",
     "mock:api": "prism mock openapi.yaml",
+    "api:dev": "tsx apps/api/src/dev/start.ts",
     "check:breaking": "oasdiff breaking origin:openapi.yaml openapi.yaml --warn-added",
     "contract:test": "schemathesis run openapi.yaml --checks all --hypothesis-deadline=1000",
     "prisma:generate": "pnpm -F @app/db prisma generate",
@@ -16,21 +19,20 @@
     "prisma:studio": "pnpm -F @app/db prisma studio",
     "db:health": "tsx packages/db/src/healthcheck.ts",
     "check:gen": "pnpm run gen:types && git diff --exit-code -- packages/contracts/src/api.types.ts",
-    "test:contract:dredd:prism": "concurrently -k -s first \"pnpm mock:api\" \"wait-on tcp:4010 && dredd dredd.yml\"",
-    "test:contract:st:prism": "concurrently -k -s first \"pnpm mock:api\" \"wait-on tcp:4010 && schemathesis run openapi.yaml --base-url=http://127.0.0.1:4010 --checks all --experimental-openapi-3-1 --hypothesis-deadline=1000 --operations-file ./.schemathesis.toml\"",
-    "api:dev": "tsx apps/api/src/dev/start.ts",
-    "test:contract:dredd:server": "concurrently -k -s first \"API_FAKE_ENQUEUE=1 pnpm api:dev\" \"wait-on tcp:3101 && dredd dredd.server.yml\"",
-    "test:contract:st:server": "concurrently -k -s first \"API_FAKE_ENQUEUE=1 pnpm api:dev\" \"wait-on tcp:3101 && schemathesis run openapi.yaml --base-url=http://127.0.0.1:3101 --checks all --experimental-openapi-3-1 --hypothesis-deadline=1000 --operations-file ./.schemathesis.toml\""
+    "test:contract:dredd:prism": "concurrently -k -s first \"pnpm mock:api\" \"wait-on tcp:4010 && dredd openapi.dredd.yaml http://127.0.0.1:4010 --config=./dredd.yml\"",
+    "test:contract:st:prism": "concurrently -k -s first \"pnpm mock:api\" \"wait-on tcp:4010 && schemathesis run openapi.yaml --url=http://127.0.0.1:4010 --checks all --phases=examples --include-operation-id playlists_items_list --include-operation-id exports_enqueueFile --include-operation-id jobs_requestMigration -H \\\"Authorization: Bearer test-token\\\"\"",
+    "test:contract:dredd:server": "concurrently -k -s first \"API_FAKE_ENQUEUE=1 pnpm api:dev\" \"wait-on tcp:3101 && dredd openapi.dredd.yaml http://127.0.0.1:3101 --config=./dredd.server.yml\"",
+    "test:contract:st:server": "concurrently -k -s first \"API_FAKE_ENQUEUE=1 pnpm api:dev\" \"wait-on tcp:3101 && schemathesis run openapi.yaml --url=http://127.0.0.1:3101 --checks all --phases=examples --include-operation-id playlists_items_list --include-operation-id exports_enqueueFile --include-operation-id jobs_requestMigration -H \\\"Authorization: Bearer test-token\\\"\""
   },
   "devDependencies": {
     "@redocly/cli": "^1.25.0",
     "@stoplight/prism-cli": "^5.7.0",
+    "concurrently": "^9.2.1",
+    "dredd": "^14.1.0",
+    "fastify": "^4.29.1",
     "openapi-typescript": "^7.5.2",
+    "supertest": "^7.1.4",
     "tsx": "^4.16.0",
-    "concurrently": "^9.0.0",
-    "wait-on": "^7.2.0",
-    "dredd": "^14.0.0",
-    "fastify": "^4.27.0",
-    "supertest": "^7.0.0"
+    "wait-on": "^7.2.0"
   }
 }
