@@ -1,0 +1,19 @@
+### `codex/TASKS/01a_spec_bootstrap.yaml`
+id: 01a_spec_bootstrap
+title: Seed API spec checks & client types
+branch: codex/01a_spec_bootstrap
+overview: >
+  Ensure OpenAPI 3.1 is linted, typegen works, and breaking changes are checked.
+acceptance:
+  - Running `pnpm lint:api` exits 0.
+  - Running `pnpm gen:types` regenerates packages/contracts/src/api.types.ts with no diff.
+  - A failing diff is produced if openapi.yaml is modified incompatibly (documented via README note).
+artifacts_to_touch:
+  - openapi.yaml
+  - packages/contracts/src/api.types.ts
+  - README.md
+constraints:
+  - Do not change route shapes yet; this task only validates the current spec and typegen.
+steps:
+  - Add/verify Redocly config if needed; ensure `gen:types` produces a file.
+  - Add a short README “Spec Workflow” section with the 3 commands and expected outcomes.

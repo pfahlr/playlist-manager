@@ -1,0 +1,20 @@
+id: 09a_ci_spec_gates
+title: CI gates: lint, breaking-change, typegen up-to-date
+branch: codex/09a_ci_spec_gates
+overview: >
+  Add GitHub Actions workflow that runs spec lint, breaking-diff, typegen check, prisma generate, and unit tests.
+acceptance:
+  - `.github/workflows/ci.yml` exists and runs scripts:
+    * lint:api
+    * check:breaking
+    * gen:types + check:gen
+    * prisma:generate
+    * unit tests (vitest) for changed packages/apps
+artifacts_to_touch:
+  - .github/workflows/ci.yml
+constraints:
+  - Do not run migrate deploy in PR CI; only generate & tests.
+steps:
+  - Create a matrix with Node 20.x ubuntu-latest.
+  - Cache pnpm store; run workspace install; execute scripts in correct order.
+

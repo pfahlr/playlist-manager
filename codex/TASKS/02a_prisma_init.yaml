@@ -1,0 +1,29 @@
+id: 02a_prisma_init
+title: Prisma schema baseline (DB model + migrate dev)
+branch: codex/02a_prisma_init
+overview: >
+  Apply Prisma schema for core tables and verify migrations run cleanly in dev.
+acceptance:
+  - Tests in codex/code/codex/02a_prisma_init/tests/db.smoke.test.ts pass.
+  - `prisma migrate dev` creates tables defined in schema.prisma.
+  - Can insert/select a Playlist row via Prisma Client.
+artifacts_to_touch:
+  - prisma/schema.prisma
+  - prisma/migrations/** (auto)
+  - packages/db/src/** (if needed for client imports in test)
+constraints:
+  - Use existing schema (INTEGER PKs, mapping tables). No extra columns.
+tests:
+  path: codex/code/codex/02a_prisma_init/tests/db.smoke.test.ts
+  content: |
+    import { prisma } from '../../../../packages/db/src/client';
+    import { beforeAll, afterAll, expect, test } from 'vitest';
+
+    test('can create/read playlist', async () => {
+      const p = await prisma.playlist.create({ data: { user_id: 1, name: 'Smoke' } });
+      const r = await prisma.playlist.findUnique({ where: { id: p.id } });
+      expect(r?.name).toBe('Smoke');
+    });
+steps:
+  - Run migrate dev and commit generated migration.
+  - Add the provided test; ensure it passes.

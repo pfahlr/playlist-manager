@@ -1,0 +1,19 @@
+id: 06b_spotify_impl
+title: Spotify importer/exporter (mocked HTTP) to/from PIF
+branch: codex/06b_spotify_impl
+overview: >
+  Implement Spotify Importer/Exporter with network mocked via nock. Focus on: read playlist → PIF, write PIF → created playlist.
+acceptance:
+  - Tests in codex/code/codex/06b_spotify_impl/tests/spotify.impl.test.ts pass:
+    * importer maps items (with ISRC when available) into PIF.
+    * exporter creates a playlist and adds tracks in batches.
+artifacts_to_touch:
+  - packages/providers/spotify/src/index.ts
+  - packages/providers/spotify/src/spotify.client.ts
+  - fixtures under codex/code/codex/06b_spotify_impl/tests/fixtures/*
+constraints:
+  - No real tokens; use nock fixtures resembling Spotify Web API responses.
+steps:
+  - Build tiny client wrapper; implement read/write using endpoints for playlists & tracks.
+  - Map external_ids.isrc → track.isrc; fallback to title/artist/duration.
+  - Batch adds; handle 429 with simple backoff (unit-tested).

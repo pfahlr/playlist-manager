@@ -1,0 +1,24 @@
+id: 08a_worker_jobs_gc
+title: BullMQ jobs (migrate/export stub) + snapshot GC worker
+branch: codex/08a_worker_jobs_gc
+overview: >
+  Create BullMQ setup, define a "snapshot-gc" repeatable job at 03:00 UTC, and implement the GC SQL from ADR-004.
+acceptance:
+  - Tests in codex/code/codex/08a_worker_jobs_gc/tests/gc.test.ts pass:
+    * inserts with snapshot_* are cleared when normalized matches or TTL expired.
+artifacts_to_touch:
+  - apps/worker/src/queues/index.ts
+  - apps/worker/src/jobs/snapshotGc.ts
+  - apps/worker/src/config.ts
+tests:
+  path: codex/code/codex/08a_worker_jobs_gc/tests/gc.test.ts
+  content: |
+    import { prisma } from '../../../../packages/db/src/client';
+    import { runGcOnce } from '../../../../apps/worker/src/jobs/snapshotGc';
+    import { expect, test } from 'vitest';
+    test('gc nulls matching snapshots', async () => {
+      // seed minimal rows; call runGcOnce(); assert snapshots are null
+      expect(1).toBe(1);
+    });
+steps:
+  - Implement `runGcOnce()` that executes the SQL from ADR-004 (no Redis needed for unit test).

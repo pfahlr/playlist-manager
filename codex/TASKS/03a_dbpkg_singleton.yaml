@@ -1,0 +1,20 @@
+id: 03a_dbpkg_singleton
+title: DB package singleton + healthcheck (ts)
+branch: codex/03a_dbpkg_singleton
+overview: >
+  Confirm single PrismaClient instance behavior and healthcheck endpoint function.
+acceptance:
+  - Tests in codex/code/codex/03a_dbpkg_singleton/tests/db.health.test.ts pass.
+tests:
+  path: codex/code/codex/03a_dbpkg_singleton/tests/db.health.test.ts
+  content: |
+    import { prisma, dbHealthcheck } from '../../../../packages/db/src';
+    import { expect, test } from 'vitest';
+    test('healthcheck ok', async () => {
+      const h = await dbHealthcheck();
+      expect(h).toEqual({ ok: true });
+      expect(prisma).toBeTruthy();
+    });
+steps:
+  - Add the test; no code changes expected (should pass with current package setup).
+

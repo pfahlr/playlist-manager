@@ -1,0 +1,18 @@
+id: 07a_routes_playlist_items_effective
+title: GET /playlists/{id}/items (effective=true) route
+branch: codex/07a_routes_playlist_items_effective
+overview: >
+  Implement the route to read from v_playlist_item_effective with pagination; validate response against OpenAPI.
+acceptance:
+  - Tests in codex/code/codex/07a_routes_playlist_items_effective/tests/route.items.test.ts pass via supertest:
+    * invalid shape fails validation
+    * correct items returned with effective fields
+artifacts_to_touch:
+  - apps/api/src/routes/playlists/[id]/items.get.ts
+  - apps/api/src/lib/db/effectiveItems.ts
+  - apps/api/src/lib/openapi/validator.ts (reuse)
+constraints:
+  - Use prisma.$queryRaw to read the view; keep pagination simple (id > cursor).
+steps:
+  - Implement data access function + route handler.
+  - Add tests using an in-memory server (Next.js route handler or Fastify) with supertest.

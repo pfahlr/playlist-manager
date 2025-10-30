@@ -1,0 +1,14 @@
+id: 05b_file_exporters
+title: File exporters (M3U, XSPF, CSV lean/verbose) with goldens
+branch: codex/05b_file_exporters
+overview: >
+  Implement pure functions to render PIF → M3U, XSPF, and CSV (lean/verbose). Compare to golden files.
+acceptance:
+  - Tests in codex/code/codex/05b_file_exporters/tests/exporters.test.ts pass by comparing exact strings to goldens.
+artifacts_to_touch:
+  - packages/providers/file-exporters/src/{m3u.ts,xspf.ts,csv.ts}
+  - codex/code/codex/05b_file_exporters/tests/goldens/*
+steps:
+  - Implement strict RFC4180 CSV quoting; respect column orders from JSON Schemas.
+  - Generate outputs from a fixed PIF fixture; assert equals goldens.
+

@@ -1,0 +1,18 @@
+id: 04a_api_validation_wiring
+title: Runtime request/response validation against OpenAPI
+branch: codex/04a_api_validation_wiring
+overview: >
+  Add Ajv-based validator middleware so all API responses conform to openapi.yaml.
+acceptance:
+  - Tests in codex/code/codex/04a_api_validation_wiring/tests/validation.middleware.test.ts pass:
+    * a mocked handler producing an invalid shape fails with 500/validation error.
+    * producing a valid response passes.
+artifacts_to_touch:
+  - apps/api/src/lib/openapi/validator.ts
+  - apps/api/src/middleware.ts (or per-route wrappers)
+  - package.json devDeps: ajv, openapi-types, openapi-typescript (already present)
+constraints:
+  - No network. Use openapi.yaml from repo; compile once and cache.
+steps:
+  - Build a small validator that loads openapi.yaml, resolves the schema for route+method, and validates responses.
+  - Add tests that import the validator and simulate handler outputs.

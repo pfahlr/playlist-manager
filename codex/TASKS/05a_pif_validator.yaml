@@ -1,0 +1,15 @@
+id: 05a_pif_validator
+title: PIF v1 JSON Schema validator + fixtures
+branch: codex/05a_pif_validator
+overview: >
+  Implement a validator for /schemas/pif-v1.schema.json with Ajv and add sample good/bad fixtures.
+acceptance:
+  - Tests in codex/code/codex/05a_pif_validator/tests/pif.validate.test.ts pass with both valid and invalid fixtures.
+artifacts_to_touch:
+  - packages/contracts/src/pif.ts (validator module)
+  - tests fixtures under codex/code/...
+steps:
+  - Create Ajv instance with 2020-12 settings.
+  - Load /schemas/pif-v1.schema.json, compile, export validatePIF().
+  - Write two fixtures (valid/invalid) and tests.
+

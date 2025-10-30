@@ -1,0 +1,33 @@
+id: 02b_raw_migrations
+title: Raw SQL extras (partial unique ISRC, updated_at triggers, effective view)
+branch: codex/02b_raw_migrations
+overview: >
+  Add partial unique index on recording.isrc, touch-updated_at trigger, and v_playlist_item_effective view.
+acceptance:
+  - Tests in codex/code/codex/02b_raw_migrations/tests/db.raw.sql.test.ts pass:
+    * updated_at changes on UPDATE for playlist/recording.
+    * unique index rejects duplicate non-null ISRC.
+    * SELECT from v_playlist_item_effective returns snapshot fallback when recording is absent.
+artifacts_to_touch:
+  - prisma/migrations/2025xxxx_raw_extras/migration.sql
+tests:
+  path: codex/code/codex/02b_raw_migrations/tests/db.raw.sql.test.ts
+  content: |
+    import { prisma } from '../../../../packages/db/src/client';
+    import { expect, test } from 'vitest';
+
+    test('partial unique ISRC', async () => {
+      const a = await prisma.recording.create({ data: { title: 'A', isrc: 'XYZ' } });
+      await expect(prisma.recording.create({ data: { title: 'B', isrc: 'XYZ' } }))
+        .rejects.toThrow();
+    });
+    test('updated_at touch', async () => {
+      const p = await prisma.playlist.create({ data: { user_id: 1, name: 't' } });
+      const first = p.updated_at;
+      const u = await prisma.playlist.update({ where: { id: p.id }, data: { name: 'u' }});
+      expect(u.updated_at.getTime()).toBeGreaterThan(first.getTime());
+    });
+constraints:
+  - Use exactly the SQL already provided in /prisma/migrations/2025xxxx_raw_extras/migration.sql.
+steps:
+  - Apply migration; run tests.

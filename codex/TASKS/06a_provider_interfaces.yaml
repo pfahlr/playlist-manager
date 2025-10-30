@@ -1,0 +1,20 @@
+id: 06a_provider_interfaces
+title: Importer/Exporter interfaces + stubs for all providers
+branch: codex/06a_provider_interfaces
+overview: >
+  Define TypeScript contracts for Importer/Exporter and create empty stubs for spotify, deezer, tidal, youtube.
+acceptance:
+  - Tests in codex/code/codex/06a_provider_interfaces/tests/types.compile.test.ts pass (type-level).
+artifacts_to_touch:
+  - packages/contracts/src/providers.ts
+  - packages/providers/{spotify,deezer,tidal,youtube}/src/index.ts
+tests:
+  path: codex/code/codex/06a_provider_interfaces/tests/types.compile.test.ts
+  content: |
+    import type { Importer, Exporter } from '../../../../packages/contracts/src/providers';
+    import Spotify from '../../../../packages/providers/spotify/src';
+    const s: Importer & Exporter = new Spotify(); // compile is the test
+    export {};
+steps:
+  - Define minimal methods: readPlaylist(id)->PIF, writePlaylist(PIF)->{destId, report}.
+  - Export default classes with method signatures only (throw new Error('NIY') inside).

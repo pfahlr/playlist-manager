@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: Tunemymusic-Alt API
+  title: playlist-manager API
   version: 1.0.0
   description: >
     v1 API for playlist migration, artist basics, and exports. This spec is the source of truth.
