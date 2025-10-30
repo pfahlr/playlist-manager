@@ -1,0 +1,115 @@
+id: 06f_provider_factory_tests
+title: Provider factory tests (tokens, flags, class mapping)
+branch: codex/06f_provider_factory_tests
+overview: >
+  Add unit tests for the provider factory. Verify token fetch from Prisma, provider enable/disable via env flags,
+  correct class instances for spotify/deezer/tidal/youtube, and getProviderForUser behavior.
+acceptance:
+  - Tests in codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts pass.
+  - No production code changes are required; only tests and (if missing) vitest config/deps.
+artifacts_to_touch:
+  - codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+constraints:
+  - No network. Mock '@app/db' Prisma client.
+  - Feature flags must be validated by reloading the factory with env vars set.
+steps:
+  - Write a Vitest suite that:
+      1) Mocks prisma.account.findFirst to return access_token (then null) and asserts success/throw.
+      2) Asserts createProvider returns instances of the correct classes and names.
+      3) Verifies feature flags: setting PROVIDERS_SPOTIFY=false causes createProvider('spotify', ...) to throw.
+      4) Verifies getProviderForUser composes token fetch + instance creation.
+tests:
+  path: codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+  content: |
+    import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
+
+    // We'll mock @app/db BEFORE importing the factory
+    vi.mock('../../../../packages/db/src/client', () => {
+      // In case someone imports via @app/db barrel:
+      return { prisma: { account: { findFirst: vi.fn() } } };
+    });
+    vi.mock('@app/db', async () => {
+      const mod = await vi.importActual<any>('../../../../packages/db/src/index');
+      // Ensure a mockable prisma exists no matter which path code uses
+      return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
+    });
+
+    // Reusable getters to re-import modules after env or mocks change
+    async function loadFactory() {
+      // Ensure a fresh module state to pick up env flags
+      await vi.resetModules();
+      // Re-apply mocks after reset
+      vi.doMock('../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
+      vi.doMock('@app/db', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
+      const prov = await import('../../../../apps/worker/src/providers');
+      const db = await import('@app/db');
+      const Spotify = (await import('../../../../packages/providers/spotify/src')).default;
+      const Deezer  = (await import('../../../../packages/providers/deezer/src')).default;
+      const Tidal   = (await import('../../../../packages/providers/tidal/src')).default;
+      const YouTube = (await import('../../../../packages/providers/youtube/src')).default;
+      return { prov, db, Spotify, Deezer, Tidal, YouTube };
+    }
+
+    describe('provider factory', () => {
+      beforeEach(() => {
+        vi.resetAllMocks();
+        process.env.PROVIDERS_SPOTIFY = 'true';
+        process.env.PROVIDERS_DEEZER  = 'true';
+        process.env.PROVIDERS_TIDAL   = 'true';
+        process.env.PROVIDERS_YOUTUBE = 'true';
+      });
+
+      afterEach(() => {
+        vi.restoreAllMocks();
+      });
+
+      test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
+        const { prov, db } = await loadFactory();
+        // First call returns a token
+        (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
+        const auth = await prov.getProviderAuthForUser(1, 'spotify');
+        expect(auth.token).toBe('tok-123');
+
+        // Next call returns null -> should throw
+        (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
+        await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
+      });
+
+      test('createProvider: returns correct classes with matching names', async () => {
+        const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
+
+        const s = prov.createProvider('spotify', { token: 'x' });
+        expect(s.name).toBe('spotify');
+        expect(s).toBeInstanceOf(Spotify);
+
+        const d = prov.createProvider('deezer', { token: 'x' });
+        expect(d.name).toBe('deezer');
+        expect(d).toBeInstanceOf(Deezer);
+
+        const t = prov.createProvider('tidal', { token: 'x' });
+        expect(t.name).toBe('tidal');
+        expect(t).toBeInstanceOf(Tidal);
+
+        const y = prov.createProvider('youtube', { token: 'x' });
+        expect(y.name).toBe('youtube');
+        expect(y).toBeInstanceOf(YouTube);
+      });
+
+      test('feature flags: disabling a provider blocks creation', async () => {
+        process.env.PROVIDERS_SPOTIFY = 'false';
+        const { prov } = await loadFactory();
+        expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
+      });
+
+      test('getProviderForUser: combines token fetch + instance creation', async () => {
+        const { prov, db, Spotify } = await loadFactory();
+        (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
+        const inst = await prov.getProviderForUser(42, 'spotify');
+        expect(inst).toBeInstanceOf(Spotify);
+        expect(inst.name).toBe('spotify');
+      });
+    });
+notes:
+  - Ensure Vitest is available in your workspace (e.g., devDep at root or in apps/*). Typical script: "vitest --run".
+  - If your repo resolves '@app/db' differently, adjust the mock import paths accordingly.
+  - These tests intentionally re-import modules to pick up env flags which are read at module load.
