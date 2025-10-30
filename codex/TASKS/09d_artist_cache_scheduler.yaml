@@ -1,0 +1,27 @@
+id: 09d_artist_cache_scheduler
+title: Artist cache refresh scheduler (bios weekly, relations monthly)
+branch: codex/09d_artist_cache_scheduler
+overview: >
+  Nightly worker that enqueues refresh tasks: bios/links weekly, relations monthly. Feature-flag driven.
+acceptance:
+  - Tests in codex/code/codex/09d_artist_cache_scheduler/tests/scheduler.test.ts pass:
+    * creates repeatable jobs with correct cron; skips when flag disabled.
+artifacts_to_touch:
+  - apps/worker/src/scheduler/artistCache.ts
+  - apps/worker/src/config.ts
+constraints:
+  - No Redis needed in unit tests; export a function that returns the desired repeat config.
+tests:
+  path: codex/code/codex/09d_artist_cache_scheduler/tests/scheduler.test.ts
+  content: |
+    import { expect, test } from 'vitest';
+    import { getSchedules } from '../../../../apps/worker/src/scheduler/artistCache';
+
+    test('returns weekly and monthly schedules', () => {
+      const s = getSchedules({ biosWeekly: true, relationsMonthly: true });
+      expect(s.weekly.cron).toMatch(/0 4 \* \* 1/);
+      expect(s.monthly.cron).toMatch(/0 5 1 \* \*/);
+    });
+steps:
+  - Implement getSchedules(flags) returning cron strings (e.g., bios Mondays 04:00 UTC; relations day-1 05:00 UTC).
+  - Wire into queue init (separate PR can connect to BullMQ).

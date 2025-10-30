@@ -1,0 +1,53 @@
+id: 06c_deezer_impl
+title: Deezer importer/exporter (mocked HTTP) to/from PIF
+branch: codex/06c_deezer_impl
+overview: >
+  Implement Deezer Importer/Exporter using the contracts from packages/contracts/src/providers.ts.
+  Read a playlist -> PIF, write PIF -> created playlist. Handle paging/batching and 429 backoff (unit-tested).
+acceptance:
+  - Tests in codex/code/codex/06c_deezer_impl/tests/deezer.impl.test.ts pass:
+    * importer maps items with ISRC when present (track.isrc), else title/artist/duration fallback.
+    * exporter creates a playlist and adds tracks in batches; respects 429 Retry-After.
+artifacts_to_touch:
+  - packages/providers/deezer/src/index.ts
+  - packages/providers/deezer/src/deezer.client.ts
+  - codex/code/codex/06c_deezer_impl/tests/fixtures/deezer.playlist.json
+  - codex/code/codex/06c_deezer_impl/tests/fixtures/deezer.created.json
+constraints:
+  - No real HTTP. Use nock for deezer API base (https://api.deezer.com/*).
+  - Keep batch size configurable; default 100.
+tests:
+  path: codex/code/codex/06c_deezer_impl/tests/deezer.impl.test.ts
+  content: |
+    import nock from 'nock';
+    import { expect, test, beforeAll, afterAll } from 'vitest';
+    import Deezer from '../../../../packages/providers/deezer/src';
+    import playlistFixture from './fixtures/deezer.playlist.json';
+
+    const dz = new Deezer({ token: 'test' });
+
+    test('importer -> PIF maps isrc when available', async () => {
+      nock('https://api.deezer.com')
+        .get('/playlist/1234')                       // metadata
+        .reply(200, { title: 'DX', nb_tracks: 2 })
+        .get('/playlist/1234/tracks')
+        .query({ limit: 50, index: 0 })
+        .reply(200, playlistFixture);
+      const pif = await dz.readPlaylist({ id: '1234' });
+      expect(pif.tracks[0].isrc).toBe('USABC1200001');
+      expect(pif.tracks[1].title).toBeTruthy();
+    });
+
+    test('exporter -> creates playlist then adds tracks in batches', async () => {
+      const tracks = Array.from({ length: 205 }, (_, i) => ({ title: 't'+i, artists: ['a'], duration_ms: 1000 }));
+      const pif = { name: 'DX out', tracks };
+      nock('https://api.deezer.com')
+        .post('/user/me/playlists', body => /DX out/.test(JSON.stringify(body))).reply(200, { id: 'pz9' })
+        .post('/playlist/pz9/tracks', body => true).times(3).reply(200, { success: true });
+      const res = await dz.writePlaylist({ pif });
+      expect(res.destId).toBe('pz9');
+    });
+steps:
+  - Implement deezer.client.ts: minimal get/post with auth header; simple retry on 429 using Retry-After.
+  - Implement index.ts Importer/Exporter: map fields between Deezer <-> PIF; batch add tracks.
+  - Add env-driven batch size and max retries (defaults inside class).

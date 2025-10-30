@@ -1,0 +1,54 @@
+id: 06e_youtube_impl
+title: YouTube importer/exporter (mocked HTTP) to/from PIF (YT → YT Music)
+branch: codex/06e_youtube_impl
+overview: >
+  Implement YouTube Importer/Exporter. Importer reads a playlist to PIF; exporter creates a playlist and adds videoIds.
+  Prefer official artist/Topic channels; include basic search (mocked) when direct IDs not provided.
+acceptance:
+  - Tests in codex/code/codex/06e_youtube_impl/tests/youtube.impl.test.ts pass:
+    * importer maps items with duration/title/channel to PIF (best-effort ISRC absent).
+    * exporter creates playlist and adds items in batches; uses cached mapping for title/artist → videoId.
+artifacts_to_touch:
+  - packages/providers/youtube/src/index.ts
+  - packages/providers/youtube/src/youtube.client.ts
+  - codex/code/codex/06e_youtube_impl/tests/fixtures/yt.playlist.json
+constraints:
+  - No real API; mock https://www.googleapis.com/youtube/v3/* with nock.
+  - Search calls capped and cached (in-memory map) within the class (unit test asserts call count).
+tests:
+  path: codex/code/codex/06e_youtube_impl/tests/youtube.impl.test.ts
+  content: |
+    import nock from 'nock';
+    import { expect, test } from 'vitest';
+    import YT from '../../../../packages/providers/youtube/src';
+
+    const yt = new YT({ token: 'x' });
+
+    test('importer -> PIF basic mapping', async () => {
+      nock('https://www.googleapis.com')
+        .get('/youtube/v3/playlistItems').query(true).reply(200, {
+          items: [
+            { contentDetails: { videoId: 'vid1' } }
+          ]
+        })
+        .get('/youtube/v3/videos').query(true).reply(200, {
+          items: [
+            { id: 'vid1', snippet: { title: 'A - AA', channelTitle: 'AA - Topic' }, contentDetails: { duration: 'PT3M0S' } }
+          ]
+        });
+      const pif = await yt.readPlaylist({ id: 'PL123' });
+      expect(pif.tracks[0].title).toContain('A');
+    });
+
+    test('exporter -> create + add videos with limited search', async () => {
+      nock('https://www.googleapis.com')
+        .post('/youtube/v3/playlists').reply(200, { id: 'PLZ' })
+        .post('/youtube/v3/playlistItems').times(2).reply(200, { status: 'ok' });
+      const pif = { name: 'YT Out', tracks: [{ title: 't1', artists: ['a1'] }, { title: 't2', artists: ['a2'] }] };
+      const res = await yt.writePlaylist({ pif });
+      expect(res.destId).toBe('PLZ');
+    });
+steps:
+  - Implement duration ISO8601 parsing (PTxMxS).
+  - Add in-class cache for title/artist search to videoId (tests assert limited calls).
+  - Implement batch adds to playlistItems.insert.

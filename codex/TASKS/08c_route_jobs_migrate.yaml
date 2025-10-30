@@ -1,0 +1,33 @@
+id: 08c_route_jobs_migrate
+title: POST /jobs/migrate route → enqueue migrate job
+branch: codex/08c_route_jobs_migrate
+overview: >
+  Implement /jobs/migrate per OpenAPI: validate payload, check feature flags, enqueue migrate job.
+acceptance:
+  - Tests in codex/code/codex/08c_route_jobs_migrate/tests/migrate.route.test.ts pass:
+    * invalid provider rejected (400)
+    * valid enqueue returns 202 JobRef
+artifacts_to_touch:
+  - apps/api/src/routes/jobs/migrate.post.ts
+  - apps/api/src/lib/jobs/enqueue.ts (reuse)
+constraints:
+  - No real queue; mock enqueue.
+tests:
+  path: codex/code/codex/08c_route_jobs_migrate/tests/migrate.route.test.ts
+  content: |
+    import { expect, test, vi } from 'vitest';
+    import request from 'supertest';
+    import { makeServer } from '../../testServer';
+    import * as Enq from '../../../../apps/api/src/lib/jobs/enqueue';
+
+    test('202 on migrate enqueue', async () => {
+      const app = await makeServer();
+      vi.spyOn(Enq, 'enqueue').mockResolvedValue({ id: 99 });
+      const res = await request(app).post('/api/v1/jobs/migrate').send({
+        source_provider: 'spotify', source_playlist_id: 1, dest_provider: 'tidal'
+      });
+      expect(res.status).toBe(202);
+      expect(res.body.job_id).toBe(99);
+    });
+steps:
+  - Implement route with OpenAPI validation; return JobRef.

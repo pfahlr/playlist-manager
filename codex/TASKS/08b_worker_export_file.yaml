@@ -1,0 +1,31 @@
+id: 08b_worker_export_file
+title: Worker: export_file job (PIF→M3U/XSPF/CSV) + artifact write
+branch: codex/08b_worker_export_file
+overview: >
+  Implement BullMQ processor for export_file: fetch playlist items (effective), render format, write gz artifact to MinIO/S3, update job row.
+acceptance:
+  - Tests in codex/code/codex/08b_worker_export_file/tests/export.worker.test.ts pass:
+    * renders CSV lean equals golden; writes to mocked storage; updates job.artifact_url and status=succeeded.
+artifacts_to_touch:
+  - apps/worker/src/processors/exportFile.ts
+  - apps/worker/src/storage/objectStore.ts
+  - codex/code/codex/08b_worker_export_file/tests/goldens/playlist.csv
+constraints:
+  - No real S3; objectStore.write mocked in tests.
+  - Use existing file exporters from 05b task.
+tests:
+  path: codex/code/codex/08b_worker_export_file/tests/export.worker.test.ts
+  content: |
+    import { expect, test, vi } from 'vitest';
+    import { processExportFile } from '../../../../apps/worker/src/processors/exportFile';
+    import * as store from '../../../../apps/worker/src/storage/objectStore';
+
+    test('writes artifact and updates job to succeeded', async () => {
+      vi.spyOn(store, 'write').mockResolvedValue('s3://bucket/key.csv.gz');
+      const ctx = { jobId: 42, payload: { playlist_id: 1, format: 'csv', variant: 'lean' } };
+      const result = await processExportFile(ctx as any);
+      expect(result.artifactUrl).toMatch(/s3:\/\//);
+    });
+steps:
+  - Implement processExportFile(ctx): load items via SQL view, render via exporters, gzip, write store, update Job row.
+  - Implement objectStore.write(buffer, mime, key): pluggable; tests mock it.

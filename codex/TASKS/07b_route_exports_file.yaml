@@ -1,0 +1,33 @@
+id: 07b_route_exports_file
+title: POST /exports/file route wiring → job enqueue
+branch: codex/07b_route_exports_file
+overview: >
+  Implement the /exports/file route from OpenAPI: validate body, enqueue an export job, return JobRef 202.
+acceptance:
+  - Tests in codex/code/codex/07b_route_exports_file/tests/exports.route.test.ts pass:
+    * invalid payload → 400 (validator)
+    * valid payload → enqueues a job with payload snapshot; returns 202 JobRef
+artifacts_to_touch:
+  - apps/api/src/routes/exports/file.post.ts
+  - apps/api/src/lib/jobs/enqueue.ts
+  - apps/api/src/lib/openapi/validator.ts (reuse)
+constraints:
+  - No real queue; stub enqueue in tests (spy/mock).
+tests:
+  path: codex/code/codex/07b_route_exports_file/tests/exports.route.test.ts
+  content: |
+    import { expect, test, vi } from 'vitest';
+    import request from 'supertest';
+    import { makeServer } from '../../testServer';
+    import * as Enq from '../../../../apps/api/src/lib/jobs/enqueue';
+
+    test('202 and JobRef on valid payload', async () => {
+      const app = await makeServer();
+      vi.spyOn(Enq, 'enqueue').mockResolvedValue({ id: 777 });
+      const res = await request(app).post('/api/v1/exports/file').send({ playlist_id: 1, format: 'csv', variant: 'lean' });
+      expect(res.status).toBe(202);
+      expect(res.body.job_id).toBe(777);
+    });
+steps:
+  - Implement route handler that validates against OpenAPI schemas and calls enqueue({ kind:'export_file', ... }).
+  - Return { job_id, status:'queued' }.

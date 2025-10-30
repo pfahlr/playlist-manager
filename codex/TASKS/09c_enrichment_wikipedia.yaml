@@ -1,0 +1,27 @@
+id: 09c_enrichment_wikipedia
+title: Wikipedia artist bio+links fetch via MusicBrainz/Wikidata mapping
+branch: codex/09c_enrichment_wikipedia
+overview: >
+  Given an artist MBID, fetch summary and canonical URL from Wikipedia (mocked), store in artist_bio and links in artist_link.
+acceptance:
+  - Tests in codex/code/codex/09c_enrichment_wikipedia/tests/wiki.enrich.test.ts pass:
+    * inserts/updates artist_bio (source='wikipedia') and at least the wikipedia link in artist_link.
+artifacts_to_touch:
+  - apps/worker/src/enrichment/wikipedia.ts
+constraints:
+  - No real network; mock the Wikipedia REST summary and any Wikidata step if needed.
+tests:
+  path: codex/code/codex/09c_enrichment_wikipedia/tests/wiki.enrich.test.ts
+  content: |
+    import { expect, test } from 'vitest';
+    import { upsertWikiBio } from '../../../../apps/worker/src/enrichment/wikipedia';
+
+    test('stores summary and link', async () => {
+      const res = await upsertWikiBio({ mbid: 'uuid-artist', name: 'Example Artist' }, {
+        summary: 'Example summary', url: 'https://en.wikipedia.org/wiki/Example_Artist'
+      });
+      expect(res.ok).toBe(true);
+    });
+steps:
+  - Implement upsertWikiBio(artist, data): UPSERT into artist_bio and artist_link(kind='wikipedia').
+  - Keep it pure; network is mocked by passing data in tests (or by stubbing client).

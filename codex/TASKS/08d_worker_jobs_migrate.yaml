@@ -1,0 +1,34 @@
+id: 08d_worker_jobs_migrate
+title: Worker: migrate job (provider→provider) with matcher hooks
+branch: codex/08d_worker_jobs_migrate
+overview: >
+  Implement migrate processor: source.read → PIF → (optional) normalize/match → dest.write.
+  Produce a report (matched_isrc_pct, matched_fuzzy_pct, unresolved).
+acceptance:
+  - Tests in codex/code/codex/08d_worker_jobs_migrate/tests/migrate.worker.test.ts pass:
+    * with mocked providers, job succeeds and report has expected percentages.
+artifacts_to_touch:
+  - apps/worker/src/processors/migrate.ts
+  - apps/worker/src/providers/index.ts (factory by name)
+  - packages/contracts/src/matcher.ts (types)
+constraints:
+  - No HTTP; provider classes mocked in tests.
+  - Matching step is pluggable; for now pass-through (ISRC direct match only).
+tests:
+  path: codex/code/codex/08d_worker_jobs_migrate/tests/migrate.worker.test.ts
+  content: |
+    import { expect, test, vi } from 'vitest';
+    import { processMigrate } from '../../../../apps/worker/src/processors/migrate';
+    import * as Prov from '../../../../apps/worker/src/providers';
+
+    test('migrate produces a report', async () => {
+      vi.spyOn(Prov, 'getProvider').mockImplementation((name: string) => ({
+        readPlaylist: async () => ({ name: 'S', tracks: [{ title: 'a', artists: ['x'], isrc: 'US1' }] }),
+        writePlaylist: async () => ({ destId: 'D1', report: { added: 1 } })
+      }) as any);
+      const result = await processMigrate({ jobId: 7, payload: { source_provider: 'spotify', source_playlist_id: 1, dest_provider: 'tidal' } } as any);
+      expect(result.report.matched_isrc_pct).toBeGreaterThanOrEqual(100);
+    });
+steps:
+  - Add getProvider(name) that returns an Importer/Exporter instance.
+  - Implement processMigrate(ctx): read → (match) → write; compute simple report; update Job row.

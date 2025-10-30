@@ -1,0 +1,37 @@
+id: 09b_enrichment_musicbrainz
+title: MusicBrainz enrichment (artist/recording MBIDs) + cache
+branch: codex/09b_enrichment_musicbrainz
+overview: >
+  Implement a service that, given title/artist/(duration), queries MusicBrainz (mocked) to resolve mb_recording_id and mb_artist ids.
+  Cache results in DB tables (artist.mbid, recording.mb_recording_id, provider_track_map if applicable).
+acceptance:
+  - Tests in codex/code/codex/09b_enrichment_musicbrainz/tests/mb.enrich.test.ts pass:
+    * given ambiguous result, picks the one within ±2s duration window.
+    * caches artist mbid and recording mb_recording_id; second call hits cache (no HTTP).
+artifacts_to_touch:
+  - apps/worker/src/enrichment/musicbrainz.ts
+  - codex/code/codex/09b_enrichment_musicbrainz/tests/fixtures/mb.search.recording.json
+constraints:
+  - Mock https://musicbrainz.org/ws/2/* via nock.
+  - Respect 1 req/sec throttling (simulate with internal timer or token bucket; unit test stubs timers).
+tests:
+  path: codex/code/codex/09b_enrichment_musicbrainz/tests/mb.enrich.test.ts
+  content: |
+    import nock from 'nock';
+    import { expect, test } from 'vitest';
+    import { resolveRecordingMBID } from '../../../../apps/worker/src/enrichment/musicbrainz';
+
+    test('picks best match within ±2s', async () => {
+      nock('https://musicbrainz.org')
+        .get('/ws/2/recording').query(true).reply(200, {
+          recordings: [
+            { id: 'good-uuid', title: 'X', length: 180000, artist-credit: [{ name: 'A' }] },
+            { id: 'bad-uuid', title: 'X', length: 250000, artist-credit: [{ name: 'A' }] }
+          ]
+        });
+      const res = await resolveRecordingMBID({ title: 'X', artists: ['A'], duration_ms: 181000 });
+      expect(res?.mb_recording_id).toBe('good-uuid');
+    });
+steps:
+  - Implement resolveRecordingMBID(input): cache-first → MB search → duration filter → return IDs.
+  - Add simple rate limiter inside the module.

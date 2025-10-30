@@ -1,0 +1,49 @@
+id: 06d_tidal_impl
+title: TIDAL importer/exporter (mocked HTTP) to/from PIF
+branch: codex/06d_tidal_impl
+overview: >
+  Implement TIDAL Importer/Exporter with mocked API responses. Handle pagination and track add batches.
+acceptance:
+  - Tests in codex/code/codex/06d_tidal_impl/tests/tidal.impl.test.ts pass:
+    * importer extracts ISRC from track.isrc or externalIds.
+    * exporter creates playlist, then adds items in batches; verifies 429 backoff logic.
+artifacts_to_touch:
+  - packages/providers/tidal/src/index.ts
+  - packages/providers/tidal/src/tidal.client.ts
+  - codex/code/codex/06d_tidal_impl/tests/fixtures/tidal.playlist.json
+constraints:
+  - No network; use nock targeting https://api.tidal.com/v1/*
+tests:
+  path: codex/code/codex/06d_tidal_impl/tests/tidal.impl.test.ts
+  content: |
+    import nock from 'nock';
+    import { expect, test } from 'vitest';
+    import Tidal from '../../../../packages/providers/tidal/src';
+
+    const td = new Tidal({ token: 't' });
+
+    test('importer -> maps tidal to PIF with isrc when present', async () => {
+      nock('https://api.tidal.com')
+        .get('/v1/playlists/ab12').reply(200, { name: 'T', numberOfTracks: 2 })
+        .get('/v1/playlists/ab12/tracks').query({ limit: 100, offset: 0 }).reply(200, {
+          items: [
+            { track: { title: 'A', isrc: 'USX1', artists: [{ name: 'AA' }], album: { title: 'AL' }, duration: 123000 } },
+            { track: { title: 'B', artists: [{ name: 'BB' }], album: { title: 'BL' }, duration: 1000 } }
+          ]
+        });
+      const pif = await td.readPlaylist({ id: 'ab12' });
+      expect(pif.tracks[0].isrc).toBe('USX1');
+      expect(pif.tracks[1].artists[0]).toBe('BB');
+    });
+
+    test('exporter -> batch add handling', async () => {
+      const pif = { name: 'TX', tracks: [{ title: 'a', artists: ['x'] }, { title: 'b', artists: ['y'] }] };
+      nock('https://api.tidal.com')
+        .post('/v1/playlists').reply(200, { uuid: 'U123' })
+        .post('/v1/playlists/U123/items', body => true).reply(200, { succeeded: 2 });
+      const res = await td.writePlaylist({ pif });
+      expect(res.destId).toBe('U123');
+    });
+steps:
+  - Implement tidal.client.ts (auth headers, 429 backoff).
+  - Implement readPlaylist/writePlaylist mapping; batch size configurable.
