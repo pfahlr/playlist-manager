@@ -1,0 +1,6 @@
+swagger: ./openapi.yaml
+endpoint: http://127.0.0.1:4010
+color: true
+dry-run: false
+hookfiles: []
+language: nodejs

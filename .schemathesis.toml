@@ -1,0 +1,15 @@
+[schemathesis]
+max_examples = 10
+checks = ["all"]
+
+[[operations]]
+method = "GET"
+path = "/playlists/{id}/items"
+
+[[operations]]
+method = "POST"
+path = "/exports/file"
+
+[[operations]]
+method = "POST"
+path = "/jobs/migrate"

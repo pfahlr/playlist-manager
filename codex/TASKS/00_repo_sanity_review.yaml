@@ -1,0 +1,87 @@
+id: 00_repo_sanity_review
+title: Repo sanity review & fixes (spec-as-SoT + TDD foundation)
+branch: codex/00_repo_sanity_review
+overview: >
+  Audit the playlist-manager repository to ensure all previously agreed scaffolding is present & correct.
+  Fix missing/incorrect files, wire scripts, and validate the OpenAPI toolchain and contract tests.
+  Follow Spec-as-Source-of-Truth and TDD: add/adjust tests first where applicable, then implement minimal code to pass.
+
+acceptance:
+  - openapi.yaml lints cleanly (pnpm lint:api) and includes examples for:
+    * GET /playlists/{id}/items 200 response
+    * POST /exports/file request & 202 response
+    * POST /jobs/migrate request & 202 response
+  - The following files exist with working content:
+    * dredd.yml, dredd.server.yml, .schemathesis.toml
+    * apps/api/src/dev/start.ts
+    * apps/api/src/lib/jobs/enqueue.ts (returns { id: 999 } when API_FAKE_ENQUEUE=1)
+  - Root package.json has scripts:
+    * mock:api, test:contract:dredd:prism, test:contract:st:prism
+    * api:dev, test:contract:dredd:server, test:contract:st:server
+    * lint:api, gen:types, check:gen, check:breaking
+    * prisma:generate (scoped to @app/db) and friends
+  - packages/db/package.json includes: { "prisma": { "schema": "../../prisma/schema.prisma" } }
+  - pnpm-workspace.yaml includes packages/* and packages/providers/*
+  - Provider skeletons exist and compile: @app/providers-{spotify,deezer,tidal,youtube}
+  - apps/api/src/testServer.ts exists (as provided earlier) and loads routes if present
+  - Contract tests pass:
+    * `pnpm test:contract:dredd:prism`
+    * `pnpm test:contract:st:prism`
+    * `API_FAKE_ENQUEUE=1 pnpm test:contract:dredd:server`
+    * `API_FAKE_ENQUEUE=1 pnpm test:contract:st:server`
+
+constraints:
+  - Do not change route shapes beyond examples or trivial corrections needed for validation.
+  - No real network calls in tests; Prism/Dredd/Schemathesis are allowed.
+  - Keep provider code as NIY stubs; only ensure types compile.
+
+steps:
+  - Detect repository structure & package manager (pnpm).
+  - Verify and (if needed) create/patch:
+      * openapi.yaml (title "playlist-manager API", examples in the specified routes, servers include /api/v1)
+      * dredd.yml, dredd.server.yml, .schemathesis.toml with the provided contents
+      * apps/api/src/dev/start.ts (bootstrap via makeServer)
+      * apps/api/src/lib/jobs/enqueue.ts (API_FAKE_ENQUEUE gate)
+      * pnpm-workspace.yaml with "apps/*", "packages/*", "packages/providers/*"
+      * packages/db/package.json prisma.schema path
+      * root package.json scripts & devDeps (prism, dredd, wait-on, concurrently, tsx)
+  - Ensure @app/contracts & provider packages exist; add if missing (package.json, tsconfig.json, src/index.ts NIY stubs)
+  - Run:
+      * pnpm -w install
+      * pnpm lint:api
+      * pnpm gen:types && pnpm check:gen
+      * pnpm test:contract:dredd:prism
+      * pnpm test:contract:st:prism
+      * API_FAKE_ENQUEUE=1 pnpm test:contract:dredd:server
+      * API_FAKE_ENQUEUE=1 pnpm test:contract:st:server
+    Capture outputs; if failures occur, patch files minimally until green.
+  - Produce a summary in the PR description:
+      * What changed (file-by-file)
+      * Commands run & outputs
+      * Next recommended tasks (e.g., 06a provider interfaces, 06b spotify impl TDD)
+
+artifacts_to_touch:
+  - openapi.yaml
+  - dredd.yml
+  - dredd.server.yml
+  - .schemathesis.toml
+  - apps/api/src/dev/start.ts
+  - apps/api/src/lib/jobs/enqueue.ts
+  - pnpm-workspace.yaml
+  - packages/db/package.json
+  - packages/contracts/**
+  - packages/providers/**
+
+tests:
+  path: codex/code/codex/00_repo_sanity_review/tests/smoke.sh
+  content: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    pnpm -v
+    pnpm lint:api
+    pnpm gen:types
+    pnpm check:gen
+    pnpm test:contract:dredd:prism
+    pnpm test:contract:st:prism
+    API_FAKE_ENQUEUE=1 pnpm test:contract:dredd:server
+    API_FAKE_ENQUEUE=1 pnpm test:contract:st:server

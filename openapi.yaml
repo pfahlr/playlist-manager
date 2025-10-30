@@ -6,8 +6,10 @@ info:
     v1 API for playlist migration, artist basics, and exports. This spec is the source of truth.
 servers:
   - url: https://api.example.com/api/v1
+  - url: http://127.0.0.1:3101/api/v1
 security:
   - bearerAuth: []
+
 paths:
   /playlists:
     get:
@@ -28,6 +30,7 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PagedPlaylists' }
+
   /playlists/{id}:
     get:
       summary: Get a playlist
@@ -43,6 +46,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Playlist' }
         '404': { $ref: '#/components/responses/NotFound' }
+
   /playlists/{id}/items:
     get:
       summary: List playlist items (effective fields by default)
@@ -66,11 +70,42 @@ paths:
       responses:
         '200':
           description: OK
-          headers: { ETag: { schema: { type: string } } }
+          headers:
+            ETag:
+              schema: { type: string }
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PagedPlaylistItems' }
+              examples:
+                demo:
+                  summary: Example effective items page
+                  value:
+                    data:
+                      - id: 101
+                        position: 1
+                        title: "Losing My Religion"
+                        artists: "R.E.M."
+                        album: "Out of Time"
+                        duration_ms: 269000
+                        isrc: "USWB19902945"
+                        recording_id: 5551
+                        mb_recording_id: "b8d0d7c0-8e1c-4b34-8bc3-38d78a0c2b1f"
+                        mb_release_id: "b7a6d2e4-1c77-4a9f-9d5b-0c3b2ea0f4a1"
+                        provider_track_id: "3urbQpVxWn"
+                      - id: 102
+                        position: 2
+                        title: "Hurt"
+                        artists: "Nine Inch Nails"
+                        album: "The Downward Spiral"
+                        duration_ms: 371000
+                        isrc: "USIR19400383"
+                        recording_id: 5552
+                        mb_recording_id: "f2d9f7d3-7a61-485f-9b1e-2f4d8b3b7d1a"
+                        mb_release_id: "9c0b3c90-1e37-4b9b-8c7e-9b7a86a1e5fd"
+                        provider_track_id: "9zYpqAbC12"
+                    next_cursor: null
         '404': { $ref: '#/components/responses/NotFound' }
+
   /active-playlist:
     get:
       summary: Get the active playlist pointer
@@ -93,6 +128,7 @@ paths:
                 playlist_id: { type: integer }
       responses:
         '204': { description: No Content }
+
   /active-playlist/items:
     post:
       summary: Append item to active playlist
@@ -104,10 +140,14 @@ paths:
               oneOf:
                 - type: object
                   required: [recording_id]
-                  properties: { recording_id: { type: integer }, position: { type: string, enum: [append, head], default: append } }
+                  properties:
+                    recording_id: { type: integer }
+                    position: { type: string, enum: [append, head], default: append }
                 - type: object
                   required: [isrc]
-                  properties: { isrc: { type: string }, position: { type: string, enum: [append, head], default: append } }
+                  properties:
+                    isrc: { type: string }
+                    position: { type: string, enum: [append, head], default: append }
                 - type: object
                   required: [title, primary_artist]
                   properties:
@@ -120,6 +160,7 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PlaylistItemEffective' }
+
   /active-playlist/items/{itemId}:
     delete:
       summary: Remove item from active playlist
@@ -131,6 +172,7 @@ paths:
       responses:
         '204': { description: No Content }
         '404': { $ref: '#/components/responses/NotFound' }
+
   /jobs/migrate:
     post:
       summary: Migrate a playlist between providers
@@ -146,13 +188,24 @@ paths:
                 source_playlist_id: { type: integer }
                 dest_provider: { type: string, enum: [spotify, deezer, tidal, youtube] }
                 dest_playlist_name: { type: string }
+            examples:
+              basic:
+                value:
+                  source_provider: spotify
+                  source_playlist_id: 1
+                  dest_provider: tidal
+                  dest_playlist_name: "Migrated — My Mix"
       responses:
         '202':
           description: Accepted
           content:
             application/json:
               schema: { $ref: '#/components/schemas/JobRef' }
+              examples:
+                accepted:
+                  value: { job_id: 456, status: "queued" }
         '400': { $ref: '#/components/responses/BadRequest' }
+
   /jobs/{id}:
     get:
       summary: Get job status/report
@@ -168,6 +221,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Job' }
         '404': { $ref: '#/components/responses/NotFound' }
+
   /exports/file:
     post:
       summary: Export a playlist to file
@@ -182,12 +236,22 @@ paths:
                 playlist_id: { type: integer }
                 format: { type: string, enum: [m3u, xspf, csv] }
                 variant: { type: string, enum: [lean, verbose], default: lean }
+            examples:
+              csvLean:
+                value:
+                  playlist_id: 1
+                  format: csv
+                  variant: lean
       responses:
         '202':
           description: Accepted
           content:
             application/json:
               schema: { $ref: '#/components/schemas/JobRef' }
+              examples:
+                accepted:
+                  value: { job_id: 123, status: "queued" }
+
   /artists/follow:
     post:
       summary: Follow an artist by MBID
@@ -202,6 +266,7 @@ paths:
                 mb_artist_id: { type: string, pattern: '^[0-9a-fA-F-]{36}$' }
       responses:
         '204': { description: No Content }
+
   /artists/follow/{mbid}:
     delete:
       summary: Unfollow artist
@@ -213,6 +278,7 @@ paths:
       responses:
         '204': { description: No Content }
         '404': { $ref: '#/components/responses/NotFound' }
+
   /artists/{mbid}:
     get:
       summary: Get artist basics (bio + links)
@@ -227,6 +293,7 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Artist' }
+
   /artists/{mbid}/relations:
     get:
       summary: Get artist relations
@@ -254,19 +321,26 @@ paths:
                   data:
                     type: array
                     items: { $ref: '#/components/schemas/ArtistRelation' }
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
   responses:
     NotFound:
       description: Not found
-      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
     BadRequest:
       description: Bad request
-      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
   schemas:
     Error:
       type: object
@@ -274,6 +348,7 @@ components:
       properties:
         error: { type: string }
         message: { type: string }
+
     PagedPlaylists:
       type: object
       properties:
@@ -281,6 +356,7 @@ components:
           type: array
           items: { $ref: '#/components/schemas/Playlist' }
         next_cursor: { type: [ 'string', 'null' ] }
+
     Playlist:
       type: object
       required: [id, name]
@@ -290,6 +366,7 @@ components:
         provider: { type: [ 'string', 'null' ] }
         provider_playlist_id: { type: [ 'string', 'null' ] }
         updated_at: { type: [ 'string', 'null' ], format: date-time }
+
     PagedPlaylistItems:
       type: object
       properties:
@@ -297,6 +374,7 @@ components:
           type: array
           items: { $ref: '#/components/schemas/PlaylistItemEffective' }
         next_cursor: { type: [ 'string', 'null' ] }
+
     PlaylistItemEffective:
       type: object
       required: [id, position, title, artists]
@@ -312,18 +390,21 @@ components:
         mb_recording_id: { type: [ 'string', 'null' ], pattern: '^[0-9a-fA-F-]{36}$' }
         mb_release_id: { type: [ 'string', 'null' ], pattern: '^[0-9a-fA-F-]{36}$' }
         provider_track_id: { type: [ 'string', 'null' ] }
+
     ActivePlaylist:
       type: object
       required: [playlist_id, updated_at]
       properties:
         playlist_id: { type: [ 'integer', 'null' ] }
         updated_at: { type: string, format: date-time }
+
     JobRef:
       type: object
       required: [job_id, status]
       properties:
         job_id: { type: integer }
         status: { type: string, enum: [queued, running, succeeded, failed] }
+
     Job:
       type: object
       required: [id, status, created_at]
@@ -339,6 +420,7 @@ components:
         artifact_url: { type: [ 'string', 'null' ], format: uri }
         created_at: { type: string, format: date-time }
         updated_at: { type: [ 'string', 'null' ], format: date-time }
+
     Artist:
       type: object
       required: [mbid, name]
@@ -360,6 +442,7 @@ components:
               kind: { type: string }
               url: { type: string, format: uri }
         updated_at: { type: [ 'string', 'null' ], format: date-time }
+
     ArtistRelation:
       type: object
       required: [type, artist]
