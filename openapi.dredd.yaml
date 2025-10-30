@@ -7,8 +7,8 @@ basePath: /
 schemes:
   - http
 produces:
-  - application/json
   - application/json; charset=utf-8
+  - application/json
 consumes:
   - application/json
 paths:
