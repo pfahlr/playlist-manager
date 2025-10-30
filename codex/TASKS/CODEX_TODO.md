@@ -27,3 +27,6 @@
 - [ ]: 09b_enrichment_musicbrainz.yaml
 - [ ]: 09c_enrichment_wikipedia.yaml
 - [ ]: 09d_artist_cache_scheduler.yaml
+
+## Phase 1C: 
+- [ ]: 06f_provider_factory_tests.yaml
