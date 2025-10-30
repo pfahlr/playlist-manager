@@ -1,5 +1,9 @@
 # Codex TODO 
 
+## Phase 0:
+
+- [x]: 00_repo_sanity_review.yaml
+
 ## Phase 1A:
 
 - [ ]: 01a_spec_bootstrap.yaml
