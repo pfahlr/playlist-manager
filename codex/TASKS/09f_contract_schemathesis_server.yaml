@@ -1,0 +1,20 @@
+id: 09f_contract_schemathesis_server
+title: Schemathesis fuzz against real API server (safe subset)
+branch: codex/09f_contract_schemathesis_server
+overview: >
+  Run Schemathesis against the real server on :3101 with API_FAKE_ENQUEUE=1.
+  Limit to the same operations and keep deadlines conservative for CI.
+acceptance:
+  - `pnpm test:contract:st:server` starts server, runs Schemathesis, exits 0
+artifacts_to_touch:
+  - package.json (scripts)
+constraints:
+  - Keep base-url http://127.0.0.1:3101 and reuse .schemathesis.toml
+steps:
+  - Add script:
+
+    {
+      "scripts": {
+        "test:contract:st:server": "concurrently -k -s first \"API_FAKE_ENQUEUE=1 pnpm api:dev\" \"wait-on tcp:3101 && schemathesis run openapi.yaml --base-url=http://127.0.0.1:3101 --checks all --experimental-openapi-3-1 --hypothesis-deadline=1000 --operations-file ./.schemathesis.toml\""
+      }
+    }

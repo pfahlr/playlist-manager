@@ -1,0 +1,83 @@
+id: 09c_contract_dredd_prism
+title: Dredd smoke tests against Prism (OpenAPI examples)
+branch: codex/09c_contract_dredd_prism
+overview: >
+  Validate that OpenAPI 3.1 request/response examples for /exports/file and /jobs/migrate are sound.
+  Run Dredd against a Prism mock of openapi.yaml so FE and CI have an always-green contract smoke.
+acceptance:
+  - `pnpm mock:api` serves openapi.yaml on http://127.0.0.1:4010
+  - `pnpm test:contract:dredd:prism` runs and exits 0
+artifacts_to_touch:
+  - openapi.yaml
+  - dredd.yml
+  - package.json (scripts)
+constraints:
+  - Do not change route shapes; only add valid request/response examples.
+steps:
+  - In openapi.yaml, add minimally valid examples:
+
+    # /exports/file
+    paths:
+      /exports/file:
+        post:
+          requestBody:
+            content:
+              application/json:
+                examples:
+                  csvLean:
+                    value:
+                      playlist_id: 1
+                      format: csv
+                      variant: lean
+          responses:
+            "202":
+              content:
+                application/json:
+                  examples:
+                    accepted:
+                      value: { job_id: 123, status: "queued" }
+
+    # /jobs/migrate
+      /jobs/migrate:
+        post:
+          requestBody:
+            content:
+              application/json:
+                examples:
+                  basic:
+                    value:
+                      source_provider: spotify
+                      source_playlist_id: 1
+                      dest_provider: tidal
+                      dest_playlist_name: "Migrated — My Mix"
+          responses:
+            "202":
+              content:
+                application/json:
+                  examples:
+                    accepted:
+                      value: { job_id: 456, status: "queued" }
+
+  - Create dredd.yml:
+
+    swagger: ./openapi.yaml
+    endpoint: http://127.0.0.1:4010
+    color: true
+    dry-run: false
+    hookfiles: []
+    language: nodejs
+
+  - Add scripts to package.json:
+
+    {
+      "scripts": {
+        "mock:api": "prism mock openapi.yaml",
+        "test:contract:dredd:prism": "concurrently -k -s first \"pnpm mock:api\" \"wait-on tcp:4010 && dredd dredd.yml\""
+      },
+      "devDependencies": {
+        "@stoplight/prism-cli": "^5.7.0",
+        "concurrently": "^9.0.0",
+        "wait-on": "^7.2.0",
+        "dredd": "^14.0.0"
+      }
+    }

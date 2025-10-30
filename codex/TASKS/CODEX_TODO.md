@@ -29,4 +29,13 @@
 - [ ]: 09d_artist_cache_scheduler.yaml
 
 ## Phase 1C: 
+
 - [ ]: 06f_provider_factory_tests.yaml
+
+## Phase 1D:
+
+- [ ]: 09c_contract_dredd_prism.yaml
+- [ ]: 09d_contract_schemathesis_prism.yaml
+- [ ]: 09e_contract_dredd_server.yaml
+- [ ]: 09f_contract_schemathesis_server.yaml
+

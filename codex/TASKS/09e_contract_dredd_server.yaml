@@ -1,0 +1,61 @@
+id: 09e_contract_dredd_server
+title: Dredd smoke tests against real API server (with test double enqueue)
+branch: codex/09e_contract_dredd_server
+overview: >
+  Swap Dredd to hit the real Fastify server. During Dredd runs, enqueue() is replaced with a test double
+  to return deterministic JobRefs; responses must match OpenAPI examples.
+acceptance:
+  - `pnpm test:contract:dredd:server` starts the API on :3101, runs Dredd, exits 0
+  - Dredd prints 100% passing for /exports/file and /jobs/migrate transactions
+artifacts_to_touch:
+  - apps/api/src/dev/start.ts
+  - apps/api/src/lib/jobs/enqueue.ts (feature flag to fake)
+  - dredd.server.yml
+  - package.json (scripts)
+constraints:
+  - No Redis/Worker dependency; enqueue returns a fake { id } when API_FAKE_ENQUEUE=1
+steps:
+  - Add a tiny server bootstrap: apps/api/src/dev/start.ts
+
+    import { makeServer } from '../testServer';
+    const port = Number(process.env.PORT ?? 3101);
+    (async () => {
+      const srv = await makeServer();
+      srv.listen(port, '0.0.0.0', () => console.log('API on', port));
+    })();
+
+  - Make enqueue test-friendly: apps/api/src/lib/jobs/enqueue.ts
+
+    export async function enqueue(payload: any): Promise<{ id: number }> {
+      if (process.env.API_FAKE_ENQUEUE === '1') {
+        return { id: 999 };
+      }
+      // TODO: real queue wiring later
+      throw new Error('enqueue not wired');
+    }
+
+  - Create dredd.server.yml:
+
+    swagger: ./openapi.yaml
+    endpoint: http://127.0.0.1:3101
+    color: true
+    dry-run: false
+    hookfiles: []
+    language: nodejs
+
+  - Add scripts & deps:
+
+    {
+      "scripts": {
+        "api:dev": "tsx apps/api/src/dev/start.ts",
+        "test:contract:dredd:server": "concurrently -k -s first \"API_FAKE_ENQUEUE=1 pnpm api:dev\" \"wait-on tcp:3101 && dredd dredd.server.yml\""
+      },
+      "devDependencies": {
+        "dredd": "^14.0.0",
+        "concurrently": "^9.0.0",
+        "wait-on": "^7.2.0",
+        "tsx": "^4.16.0",
+        "fastify": "^4.27.0",
+        "supertest": "^7.0.0"
+      }
+    }
