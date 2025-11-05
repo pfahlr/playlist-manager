@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@prisma/client':
+        specifier: 5.22.0
+        version: 5.22.0(prisma@5.22.0)
     devDependencies:
       '@redocly/cli':
         specifier: ^1.25.0
@@ -32,6 +36,9 @@ importers:
       openapi-typescript:
         specifier: ^7.5.2
         version: 7.10.1(typescript@5.9.3)
+      prisma:
+        specifier: 5.22.0
+        version: 5.22.0
       supertest:
         specifier: ^7.1.4
         version: 7.1.4

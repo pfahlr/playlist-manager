@@ -9,7 +9,7 @@
   "scripts": {
     "lint:api": "redocly lint openapi.yaml --extends recommended",
     "gen:types": "openapi-typescript openapi.yaml -o packages/contracts/src/api.types.ts",
-    "mock:api": "prism mock openapi.yaml",
+    "mock:api": "prism mock openapi.dredd.yaml",
     "api:dev": "tsx apps/api/src/dev/start.ts",
     "check:breaking": "node ./scripts/check-breaking.mjs",
     "contract:test": "node ./scripts/schemathesis.mjs run openapi.yaml --checks all --hypothesis-deadline=1000",
@@ -33,10 +33,14 @@
     "dredd": "^14.1.0",
     "fastify": "^4.29.1",
     "openapi-typescript": "^7.5.2",
+    "prisma": "5.22.0",
     "supertest": "^7.1.4",
     "tsx": "^4.16.0",
     "vitest": "^4.0.5",
     "wait-on": "^7.2.0",
     "yaml": "^2.5.0"
+  },
+  "dependencies": {
+    "@prisma/client": "5.22.0"
   }
 }
