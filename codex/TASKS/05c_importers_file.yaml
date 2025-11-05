@@ -1,0 +1,20 @@
+id: 05c_importers_file
+title: File → PIF importers (CSV/M3U/XSPF/PLS/WPL)
+branch: codex/05c_importers_file
+overview: >
+  Implement server-side parsers for supported playlist file formats into PIF-v1.
+  Validate with existing JSON Schemas; add golden fixtures.
+acceptance:
+  - POST /imports/file accepts csv|m3u|xspf|pls|wpl and returns PIF preview
+  - Invalid files return 400 with error envelope
+  - Tests with golden inputs/outputs for each format
+artifacts_to_touch:
+  - openapi.yaml (POST /imports/file)
+  - apps/api/src/routes/imports.file.ts
+  - packages/interop/src/importers/{csv,m3u,xspf,pls,wpl}.ts
+  - packages/interop/test/importers/*.test.ts
+  - schemas/csv/*.json (already present) used for validation
+steps:
+  - Implement lossless parsers (title/artist/album/duration/url)
+  - Validate PIF with Ajv; return normalized preview + counts
+  - Add examples to OpenAPI for each format

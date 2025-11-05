@@ -1,0 +1,17 @@
+id: 03b_db_migration_ci_gate
+title: CI gate for DB migrations (drift + healthcheck)
+branch: codex/03b_db_migration_ci_gate
+overview: >
+  Add a CI job that boots Postgres service, runs prisma migrate deploy, executes db:health,
+  then runs a basic smoke query. Fails PRs on migration drift or boot issues.
+acceptance:
+  - .github/workflows/ci.yml has a "db-migrations" job that passes on main
+  - Job fails if a migration is missing/invalid or healthcheck fails
+  - Logs include Prisma version and migration list
+artifacts_to_touch:
+  - .github/workflows/ci.yml
+  - packages/db/src/healthcheck.ts (use existing)
+steps:
+  - Add postgres service, DB URL env, cache ~/.cache/prisma if desired
+  - Run prisma migrate deploy; pnpm db:health; run a tiny node script to SELECT 1
+  - Upload migration logs on failure

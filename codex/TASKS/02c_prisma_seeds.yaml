@@ -1,0 +1,21 @@
+id: 02c_prisma_seeds
+title: Prisma seed data (minimal fixtures for contracts & demos)
+branch: codex/02c_prisma_seeds
+overview: >
+  Create deterministic seed data (1 test user, 2 artists with MBIDs, 2 albums,
+  1 playlist with 6 items) to enable local runs & contract tests without providers.
+acceptance:
+  - pnpm -F @app/db prisma db seed exits 0 and re-seeding is idempotent
+  - db:health returns "ok"
+  - SELECT COUNT(*) FROM playlist_items returns >= 6 after seeding
+  - Seeds are deterministic (same IDs on re-run)
+artifacts_to_touch:
+  - packages/db/package.json
+  - prisma/seed.ts
+  - prisma/seed-data/*.json
+  - README.md (brief "Seeding" section)
+steps:
+  - Add "prisma": { "seed": "tsx prisma/seed.ts" } to packages/db/package.json
+  - Implement seed.ts: upsert user, artists (with mbid), albums, recordings, playlist(+items)
+  - Ensure transactions & ordering; wrap in try/catch with process.exit codes
+  - Document: pnpm -F @app/db prisma db seed

@@ -1,0 +1,19 @@
+id: 06z_track_matching_heuristics
+title: Deterministic track matching to MBID (heuristic ladder + tests)
+branch: codex/06z_track_matching_heuristics
+overview: >
+  Implement a resolver that maps provider track → MBID using a strict priority:
+  (1) direct MBID tag; (2) ISRC→MBID map; (3) exact title+primary_artist+duration;
+  (4) fuzzy title+artist with thresholds. Provide unit tests and golden fixtures.
+acceptance:
+  - tests pass with golden fixtures covering edge cases (live versions, remasters)
+  - Resolver exposes confidences and the chosen rule for auditing
+  - No external network during tests (fixtures only)
+artifacts_to_touch:
+  - packages/providers/core/src/match/mbidResolver.ts
+  - packages/providers/core/test/mbidResolver.test.ts
+  - packages/providers/core/fixtures/*.json
+steps:
+  - Implement pure functions with deterministic sorting & thresholds
+  - Add configurable thresholds via env/params
+  - Export types for MatchResult { mbid, confidence, rule, candidates[] }

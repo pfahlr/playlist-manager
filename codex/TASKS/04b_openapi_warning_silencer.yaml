@@ -1,0 +1,19 @@
+id: 04b_openapi_warning_silencer
+title: OpenAPI lints to zero (license, servers, operationId, 4xx, path ambiguity)
+branch: codex/04b_openapi_warning_silencer
+overview: >
+  Clean up openapi.yaml: add info.license, use variable server for localhost,
+  add operationId to all ops, add at least one 4xx per op, and rename follow route
+  to /artists/{mbid}/follow to eliminate ambiguity with /artists/{mbid}/relations.
+acceptance:
+  - redocly lint openapi.yaml has 0 warnings for:
+    info-license, no-server-example.com, operation-operationId, operation-4xx-response, no-ambiguous-paths
+  - openapi-typescript runs clean (no type regressions)
+artifacts_to_touch:
+  - openapi.yaml
+  - .redocly.yaml (optional, if needed keep extends: recommended)
+steps:
+  - Add MIT license block to info
+  - Replace servers with: prod placeholder + http://{host}:{port}/api/v1
+  - Assign operationId to every operation, add 400/404 responses
+  - Change follow endpoints to /artists/{mbid}/follow (POST/DELETE)

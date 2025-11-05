@@ -1,0 +1,18 @@
+id: 07c_error_contracts
+title: Unified error schema + server wiring
+branch: codex/07c_error_contracts
+overview: >
+  Define a single error envelope (type, code, message, details) in OpenAPI and ensure
+  all handlers use it. Add BadRequest/Unauthorized/NotFound/TooManyRequests components.
+acceptance:
+  - All 4xx/5xx responses conform to components/schemas/Error
+  - Dredd + Schemathesis pass with error examples
+  - Server returns correlation/request-id in error responses
+artifacts_to_touch:
+  - openapi.yaml (components.schemas.Error + components.responses.*)
+  - apps/api/src/plugins/errors.ts
+  - apps/api/src/dev/start.ts (register plugin)
+steps:
+  - Add schema + responses in OpenAPI; add examples
+  - Implement Fastify error handler mapping known errors to codes
+  - Ensure request-id header is echoed in error response meta/details

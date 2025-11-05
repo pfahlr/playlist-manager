@@ -1,0 +1,19 @@
+id: 09g_observability_min
+title: Minimal observability (pino logs, request-id, metrics stub)
+branch: codex/09g_observability_min
+overview: >
+  Add pino JSON logging with request-id; expose /metrics (Prom stub) and basic
+  process gauges; include job counters. No external vendor lock-in.
+acceptance:
+  - All requests include requestId in logs
+  - GET /metrics returns Prometheus text with process and job gauges
+  - Error logs include error.code and correlation id
+artifacts_to_touch:
+  - apps/api/src/plugins/logging.ts
+  - apps/api/src/plugins/metrics.ts
+  - apps/api/src/dev/start.ts (register plugins)
+  - apps/worker/src/metrics.ts (optional counters)
+steps:
+  - Fastify onRequest hook to attach request-id (header or generated)
+  - prom-client integration for process metrics
+  - Document how to scrape locally (docker-compose Prom optional later)

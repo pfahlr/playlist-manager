@@ -1,0 +1,21 @@
+id: 08z_idempotency_keys
+title: Idempotency-Key for job-enqueue endpoints
+branch: codex/08z_idempotency_keys
+overview: >
+  Support Idempotency-Key header on POST /exports/file and /jobs/migrate.
+  Duplicate requests with the same key+fingerprint return the original JobRef.
+acceptance:
+  - Repeated POST with same Idempotency-Key returns identical job_id
+  - Different body with same key returns 422 with error.type=idempotency_conflict
+  - Keys expire after configurable TTL
+artifacts_to_touch:
+  - openapi.yaml (document header + 422 response)
+  - apps/api/src/lib/idempotency.ts
+  - apps/api/src/routes/exports.file.ts
+  - apps/api/src/routes/jobs.migrate.ts
+  - apps/api/src/dev/start.ts (plugin registration)
+  - apps/api/src/config/env.ts (TTL)
+steps:
+  - Compute request fingerprint (method+path+normalized body)
+  - Store mapping key→job_id in Redis or DB with TTL
+  - Return prior JobRef if present; enforce conflict on mismatched fingerprint
