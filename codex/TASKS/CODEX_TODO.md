@@ -7,7 +7,7 @@
 ## Phase 1A:
 
 - [x]: 01a_spec_bootstrap.yaml
-- [ ]: 02a_prisma_init.yaml
+- [x]: 02a_prisma_init.yaml
 - [ ]: 02b_raw_migrations.yaml
 - [ ]: 03a_dbpkg_singleton.yaml
 - [ ]: 04a_api_validation_wiring.yaml
