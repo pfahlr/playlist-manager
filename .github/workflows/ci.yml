@@ -9,6 +9,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   spec-and-types:
     runs-on: ubuntu-latest
@@ -67,9 +70,9 @@ jobs:
       - name: Install deps
         run: pnpm -w install --frozen-lockfile
       - name: Generate Prisma client
-        run: pnpm prisma:generate
+        run: pnpm --filter @app/db exec prisma generate
       - name: Apply Prisma migrations
-        run: pnpm prisma:migrate:deploy
+        run: pnpm --filter @app/db exec prisma migrate deploy
       - name: Run unit tests (vitest)
         run: pnpm vitest run
 
@@ -126,9 +129,9 @@ jobs:
       - name: Install Node deps
         run: pnpm -w install --frozen-lockfile
       - name: Generate Prisma client
-        run: pnpm prisma:generate
+        run: pnpm --filter @app/db exec prisma generate
       - name: Apply Prisma migrations
-        run: pnpm prisma:migrate:deploy
+        run: pnpm --filter @app/db exec prisma migrate deploy
 
       - name: Install Schemathesis (pipx)
         uses: actions/setup-python@v5
