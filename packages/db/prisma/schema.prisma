@@ -12,7 +12,8 @@ generator client {
 
 model User {
   id         Int      @id @default(autoincrement())
-  email      String?  @unique
+  email      String   @unique
+  name       String?
   created_at DateTime @default(now()) @db.Timestamptz
 
   accounts  Account[]

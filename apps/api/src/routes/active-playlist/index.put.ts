@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { setActivePlaylist } from '../_mockData';
+import { problem } from '../../lib/problem';
 
 type Body = {
   playlist_id: number;
@@ -13,7 +14,7 @@ export default async function handler(
   const isNumber = typeof playlist_id === 'number' && Number.isFinite(playlist_id);
 
   if (!isNumber) {
-    return reply.status(400).send({ error: 'bad_request', message: 'playlist_id must be an integer' });
+    throw problem({ status: 400, code: 'invalid_playlist_id', message: 'playlist_id must be an integer' });
   }
 
   setActivePlaylist(playlist_id);

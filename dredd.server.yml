@@ -1,11 +1,31 @@
 # Dredd config for your Fastify dev server
+dry-run: null
+hookfiles: []
+language: nodejs
+server: ''
+server-wait: 3
+init: false
+custom: {}
+names: false
+reporter: []
+output: []
+header: []
+sorted: false
+user: null
+inline-errors: false
+details: false
+method: []
 color: true
 loglevel: warning
-language: nodejs
-blueprint: ./openapi.dredd.yaml
+apiDescriptions:
+  - ./openapi.yaml
+endpoint: 'http://127.0.0.1:3101'
 path:
-  - ./openapi.dredd.yaml
-endpoint: http://127.0.0.1:3101
-hookfiles: []
-header:
-  - 'Authorization: Bearer test-token'
+  - ./openapi.yaml
+_:
+  - ./openapi.yaml
+  - 'http://127.0.0.1:3101'
+blueprint: ./openapi.yaml
+only:
+  - 'POST (202) /exports/file'
+  - 'POST (202) /jobs/migrate'

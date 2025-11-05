@@ -215,8 +215,16 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         Error: {
-            error: string;
+            /** @example about:blank */
+            type: string;
+            /** @example provider_disabled */
+            code: string;
+            /** @example TIDAL is disabled */
             message: string;
+            request_id?: string | null;
+            details?: null | {
+                [key: string]: unknown;
+            };
         };
         PagedPlaylists: {
             data?: components["schemas"]["Playlist"][];
@@ -658,6 +666,7 @@ export interface operations {
                 content?: never;
             };
             400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
         };
     };
     artists_unfollow: {
@@ -678,7 +687,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            404: components["responses"]["NotFound"];
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
         };
     };
     artists_get: {

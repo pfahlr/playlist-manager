@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { hasArtist, unfollowArtist } from '../../_mockData';
+import { unfollowArtist } from '../../_mockData';
+import { problem } from '../../../lib/problem';
 
 type Params = {
   mbid: string;
@@ -13,11 +14,7 @@ export default async function handler(
 ) {
   const { mbid } = request.params;
   if (!MBID_REGEX.test(mbid)) {
-    return reply.status(400).send({ error: 'bad_request', message: 'Invalid MBID' });
-  }
-
-  if (!hasArtist(mbid)) {
-    return reply.status(404).send({ error: 'not_found', message: 'Artist not followed' });
+    throw problem({ status: 400, code: 'invalid_mbid', message: 'Invalid MBID' });
   }
 
   unfollowArtist(mbid);

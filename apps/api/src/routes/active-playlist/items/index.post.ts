@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { appendPlaylistItem } from '../../_mockData';
+import { problem } from '../../../lib/problem';
 
 type AppendByRecording = {
   recording_id: number;
@@ -43,7 +44,7 @@ export default async function handler(
 ) {
   const payload = request.body;
   if (!isValidBody(payload)) {
-    return reply.status(400).send({ error: 'bad_request', message: 'Invalid request body' });
+    throw problem({ status: 400, code: 'invalid_playlist_item_request', message: 'Invalid request body' });
   }
 
   const item = appendPlaylistItem(payload as Record<string, unknown>);

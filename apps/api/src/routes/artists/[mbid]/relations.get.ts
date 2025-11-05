@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { getArtistRelations } from '../../_mockData';
+import { problem } from '../../../lib/problem';
 
 type Params = {
   mbid: string;
@@ -17,7 +18,7 @@ export default async function handler(
 ) {
   const { mbid } = request.params;
   if (!MBID_REGEX.test(mbid)) {
-    return reply.status(400).send({ error: 'bad_request', message: 'Invalid MBID' });
+    throw problem({ status: 400, code: 'invalid_mbid', message: 'Invalid MBID' });
   }
 
   const payload = getArtistRelations(mbid);

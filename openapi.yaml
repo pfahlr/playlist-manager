@@ -2,23 +2,28 @@ openapi: 3.1.0
 info:
   title: playlist-manager API
   version: 1.0.0
-  description: >
-    v1 API for playlist migration, artist basics, and exports. This spec is the source of truth.
   license:
     name: MIT
-    url: https://opensource.org/licenses/MIT
-
+    identifier: MIT
 servers:
-  - url: https://api.playlist-manager.dev/api/v1
-    description: Production (placeholder)
-  - url: http://{host}:{port}/api/v1
-    description: Local dev
+  - url: https://{host}/api/v1
     variables:
-      host: { default: 127.0.0.1 }
-      port: { default: '3101' }
+      host:
+        default: dev.api.playlist-manager.app
+  - url: http://127.0.0.1:3101
 security:
-  - bearerAuth: []
-
+  - {}
+tags:
+  - name: playlists
+    description: Playlist management endpoints
+  - name: active-playlist
+    description: Active playlist controls for a user session
+  - name: jobs
+    description: Background job submission and status
+  - name: exports
+    description: Export playlist snapshots into provider formats
+  - name: artists
+    description: Artist catalogue and follow operations
 paths:
   /playlists:
     get:
@@ -51,6 +56,7 @@ paths:
         - in: path
           name: id
           required: true
+          example: 101
           schema:
             type: integer
             example: 101
@@ -76,6 +82,7 @@ paths:
         - in: path
           name: id
           required: true
+          example: 101
           schema:
             type: integer
             example: 101
@@ -209,6 +216,7 @@ paths:
         - in: path
           name: itemId
           required: true
+          example: 4001
           schema:
             type: integer
             example: 4001
@@ -261,6 +269,7 @@ paths:
         - in: path
           name: id
           required: true
+          example: 5001
           schema:
             type: integer
             example: 5001
@@ -319,6 +328,7 @@ paths:
         - in: path
           name: mbid
           required: true
+          example: '123e4567-e89b-12d3-a456-426614174000'
           schema:
             type: string
             pattern: '^[0-9a-fA-F-]{36}$'
@@ -329,8 +339,9 @@ paths:
               value: '123e4567-e89b-12d3-a456-426614174000'
           x-example: '123e4567-e89b-12d3-a456-426614174000'
       responses:
-        '204': { description: No Content }
-        '400': { $ref: '#/components/responses/BadRequest' }
+        "204": { description: No Content }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
     delete:
       summary: Unfollow artist
       operationId: artists_unfollow
@@ -338,6 +349,7 @@ paths:
         - in: path
           name: mbid
           required: true
+          example: '123e4567-e89b-12d3-a456-426614174000'
           schema:
             type: string
             pattern: '^[0-9a-fA-F-]{36}$'
@@ -348,8 +360,9 @@ paths:
               value: '123e4567-e89b-12d3-a456-426614174000'
           x-example: '123e4567-e89b-12d3-a456-426614174000'
       responses:
-        '204': { description: No Content }
-        '404': { $ref: '#/components/responses/NotFound' }
+        "204": { description: No Content }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
 
   /artists/{mbid}:
     get:
@@ -359,6 +372,7 @@ paths:
         - in: path
           name: mbid
           required: true
+          example: '123e4567-e89b-12d3-a456-426614174000'
           schema:
             type: string
             pattern: '^[0-9a-fA-F-]{36}$'
@@ -385,6 +399,7 @@ paths:
         - in: path
           name: mbid
           required: true
+          example: '123e4567-e89b-12d3-a456-426614174000'
           schema:
             type: string
             pattern: '^[0-9a-fA-F-]{36}$'
@@ -428,7 +443,7 @@ components:
       description: Not found
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/Error' }
+          schema: { $ref: "#/components/schemas/Error" }
     BadRequest:
       description: Bad request
       content:
@@ -448,10 +463,21 @@ components:
   schemas:
     Error:
       type: object
-      required: [error, message]
+      required: [type, code, message]
       properties:
-        error: { type: string }
-        message: { type: string }
+        type: { type: string, example: "about:blank" }
+        code: { type: string, example: "provider_disabled" }
+        message: { type: string, example: "TIDAL is disabled" }
+        request_id:
+          oneOf:
+            - { type: string }
+            - { type: 'null' }
+        details:
+          oneOf:
+            - { type: 'null' }
+            -
+              type: object
+              additionalProperties: true
 
     PagedPlaylists:
       type: object

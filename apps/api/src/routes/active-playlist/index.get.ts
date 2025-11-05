@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { getActivePlaylist } from '../_mockData';
+import { problem } from '../../lib/problem';
 
 export default async function handler(
   _request: FastifyRequest,
@@ -7,7 +8,7 @@ export default async function handler(
 ) {
   const payload = getActivePlaylist();
   if (payload.playlist_id === null) {
-    return reply.status(404).send({ error: 'not_found', message: 'Active playlist not set' });
+    throw problem({ status: 404, code: 'active_playlist_missing', message: 'Active playlist not set' });
   }
 
   return reply.send(payload);

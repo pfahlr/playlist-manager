@@ -147,3 +147,42 @@ jobs:
       - name: Schemathesis vs Real Server (fake enqueue)
         env: { API_FAKE_ENQUEUE: '1' }
         run: pnpm test:contract:st:server
+
+  db-migrations:
+    name: DB migrations (deploy + health)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: playlistmgr
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U postgres -d playlistmgr"
+          --health-interval=5s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm -w install
+
+      - name: Prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/playlistmgr
+        run: pnpm -F @app/db prisma migrate deploy
+
+      - name: DB healthcheck
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/playlistmgr
+        run: pnpm db:health
+
+      - name: Smoke SELECT 1
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/playlistmgr
+        run: node -e "import('pg').then(async m=>{const c=new m.Client({connectionString:process.env.DATABASE_URL});await c.connect();const r=await c.query('SELECT 1');console.log(r.rows[0]);await c.end();})"

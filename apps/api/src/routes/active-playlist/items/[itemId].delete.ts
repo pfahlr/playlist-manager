@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { removePlaylistItem } from '../../_mockData';
+import { problem } from '../../../lib/problem';
 
 type Params = {
   itemId: string;
@@ -11,7 +12,7 @@ export default async function handler(
 ) {
   const itemId = Number.parseInt(request.params.itemId, 10);
   if (Number.isNaN(itemId)) {
-    return reply.status(400).send({ error: 'bad_request', message: 'Invalid item id' });
+    throw problem({ status: 400, code: 'invalid_item_id', message: 'Invalid item id' });
   }
 
   removePlaylistItem(itemId);

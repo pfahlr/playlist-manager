@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { enqueueJob } from '../_mockData';
+import { problem } from '../../lib/problem';
 
 type Body = {
   playlist_id: number;
@@ -25,7 +26,7 @@ export default async function handler(
   reply: FastifyReply,
 ) {
   if (!isValid(request.body)) {
-    return reply.status(400).send({ error: 'bad_request', message: 'Invalid export request' });
+    throw problem({ status: 400, code: 'invalid_export_request', message: 'Invalid export request' });
   }
 
   const { jobRef } = enqueueJob('export');

@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { enqueueJob } from '../_mockData';
+import { problem } from '../../lib/problem';
 
 type Body = {
   source_provider: 'spotify' | 'deezer' | 'tidal' | 'youtube';
@@ -24,7 +25,7 @@ export default async function handler(
   reply: FastifyReply,
 ) {
   if (!isValidPayload(request.body)) {
-    return reply.status(400).send({ error: 'bad_request', message: 'Invalid migration request' });
+    throw problem({ status: 400, code: 'invalid_migration_request', message: 'Invalid migration request' });
   }
 
   const { jobRef } = enqueueJob('migrate');

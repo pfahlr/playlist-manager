@@ -1,0 +1,16 @@
+[
+  {
+    "title": "Roygbiv",
+    "durationMs": 155000,
+    "mbid": "91c9ad8e-2ddb-4a3c-b061-7e86b0d6a79f",
+    "artistMbid": "a04d5341-d8e1-4c24-bf5b-6fbe77e38e1b",
+    "albumTitle": "Music Has the Right to Children"
+  },
+  {
+    "title": "Xtal",
+    "durationMs": 272000,
+    "mbid": "f0b8f033-0a23-4d51-9f9a-2ba1d210b040",
+    "artistMbid": "a83b5f31-3505-4db9-b1e8-9b6cc53876b5",
+    "albumTitle": "Selected Ambient Works 85-92"
+  }
+]
