@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@prisma/client':
+        specifier: ^5.22.0
+        version: 5.22.0(prisma@5.22.0)
       '@redocly/cli':
         specifier: ^1.25.0
         version: 1.34.5(ajv@8.17.1)
@@ -29,6 +32,9 @@ importers:
       openapi-typescript:
         specifier: ^7.5.2
         version: 7.10.1(typescript@5.9.3)
+      prisma:
+        specifier: ^5.22.0
+        version: 5.22.0
       supertest:
         specifier: ^7.1.4
         version: 7.1.4
@@ -51,11 +57,11 @@ importers:
   packages/db:
     dependencies:
       '@prisma/client':
-        specifier: ^5.20.0
+        specifier: ^5.22.0
         version: 5.22.0(prisma@5.22.0)
     devDependencies:
       prisma:
-        specifier: ^5.20.0
+        specifier: ^5.22.0
         version: 5.22.0
       typescript:
         specifier: ^5.6.3
