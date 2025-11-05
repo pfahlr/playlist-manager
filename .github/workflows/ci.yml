@@ -67,6 +67,10 @@ jobs:
           node-version: 20
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
+      - name: Install OpenSSL runtime (Bookworm)
+        run: |
+          apt-get update
+          apt-get install -y openssl libssl3 ca-certificates
       - run: pnpm -w install --frozen-lockfile
       - name: Wait for Postgres
         run: npx wait-on tcp:postgres:5432
@@ -125,6 +129,10 @@ jobs:
           node-version: 20
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
+      - name: Install OpenSSL runtime (Bookworm)
+        run: |
+          apt-get update
+          apt-get install -y openssl libssl3 ca-certificates
       - run: pnpm -w install --frozen-lockfile
       - name: Wait for Postgres
         run: npx wait-on tcp:postgres:5432
