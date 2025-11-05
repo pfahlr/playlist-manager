@@ -434,6 +434,18 @@ definitions:
       provider_track_id:
         type: string
         x-nullable: true
+    example:
+      id: 1
+      position: 1
+      title: Example track
+      artists: Example Artist
+      album: Example Album
+      duration_ms: 180000
+      recording_id: 500
+      isrc: USRC17607839
+      mb_recording_id: 123e4567-e89b-12d3-a456-426614174000
+      mb_release_id: 123e4567-e89b-12d3-a456-426614174001
+      provider_track_id: example-track-id
   ActivePlaylist:
     type: object
     required: [playlist_id, updated_at]
@@ -514,6 +526,17 @@ definitions:
       updated_at:
         type: string
         format: date-time
+    example:
+      mbid: 123e4567-e89b-12d3-a456-426614174000
+      name: Example Artist
+      bio:
+        source: Example Source
+        summary: Example summary
+        url: https://example.com/artist
+      links:
+        - kind: homepage
+          url: https://example.com
+      updated_at: 2025-11-05T07:14:59Z
   ArtistRelation:
     type: object
     required: [type, artist]
@@ -530,3 +553,8 @@ definitions:
             pattern: '^[0-9a-fA-F-]{36}$'
           name:
             type: string
+    example:
+      type: influences
+      artist:
+        mbid: 123e4567-e89b-12d3-a456-426614174002
+        name: Related Artist
