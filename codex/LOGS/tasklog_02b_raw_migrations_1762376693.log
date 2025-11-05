@@ -1,0 +1,7 @@
+error: unexpected argument '--start' found
+
+  tip: a similar argument exists: '--search'
+
+Usage: codex --search [PROMPT]
+
+For more information, try '--help'.

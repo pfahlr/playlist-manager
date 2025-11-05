@@ -1,0 +1,15 @@
+🚀 Starting Codex task runner at Wed Nov  5 04:04:53 PM EST 2025
+Using task file: codex/TASKS/work_list
+Task directory: codex/TASKS
+Tasks: 02b_raw_migrations 02c_prisma_seeds
+=======================================
+🟡 Starting task: 02b_raw_migrations
+❌ Task 02b_raw_migrations failed or did not emit success signal.
+📄 Output from tasklog_02b_raw_migrations_1762376693.log:
+error: unexpected argument '--start' found
+
+  tip: a similar argument exists: '--search'
+
+Usage: codex --search [PROMPT]
+
+For more information, try '--help'.

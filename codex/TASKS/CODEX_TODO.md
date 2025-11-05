@@ -8,8 +8,8 @@ Spec-first, TDD, incremental. ✅ = done. New/updated items marked **← NEW**.
 ## Phase 1A — Contract, DB, runtime baseline
 - ✅ 01a_spec_bootstrap.yaml
 - ✅ 02a_prisma_init.yaml
-- ☐ 02b_raw_migrations.yaml
-- ☐ 02c_prisma_seeds.yaml
+- ✅ 02b_raw_migrations.yaml
+- ✅ 02c_prisma_seeds.yaml
 - ☐ 02d_db_indexes_bench.yaml **← NEW**
 - ☐ 03a_dbpkg_singleton.yaml
 - ☐ 03b_db_migration_ci_gate.yaml

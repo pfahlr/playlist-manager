@@ -1,0 +1,8 @@
+🚀 Starting Codex task runner at Wed Nov  5 03:58:09 PM EST 2025
+Using task file: codex/TASKS/work_list
+Task directory: codex/TASKS
+Tasks: 02b_raw_migrations 02c_prisma_seeds
+=======================================
+🟡 Starting task: 02b_raw_migrations
+❌ Task 02b_raw_migrations failed or did not emit success signal.
+📄 Output from tasklog_02b_raw_migrations_1762376289.log:
