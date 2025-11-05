@@ -1,0 +1,15 @@
+id: 10m_oauth_state_nonce_csrf
+title: OAuth state/nonce hardening + CSRF protections (web flow)
+branch: codex/10m_oauth_state_nonce_csrf
+overview: >
+  Add state & nonce to auth attempts and validate on callback. For web auth endpoints, protect with CSRF (double-submit or same-site cookie).
+acceptance:
+  - callbacks reject mismatched/expired state/nonce
+  - CSRF middleware blocks cross-site POSTs to auth endpoints
+artifacts_to_touch:
+  - apps/api/src/lib/auth/pkce.ts (extend to include state/nonce)
+  - apps/api/src/plugins/csrf.ts
+  - openapi.yaml (document state param in examples)
+steps:
+  - Persist state/nonce alongside attempt
+  - Add expiry; add tests for tampering

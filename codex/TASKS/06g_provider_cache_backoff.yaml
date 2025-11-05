@@ -1,0 +1,15 @@
+id: 06g_provider_cache_backoff
+title: Provider HTTP client with retry/backoff/circuit-breaker + response caching
+branch: codex/06g_provider_cache_backoff
+overview: >
+  A shared client wrapper for providers: exponential backoff with jitter, 429/5xx handling, token-refresh hooks,
+  LRU/Redis cache with TTL for read endpoints, and a circuit breaker.
+acceptance:
+  - retries on 429 with backoff; respects Retry-After when present
+  - caching reduces duplicate calls in tests; breaker opens after threshold
+artifacts_to_touch:
+  - packages/providers/core/src/http/client.ts
+  - packages/providers/core/src/http/cache.ts
+  - packages/providers/core/test/client.test.ts
+steps:
+  - Implement policy; add metrics hooks; unit tests with fake timers

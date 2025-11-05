@@ -1,0 +1,16 @@
+id: 02d_db_indexes_bench
+title: DB hot-path indexes + EXPLAIN checks
+branch: codex/02d_db_indexes_bench
+overview: >
+  Add pragmatic indexes (FKs, unique, partial) and trigram for fuzzy title/artist search. Include tiny scripts that
+  run EXPLAIN (ANALYZE, BUFFERS) on representative queries in CI to catch regressions.
+acceptance:
+  - migration adds indexes without locking issues (dev)
+  - scripts/explain/*.sql exist; CI job runs them against seeded data
+artifacts_to_touch:
+  - prisma/migrations/2025xxxx_indexes/migration.sql
+  - scripts/explain/{playlists.sql, items.sql, fuzzy_search.sql}
+  - .github/workflows/ci.yml (add explain step)
+steps:
+  - Create indexes for playlist lookups, MBID resolution, follow tables
+  - Add pg_trgm extension and trigram indexes where needed

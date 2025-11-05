@@ -1,0 +1,19 @@
+id: 03c_token_encryption_at_rest
+title: Encrypt provider refresh tokens at rest (libsodium) + rotation
+branch: codex/03c_token_encryption_at_rest
+overview: >
+  Encrypt provider refresh/access tokens before persisting. Use libsodium sealed boxes with a
+  MASTER_KEY (env). Provide a rotation script that re-encrypts rows when the key changes.
+acceptance:
+  - tokens are stored encrypted (no plaintext in DB/logs)
+  - rotation script re-encrypts existing rows and is idempotent
+  - unit tests cover encrypt/decrypt + failure modes
+artifacts_to_touch:
+  - apps/api/src/lib/crypto/keystore.ts
+  - packages/db/prisma/schema.prisma (provider_accounts.encrypted_token fields if needed)
+  - scripts/rotate-token-key.ts
+  - apps/api/src/config/env.ts (.env.example: MASTER_KEY)
+steps:
+  - Add crypto helpers (seal/open) using libsodium
+  - Wire into provider account persistence & retrieval
+  - Add rotation utility; document runbook in README

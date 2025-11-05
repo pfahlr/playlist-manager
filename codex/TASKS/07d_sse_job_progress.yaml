@@ -1,0 +1,15 @@
+id: 07d_sse_job_progress
+title: Server-Sent Events for job progress at /jobs/{id}/events
+branch: codex/07d_sse_job_progress
+overview: >
+  Stream migration/export progress via SSE so web/mobile can show live updates. Keep /jobs/{id} polling as fallback.
+acceptance:
+  - GET /jobs/{id}/events streams event:progress data:{"percent":...}
+  - worker emits progress updates through a channel; tests simulate job lifecycle
+artifacts_to_touch:
+  - apps/api/src/routes/jobs.events.ts
+  - apps/worker/src/lib/progress.ts
+  - apps/api/src/dev/start.ts (register SSE route)
+steps:
+  - Add minimal bus (Redis pub/sub or in-proc for dev)
+  - Emit progress at safe cadence; close stream on completion

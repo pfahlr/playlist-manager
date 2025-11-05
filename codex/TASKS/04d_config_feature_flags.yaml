@@ -1,0 +1,15 @@
+id: 04d_config_feature_flags
+title: Feature flags for providers & endpoints
+branch: codex/04d_config_feature_flags
+overview: >
+  Introduce a simple feature-flag layer (env or JSON config) to enable/disable providers and risky routes.
+  Expose flags via /auth/providers. Add deny middleware for disabled features.
+acceptance:
+  - toggling PROVIDERS_SPOTIFY_ENABLED=false hides it in /auth/providers and blocks related routes with 503
+  - tests assert blocked behavior returns the standard error envelope
+artifacts_to_touch:
+  - apps/api/src/config/flags.ts (.env.example: PROVIDERS_* booleans)
+  - apps/api/src/plugins/feature-guard.ts
+  - apps/api/src/routes/auth.providers.ts
+steps:
+  - Parse flags from env; inject guard middleware where needed

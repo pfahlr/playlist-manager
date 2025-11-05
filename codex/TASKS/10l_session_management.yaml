@@ -1,0 +1,18 @@
+id: 10l_session_management
+title: Session lifecycle (refresh, revoke, logout, device list)
+branch: codex/10l_session_management
+overview: >
+  Implement refresh token rotation, logout (single device), revoke-all sessions, and GET /me/sessions.
+  Store refresh tokens hashed; tie to device metadata.
+acceptance:
+  - POST /auth/refresh issues new access+refresh; old refresh invalid after rotation
+  - POST /auth/logout revokes current session; POST /auth/logout-all revokes all
+  - GET /me/sessions lists active sessions (device, created, last_used)
+artifacts_to_touch:
+  - openapi.yaml (new auth endpoints)
+  - apps/api/src/routes/auth.sessions.ts
+  - apps/api/src/lib/auth/session.ts (rotation logic)
+  - prisma/migrations/… (sessions table if needed)
+steps:
+  - Hash refresh tokens with strong KDF
+  - Add device metadata from UA; prune expired sessions

@@ -1,0 +1,16 @@
+id: 09h_tests_scaffold
+title: Unit & integration test scaffold + coverage gate
+branch: codex/09h_tests_scaffold
+overview: >
+  Set up Vitest (or Jest) monorepo config, supertest for API integration tests, and a coverage gate (>=70%) for changed packages.
+acceptance:
+  - pnpm test runs unit & integration suites
+  - CI fails PRs under coverage threshold for touched code
+artifacts_to_touch:
+  - vitest.workspace.ts (or jest.config.ts)
+  - apps/api/test/**/*.test.ts
+  - packages/**/test/**/*.test.ts
+  - .github/workflows/ci.yml (test job + coverage summary)
+steps:
+  - Configure ts-node/tsx path aliases
+  - Add sample tests for routes and providers

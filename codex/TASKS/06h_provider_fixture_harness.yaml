@@ -1,0 +1,15 @@
+id: 06h_provider_fixture_harness
+title: Offline fixture harness for provider tests (record/replay)
+branch: codex/06h_provider_fixture_harness
+overview: >
+  Add a record/replay harness (nock or fetch-mock with saved JSON) so provider tests run without network.
+  Switch via PROVIDER_FIXTURES=1.
+acceptance:
+  - provider tests pass offline using stored fixtures
+  - a script updates fixtures deterministically
+artifacts_to_touch:
+  - packages/providers/core/test/fixtures/*.json
+  - packages/providers/core/test/fixtureHarness.ts
+  - package.json scripts ("test:update-fixtures")
+steps:
+  - Wrap fetch; when recording, save responses; when replaying, serve from disk

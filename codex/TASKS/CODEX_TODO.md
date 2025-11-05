@@ -1,6 +1,6 @@
 # CODEX TODO — playlist-manager
 
-Spec-first, TDD, incremental. ✅ = done.
+Spec-first, TDD, incremental. ✅ = done. New/updated items marked **← NEW**.
 
 ## Phase 0
 - ✅ 00_repo_sanity_review.yaml
@@ -9,34 +9,41 @@ Spec-first, TDD, incremental. ✅ = done.
 - ✅ 01a_spec_bootstrap.yaml
 - ✅ 02a_prisma_init.yaml
 - ☐ 02b_raw_migrations.yaml
-- ☐ 02c_prisma_seeds.yaml  ← **new**
+- ☐ 02c_prisma_seeds.yaml
+- ☐ 02d_db_indexes_bench.yaml **← NEW**
 - ☐ 03a_dbpkg_singleton.yaml
-- ☐ 03b_db_migration_ci_gate.yaml  ← **new**
+- ☐ 03b_db_migration_ci_gate.yaml
+- ☐ 03c_token_encryption_at_rest.yaml **← NEW**
 - ☐ 04a_api_validation_wiring.yaml
-- ☐ 04b_openapi_warning_silencer.yaml  ← **new**
+- ☐ 04b_openapi_warning_silencer.yaml
+- ☐ 04c_api_docs_ui.yaml **← NEW**
+- ☐ 04d_config_feature_flags.yaml **← NEW**
 
 ### Phase 1A.5 — Interchange
 - ☐ 05a_pif_validator.yaml
 - ☐ 05b_file_exporters.yaml
-- ☐ 05c_importers_file.yaml  ← **new**
+- ☐ 05c_importers_file.yaml
 
 ## Phase 1B — Providers (abstractions + Spotify first)
 - ☐ 06a_provider_interfaces.yaml
+- ☐ 06g_provider_cache_backoff.yaml **← NEW**
+- ☐ 06h_provider_fixture_harness.yaml **← NEW**
+- ☐ 06z_track_matching_heuristics.yaml
+- ☐ 06f_provider_factory_tests.yaml
 - ☐ 06b_spotify_impl.yaml
-- ☐ 06z_track_matching_heuristics.yaml  ← **new**
-- ☐ 06f_provider_factory_tests.yaml  *(moved up earlier guard)*
 
 ### Phase 1B.5 — Core routes (real data)
 - ☐ 07a_routes_playlist_items_effective.yaml
+- ☐ 07c_error_contracts.yaml
 - ☐ 07b_route_exports_file.yaml
-- ☐ 07c_error_contracts.yaml  ← **new**
+- ☐ 07d_sse_job_progress.yaml **← NEW**
 
 ## Phase 1C — Jobs & workers
+- ☐ 08z_idempotency_keys.yaml
 - ☐ 08a_worker_jobs_gc.yaml
 - ☐ 08b_worker_export_file.yaml
 - ☐ 08c_route_jobs_migrate.yaml
 - ☐ 08d_worker_jobs_migrate.yaml
-- ☐ 08z_idempotency_keys.yaml  ← **new**
 
 ## Phase 1D — Enrichment & Gates
 - ☐ 09a_ci_spec_gates.yaml
@@ -47,14 +54,18 @@ Spec-first, TDD, incremental. ✅ = done.
 - ☐ 09d_contract_schemathesis_prism.yaml
 - ☐ 09e_contract_dredd_server.yaml
 - ☐ 09f_contract_schemathesis_server.yaml
-- ☐ 09g_observability_min.yaml  ← **new**
+- ☐ 09g_observability_min.yaml
+- ☐ 09h_tests_scaffold.yaml **← NEW**
+- ☐ 09k_backup_restore.yaml **← NEW**
 
 ## Phase 1E — Mobile & OAuth (+ storage)
 - ☐ 10a_mobile_scaffold.yaml
 - ☐ 10e_openapi_auth_completion.yaml
 - ☐ 10f_env_and_secrets.yaml
 - ☐ 10d_backend_oauth_callbacks.yaml
+- ☐ 10m_oauth_state_nonce_csrf.yaml **← NEW**
 - ☐ 10b_mobile_oauth_pkce.yaml
+- ☐ 10l_session_management.yaml **← NEW**
 - ☐ 10c_mobile_playlist_mvp.yaml
 - ☐ 10h_deeplinks_universal_links.yaml
 - ☐ 10g_ci_mobile.yaml
@@ -71,20 +82,11 @@ Spec-first, TDD, incremental. ✅ = done.
 
 ## Recommended execution order (high level)
 
-1. **Baseline**: 02b → 02c → 03a → 03b → 04a → 04b  
+1. **Baseline**: 02b → 02c → 02d → 03a → 03b → 03c → 04a → 04b → 04c → 04d  
 2. **Interchange**: 05a → 05b → 05c  
-3. **Providers**: 06a → 06z → 06f → 06b  
-4. **Routes/Jobs**: 07a → 07c → 07b → 08z → 08a → 08b → 08c → 08d  
-5. **Enrichment & Gates**: 09a → 09b → 09c → 09d → 09c/09d/09e/09f contracts → 09g  
-6. **Mobile & OAuth**: 10a → 10e → 10f → 10d → 10b → 10c → 10h → 10g → 10i → 10j → 10k  
+3. **Providers**: 06a → 06g → 06h → 06z → 06f → 06b  
+4. **Routes/Jobs**: 07a → 07c → 07b → 07d → 08z → 08a → 08b → 08c → 08d  
+5. **Enrichment & Gates**: 09a → 09b → 09c → 09d → 09c/09d/09e/09f → 09g → 09h → 09k  
+6. **Mobile & OAuth**: 10a → 10e → 10f → 10d → 10m → 10b → 10l → 10c → 10h → 10g → 10i → 10j → 10k  
 7. **More providers**: 06c → 06d → 06e
-
----
-
-## Quick “green” checks per phase
-
-- **Spec/Types**: `pnpm lint:api && pnpm gen:types && pnpm check:gen`
-- **Contracts (mock)**: `pnpm test:contract:dredd:prism && pnpm test:contract:st:prism`
-- **Contracts (server)**: `API_FAKE_ENQUEUE=1 pnpm test:contract:dredd:server && API_FAKE_ENQUEUE=1 pnpm test:contract:st:server`
-- **DB**: `pnpm -F @app/db prisma db seed && pnpm db:health`
 

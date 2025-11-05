@@ -1,0 +1,15 @@
+id: 09k_backup_restore
+title: Backup & restore scripts (DB + artifacts)
+branch: codex/09k_backup_restore
+overview: >
+  Provide pg_dump/pg_restore scripts and S3 artifact sync scripts with retention. Document runbooks.
+acceptance:
+  - scripts/backup.sh and scripts/restore.sh run locally with docker-compose services
+  - README has a "Backups" section with retention strategy
+artifacts_to_touch:
+  - scripts/backup.sh
+  - scripts/restore.sh
+  - README.md (Backups)
+steps:
+  - Use environment variables for credentials/targets
+  - Dry-run mode; log summaries

@@ -1,0 +1,15 @@
+id: 04c_api_docs_ui
+title: Serve OpenAPI docs UI at /docs (Redoc/RapiDoc)
+branch: codex/04c_api_docs_ui
+overview: >
+  Mount a static docs page at /docs that renders openapi.yaml (from the repo). Include a link to JSON/YAML.
+acceptance:
+  - GET /docs renders the spec
+  - GET /openapi.yaml serves the raw spec
+artifacts_to_touch:
+  - apps/api/src/routes/docs.ts
+  - apps/api/public/docs/index.html (Redoc or RapiDoc)
+  - apps/api/src/dev/start.ts (register route)
+steps:
+  - Add static handler for openapi.yaml and a docs HTML shell
+  - Add to README ("API docs" section)
