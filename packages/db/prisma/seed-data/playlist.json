@@ -1,0 +1,30 @@
+{
+  "name": "Seed Playlist",
+  "description": "Deterministic seed playlist for local demos and contract tests.",
+  "items": [
+    {
+      "recordingMbid": "91c9ad8e-2ddb-4a3c-b061-7e86b0d6a79f",
+      "position": 0
+    },
+    {
+      "recordingMbid": "4f6de5b4-11c0-4163-92d0-8e4a04c1c3aa",
+      "position": 1
+    },
+    {
+      "recordingMbid": "0a2ab4c1-2d9b-4ff4-9d8f-1f1e1c1f4db2",
+      "position": 2
+    },
+    {
+      "recordingMbid": "f0b8f033-0a23-4d51-9f9a-2ba1d210b040",
+      "position": 3
+    },
+    {
+      "recordingMbid": "c0f01856-6b54-4c45-8729-3a4bc1d4a837",
+      "position": 4
+    },
+    {
+      "recordingMbid": "c8a4d5fb-6ad6-4f34-9a1d-99793926ab41",
+      "position": 5
+    }
+  ]
+}

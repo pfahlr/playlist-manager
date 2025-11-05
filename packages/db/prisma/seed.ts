@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -12,7 +12,9 @@ function readJSON<T>(fileName: string): T {
   return JSON.parse(fs.readFileSync(fullPath, 'utf8')) as T;
 }
 
-async function upsertUserByEmail(client: PrismaClient, email: string) {
+type SeedClient = PrismaClient | Prisma.TransactionClient;
+
+async function upsertUserByEmail(client: SeedClient, email: string) {
   return client.user.upsert({
     where: { email },
     update: {},
@@ -21,7 +23,7 @@ async function upsertUserByEmail(client: PrismaClient, email: string) {
 }
 
 type SeedContext = {
-  prisma: PrismaClient;
+  prisma: SeedClient;
 };
 
 async function seedArtists({ prisma }: SeedContext) {
@@ -38,7 +40,7 @@ async function seedArtists({ prisma }: SeedContext) {
 }
 
 async function seedAlbums({ prisma }: SeedContext) {
-  type AlbumRow = { title: string; artistMbid: string };
+  type AlbumRow = { title: string; artistMbid: string; mbReleaseId?: string | null };
   const albums = readJSON<AlbumRow[]>('albums.json');
 
   for (const album of albums) {
@@ -49,16 +51,27 @@ async function seedAlbums({ prisma }: SeedContext) {
     });
 
     if (existing) {
+      const updates: Prisma.AlbumUpdateInput = {};
+
       if (!existing.primary_artist_id) {
+        updates.primary_artist = { connect: { id: artist.id } };
+      }
+
+      if (album.mbReleaseId && existing.mb_release_id !== album.mbReleaseId) {
+        updates.mb_release_id = album.mbReleaseId;
+      }
+
+      if (Object.keys(updates).length > 0) {
         await prisma.album.update({
           where: { id: existing.id },
-          data: { primary_artist_id: artist.id },
+          data: updates,
         });
       }
     } else {
       await prisma.album.create({
         data: {
           title: album.title,
+          mb_release_id: album.mbReleaseId ?? null,
           primary_artist: { connect: { id: artist.id } },
         },
       });
@@ -73,6 +86,7 @@ async function seedRecordings({ prisma }: SeedContext) {
     mbid: string;
     artistMbid: string;
     albumTitle: string;
+    isrc?: string | null;
   };
 
   const recordings = readJSON<RecordingRow[]>('recordings.json');
@@ -89,12 +103,14 @@ async function seedRecordings({ prisma }: SeedContext) {
         title: row.title,
         duration_ms: row.durationMs,
         album_id: album.id,
+        isrc: row.isrc ?? null,
       },
       create: {
         title: row.title,
         duration_ms: row.durationMs,
         mb_recording_id: row.mbid,
         album_id: album.id,
+        isrc: row.isrc ?? null,
       },
     });
 
@@ -120,61 +136,117 @@ async function seedRecordings({ prisma }: SeedContext) {
 }
 
 async function seedPlaylist({ prisma }: SeedContext, userId: number) {
-  const playlistTitle = 'Seed Playlist';
+  type PlaylistSeed = {
+    name: string;
+    description?: string | null;
+    items: Array<{
+      recordingMbid: string;
+      position: number;
+    }>;
+  };
 
-  const playlistExisting = await prisma.playlist.findFirst({
-    where: { user_id: userId, name: playlistTitle },
+  const seed = readJSON<PlaylistSeed>('playlist.json');
+  const playlistName = seed.name;
+
+  if (!playlistName) {
+    throw new Error('Playlist seed requires a name');
+  }
+
+  let playlist = await prisma.playlist.findFirst({
+    where: { user_id: userId, name: playlistName },
   });
 
-  const playlist =
-    playlistExisting ??
-    (await prisma.playlist.create({
+  const playlistDescription = seed.description ?? null;
+
+  if (!playlist) {
+    playlist = await prisma.playlist.create({
       data: {
         user_id: userId,
-        name: playlistTitle,
-        description: 'Deterministic seed',
+        name: playlistName,
+        description: playlistDescription,
       },
-    }));
+    });
+  } else if ((playlist.description ?? null) !== playlistDescription) {
+    playlist = await prisma.playlist.update({
+      where: { id: playlist.id },
+      data: { description: playlistDescription },
+    });
+  }
 
-  const recordings = await prisma.recording.findMany({
-    orderBy: { id: 'asc' },
-    take: 6,
-    include: { album: true },
+  if (!Array.isArray(seed.items)) {
+    throw new Error('Playlist seed requires an items array');
+  }
+
+  const sortedItems = [...seed.items].sort((a, b) => a.position - b.position);
+
+  if (sortedItems.length === 0) {
+    await prisma.playlistItem.deleteMany({ where: { playlist_id: playlist.id } });
+    return;
+  }
+
+  const allowedPositions = Array.from(new Set(sortedItems.map((item) => item.position)));
+
+  await prisma.playlistItem.deleteMany({
+    where: {
+      playlist_id: playlist.id,
+      OR: [
+        { position: null },
+        { position: { notIn: allowedPositions } },
+      ],
+    },
   });
 
-  let position = 0;
-  for (const recording of recordings) {
-    const existing = await prisma.playlistItem.findFirst({
-      where: { playlist_id: playlist.id, recording_id: recording.id },
+  for (const item of sortedItems) {
+    const recording = await prisma.recording.findUniqueOrThrow({
+      where: { mb_recording_id: item.recordingMbid },
+      include: { album: true },
     });
 
-    if (!existing) {
-      await prisma.playlistItem.create({
-        data: {
+    await prisma.playlistItem.upsert({
+      where: {
+        playlist_id_position: {
           playlist_id: playlist.id,
-          recording_id: recording.id,
-          position: position++,
-          duration_ms: recording.duration_ms,
-          isrc: recording.isrc,
-          mb_recording_id: recording.mb_recording_id,
-          mb_release_id: recording.album?.mb_release_id,
+          position: item.position,
         },
-      });
-    }
+      },
+      update: {
+        position: item.position,
+        recording_id: recording.id,
+        duration_ms: recording.duration_ms,
+        isrc: recording.isrc,
+        mb_recording_id: recording.mb_recording_id,
+        mb_release_id: recording.album?.mb_release_id ?? null,
+        provider_track_id: null,
+        snapshot_album: null,
+        snapshot_artists: null,
+        snapshot_title: null,
+        snapshot_expires_at: null,
+      },
+      create: {
+        playlist_id: playlist.id,
+        position: item.position,
+        recording_id: recording.id,
+        duration_ms: recording.duration_ms,
+        isrc: recording.isrc,
+        mb_recording_id: recording.mb_recording_id,
+        mb_release_id: recording.album?.mb_release_id ?? null,
+      },
+    });
   }
 }
 
+const SEED_USER_EMAIL = 'demo@playlist-manager.local';
+
 export async function runSeed(prisma: PrismaClient = defaultPrisma) {
-  // ---- 0) Deterministic user
-  const user = await upsertUserByEmail(prisma, 'demo@playlist-manager.local');
+  return prisma.$transaction(async (tx) => {
+    const user = await upsertUserByEmail(tx, SEED_USER_EMAIL);
 
-  await seedArtists({ prisma });
-  await seedAlbums({ prisma });
-  await seedRecordings({ prisma });
-  await seedPlaylist({ prisma }, user.id);
+    await seedArtists({ prisma: tx });
+    await seedAlbums({ prisma: tx });
+    await seedRecordings({ prisma: tx });
+    await seedPlaylist({ prisma: tx }, user.id);
 
-  console.log('✅ Seed complete:', {
-    user: user.email,
+    return { userEmail: user.email };
   });
 }
 
@@ -182,13 +254,20 @@ const executedDirectly =
   process.argv[1] &&
   pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
 
+async function main() {
+  try {
+    const { userEmail } = await runSeed(defaultPrisma);
+    console.log('✅ Seed complete:', { user: userEmail });
+    await defaultPrisma.$disconnect();
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Seed failed');
+    console.error(error);
+    await defaultPrisma.$disconnect();
+    process.exit(1);
+  }
+}
+
 if (executedDirectly) {
-  runSeed()
-    .then(() => defaultPrisma.$disconnect())
-    .catch((error) => {
-      console.error(error);
-      return defaultPrisma
-        .$disconnect()
-        .finally(() => process.exit(1));
-    });
+  main();
 }

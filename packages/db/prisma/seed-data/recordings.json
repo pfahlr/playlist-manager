@@ -4,13 +4,47 @@
     "durationMs": 155000,
     "mbid": "91c9ad8e-2ddb-4a3c-b061-7e86b0d6a79f",
     "artistMbid": "a04d5341-d8e1-4c24-bf5b-6fbe77e38e1b",
-    "albumTitle": "Music Has the Right to Children"
+    "albumTitle": "Music Has the Right to Children",
+    "isrc": "GBAYE9800164"
+  },
+  {
+    "title": "Turquoise Hexagon Sun",
+    "durationMs": 342000,
+    "mbid": "4f6de5b4-11c0-4163-92d0-8e4a04c1c3aa",
+    "artistMbid": "a04d5341-d8e1-4c24-bf5b-6fbe77e38e1b",
+    "albumTitle": "Music Has the Right to Children",
+    "isrc": "GBAYE9800172"
+  },
+  {
+    "title": "Aquarius",
+    "durationMs": 354000,
+    "mbid": "0a2ab4c1-2d9b-4ff4-9d8f-1f1e1c1f4db2",
+    "artistMbid": "a04d5341-d8e1-4c24-bf5b-6fbe77e38e1b",
+    "albumTitle": "Music Has the Right to Children",
+    "isrc": "GBAYE9800111"
   },
   {
     "title": "Xtal",
     "durationMs": 272000,
     "mbid": "f0b8f033-0a23-4d51-9f9a-2ba1d210b040",
     "artistMbid": "a83b5f31-3505-4db9-b1e8-9b6cc53876b5",
-    "albumTitle": "Selected Ambient Works 85-92"
+    "albumTitle": "Selected Ambient Works 85-92",
+    "isrc": "GBTDM9200001"
+  },
+  {
+    "title": "Pulsewidth",
+    "durationMs": 246000,
+    "mbid": "c0f01856-6b54-4c45-8729-3a4bc1d4a837",
+    "artistMbid": "a83b5f31-3505-4db9-b1e8-9b6cc53876b5",
+    "albumTitle": "Selected Ambient Works 85-92",
+    "isrc": "GBTDM9200005"
+  },
+  {
+    "title": "Ageispolis",
+    "durationMs": 457000,
+    "mbid": "c8a4d5fb-6ad6-4f34-9a1d-99793926ab41",
+    "artistMbid": "a83b5f31-3505-4db9-b1e8-9b6cc53876b5",
+    "albumTitle": "Selected Ambient Works 85-92",
+    "isrc": "GBTDM9200006"
   }
 ]

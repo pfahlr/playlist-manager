@@ -2,11 +2,13 @@
   {
     "title": "Music Has the Right to Children",
     "releaseDate": "1998-04-20",
-    "artistMbid": "a04d5341-d8e1-4c24-bf5b-6fbe77e38e1b"
+    "artistMbid": "a04d5341-d8e1-4c24-bf5b-6fbe77e38e1b",
+    "mbReleaseId": "e9e7c7ae-7be3-3d56-9716-6dbcfe5d9d7a"
   },
   {
     "title": "Selected Ambient Works 85-92",
     "releaseDate": "1992-11-09",
-    "artistMbid": "a83b5f31-3505-4db9-b1e8-9b6cc53876b5"
+    "artistMbid": "a83b5f31-3505-4db9-b1e8-9b6cc53876b5",
+    "mbReleaseId": "0f1f8c40-3b63-3d7e-b7c0-9ec53fdf3f8f"
   }
 ]

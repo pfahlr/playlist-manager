@@ -6,6 +6,7 @@ export default defineConfig({
       'packages/**/test/**/*.test.ts',
       'packages/**/tests/**/*.test.ts',
       'apps/**/src/**/__tests__/**/*.test.ts',
+      'codex/code/**/tests/**/*.test.ts',
     ],
     testTimeout: 30000,
   },
