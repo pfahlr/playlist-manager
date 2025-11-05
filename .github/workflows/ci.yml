@@ -108,7 +108,6 @@ jobs:
   contract-server:
     runs-on: ubuntu-latest
     container: node:20-noble   # Ubuntu 24.04 base, glibc 2.39
-    ...
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
