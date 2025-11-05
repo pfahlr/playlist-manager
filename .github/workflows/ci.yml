@@ -45,7 +45,7 @@ jobs:
 
   unit-tests:
     runs-on: ubuntu-latest
-    needs: [ spec-and-types ]
+    container: node:20-bookworm-slim     # ⬅️ run the job in a container
     services:
       postgres:
         image: postgres:16
@@ -53,28 +53,27 @@ jobs:
           POSTGRES_DB: tmm_dev
           POSTGRES_PASSWORD: postgres
           POSTGRES_USER: postgres
-        ports:
-          - 5432:5432
+        # no ports needed when the job has a container
         options: >-
-          --health-cmd "pg_isready -U postgres -d tmm_dev" --health-interval 10s --health-timeout 5s --health-retries 5
+          --health-cmd "pg_isready -U postgres -d tmm_dev"
+          --health-interval 10s --health-timeout 5s --health-retries 5
     env:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tmm_dev
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tmm_dev?schema=public
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+          cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
-      - name: Install deps
-        run: pnpm -w install --frozen-lockfile
-      - name: Generate Prisma client
-        run: pnpm --filter @app/db exec prisma generate
-      - name: Apply Prisma migrations
-        run: pnpm --filter @app/db exec prisma migrate deploy
-      - name: Run unit tests (vitest)
-        run: pnpm vitest run
+      - run: pnpm -w install --frozen-lockfile
+      - name: Wait for Postgres
+        run: npx wait-on tcp:postgres:5432
+      - run: pnpm --filter @app/db exec prisma generate
+      - run: pnpm --filter @app/db exec prisma migrate deploy
+      - run: pnpm vitest run
+
 
   contract-prism:
     runs-on: ubuntu-latest
@@ -105,6 +104,7 @@ jobs:
   contract-server:
     runs-on: ubuntu-latest
     needs: [ unit-tests ]
+    container: node:20-bookworm-slim
     services:
       postgres:
         image: postgres:16
@@ -112,39 +112,30 @@ jobs:
           POSTGRES_DB: tmm_dev
           POSTGRES_PASSWORD: postgres
           POSTGRES_USER: postgres
-        ports:
-          - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U postgres -d tmm_dev" --health-interval 10s --health-timeout 5s --health-retries 5
+          --health-cmd "pg_isready -U postgres -d tmm_dev"
+          --health-interval 10s --health-timeout 5s --health-retries 5
     env:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tmm_dev
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tmm_dev?schema=public
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+          cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
-      - name: Install Node deps
-        run: pnpm -w install --frozen-lockfile
-      - name: Generate Prisma client
-        run: pnpm --filter @app/db exec prisma generate
-      - name: Apply Prisma migrations
-        run: pnpm --filter @app/db exec prisma migrate deploy
-
-      - name: Install Schemathesis (pipx)
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+      - run: pnpm -w install --frozen-lockfile
+      - name: Wait for Postgres
+        run: npx wait-on tcp:postgres:5432
+      - run: pnpm --filter @app/db exec prisma generate
+      - run: pnpm --filter @app/db exec prisma migrate deploy
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
       - run: python -m pip install --upgrade pip pipx && pipx install schemathesis
-
       - name: Dredd vs Real Server (fake enqueue)
-        env:
-          API_FAKE_ENQUEUE: '1'
+        env: { API_FAKE_ENQUEUE: '1' }
         run: pnpm test:contract:dredd:server
-
       - name: Schemathesis vs Real Server (fake enqueue)
-        env:
-          API_FAKE_ENQUEUE: '1'
+        env: { API_FAKE_ENQUEUE: '1' }
         run: pnpm test:contract:st:server
