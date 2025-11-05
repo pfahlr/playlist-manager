@@ -26,14 +26,16 @@
   },
   "devDependencies": {
     "@redocly/cli": "^1.25.0",
-    "@useoptic/optic": "^1.0.9",
     "@stoplight/prism-cli": "^5.7.0",
+    "@types/node": "^24.9.2",
+    "@useoptic/optic": "^1.0.9",
     "concurrently": "^9.2.1",
     "dredd": "^14.1.0",
     "fastify": "^4.29.1",
     "openapi-typescript": "^7.5.2",
     "supertest": "^7.1.4",
     "tsx": "^4.16.0",
+    "vitest": "^4.0.5",
     "wait-on": "^7.2.0",
     "yaml": "^2.5.0"
   }
