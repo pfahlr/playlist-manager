@@ -1,0 +1,13 @@
+id: 10g_ci_mobile
+title: CI: typecheck + lint mobile (Expo RN)
+branch: codex/10g_ci_mobile
+overview: >
+  Add a CI job to typecheck and lint apps/mobile. Optionally run expo prebuild --no-install to validate config.
+acceptance:
+  - CI passes on PR: mobile typecheck + eslint run
+artifacts_to_touch:
+  - .github/workflows/ci.yml
+  - apps/mobile/tsconfig.json
+  - apps/mobile/.eslintrc.cjs
+steps:
+  - Add job using actions/setup-node and pnpm filters for apps/mobile.

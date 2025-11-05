@@ -1,0 +1,23 @@
+id: 10a_mobile_scaffold
+title: Expo mobile app scaffold, deep links, and API client
+branch: codex/10a_mobile_scaffold
+overview: >
+  Create apps/mobile (Expo RN + TS). Configure deep linking, SecureStore, auth session.
+  Add an OpenAPI-typed client and a minimal Home screen.
+acceptance:
+  - pnpm --filter ./apps/mobile run ios|android starts the app
+  - Linking.createURL('auth/callback') works (scheme pm://auth/callback)
+  - api client compiles against @app/contracts
+artifacts_to_touch:
+  - apps/mobile/**
+  - pnpm-workspace.yaml
+  - apps/mobile/app.json
+  - apps/mobile/app.config.ts
+  - apps/mobile/src/api.ts
+  - apps/mobile/src/auth/startMobileOauth.ts
+steps:
+  - Generate Expo app in apps/mobile with TypeScript template.
+  - Configure app scheme "pm" and deep links for "auth/callback".
+  - Install deps: @tanstack/react-query, openapi-fetch, expo-auth-session, expo-linking, expo-secure-store, react-native-url-polyfill.
+  - Add api.ts with OpenAPI client bound to /api/v1.
+  - Add a Home screen skeleton that shows "Sign in with Spotify" (no real call yet).

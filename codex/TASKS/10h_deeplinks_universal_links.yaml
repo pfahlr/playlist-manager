@@ -1,0 +1,15 @@
+id: 10h_deeplinks_universal_links
+title: Mobile deep links (scheme) + Universal Links / App Links
+branch: codex/10h_deeplinks_universal_links
+overview: >
+  Configure Expo scheme 'pm', android intent filters, iOS associated domains, and host
+  apple-app-site-association / .well-known/assetlinks.json in apps/api static.
+acceptance:
+  - Linking.createURL('auth/callback') resolves to pm://auth/callback
+  - iOS/Android open the app via universal/app links for /auth/callback
+artifacts_to_touch:
+  - apps/mobile/app.config.ts (scheme & links)
+  - apps/api/public/.well-known/apple-app-site-association
+  - apps/api/public/.well-known/assetlinks.json
+steps:
+  - Add scheme; configure iOS/Android; serve JSON files from API gateway domain.

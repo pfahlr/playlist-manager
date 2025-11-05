@@ -1,0 +1,13 @@
+id: 10k_provider_oauth_spotify_mvp
+title: Spotify end-to-end OAuth + Importer
+branch: codex/10k_provider_oauth_spotify_mvp
+overview: >
+  Complete Spotify provider: OAuth scopes, refresh token storage, and Importer listing playlists/items.
+acceptance:
+  - With a real Spotify app config, /playlists?provider=spotify returns real data for the authenticated user
+  - Tokens refresh automatically on 401
+artifacts_to_touch:
+  - packages/providers/spotify/**
+  - apps/api/src/routes/playlists.spotify.ts
+steps:
+  - Implement importer per base interface; map Spotify objects to internal models & MBID lookup (best-effort).

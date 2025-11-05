@@ -1,0 +1,21 @@
+id: 10d_backend_oauth_callbacks
+title: OAuth callbacks + session issuance (Spotify MVP)
+branch: codex/10d_backend_oauth_callbacks
+overview: >
+  Implement GET /auth/callback/{provider} to handle code exchange (PKCE), link/create user,
+  store provider refresh token, issue first-party session JWT, and mark mobile attempt as succeeded/failed.
+acceptance:
+  - GET /auth/callback/spotify completes end-to-end with a real or mocked exchange (feature flag)
+  - Mobile polling at /auth/mobile/attempts/{id} returns {status:succeeded, session_jwt}
+  - Session JWT validates via bearer auth on protected routes
+artifacts_to_touch:
+  - apps/api/src/routes/auth.callback.ts
+  - apps/api/src/lib/auth/session.ts
+  - apps/api/src/lib/auth/providers/spotify.ts
+  - apps/api/src/lib/auth/attempts.ts (extend)
+  - apps/api/src/config/env.ts
+steps:
+  - Add provider client (Spotify) with code->tokens exchange, PKCE verifier retrieval (from attempt).
+  - Link or create user; upsert provider account row; store refresh token securely.
+  - Issue your JWT; mark attempt succeeded; redirect a tiny HTML page that instructs users to return to the app.
+  - Add feature flag to simulate exchange in CI.

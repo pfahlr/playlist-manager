@@ -1,0 +1,18 @@
+id: 10c_mobile_playlist_mvp
+title: Mobile playlist MVP (list + items + export)
+branch: codex/10c_mobile_playlist_mvp
+overview: >
+  Use the existing /playlists, /playlists/{id}, /playlists/{id}/items, /exports/file endpoints to make a simple playlist viewer and export trigger in mobile.
+acceptance:
+  - Authenticated mobile app lists user playlists
+  - Tapping a playlist shows items (uses effective fields)
+  - Export button triggers POST /exports/file and shows job_id
+artifacts_to_touch:
+  - apps/mobile/app/(tabs)/playlists.tsx
+  - apps/mobile/app/playlist/[id].tsx
+  - apps/mobile/src/hooks/useApi.ts (React Query helpers)
+steps:
+  - Add React Query provider.
+  - Implement playlists screen and details screen with API calls.
+  - Add "Export" button calling POST /exports/file (csv lean variant).
+

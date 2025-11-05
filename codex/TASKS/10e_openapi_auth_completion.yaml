@@ -1,0 +1,15 @@
+id: 10e_openapi_auth_completion
+title: OpenAPI: add /auth/* endpoints + errors/operationIds
+branch: codex/10e_openapi_auth_completion
+overview: >
+  Extend openapi.yaml with /auth/providers, /auth/mobile/authorize, /auth/mobile/attempts/{id},
+  /auth/callback/{provider}. Ensure all routes have operationId and at least one 4xx response.
+acceptance:
+  - redocly lint passes with no errors (warns OK)
+  - openapi-types generated types compile for apps/mobile & apps/api
+artifacts_to_touch:
+  - openapi.yaml
+  - packages/contracts/src/api.types.ts
+steps:
+  - Add paths, schemas, examples; regenerate types.
+  - Update README with OAuth sequence diagram (mermaid).

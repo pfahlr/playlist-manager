@@ -1,0 +1,22 @@
+id: 10b_mobile_oauth_pkce
+title: Mobile OAuth (PKCE) endpoints + RN flow
+branch: codex/10b_mobile_oauth_pkce
+overview: >
+  Implement server endpoints /auth/providers, /auth/mobile/authorize, /auth/mobile/attempts/{id}.
+  On mobile, add sign-in screen using expo-auth-session and polling.
+acceptance:
+  - redocly lint openapi.yaml passes with the new /auth/* routes
+  - POST /auth/mobile/authorize returns authorization_url + attempt_id + code_challenge(+method)
+  - Attempt lifecycle: pending -> succeeded (returns session_jwt) on callback
+  - Mobile UI signs in and persists session with SecureStore
+artifacts_to_touch:
+  - openapi.yaml
+  - apps/api/src/routes/auth.mobile.ts
+  - apps/api/src/lib/auth/pkce.ts
+  - apps/api/src/lib/auth/attempts.ts
+  - apps/mobile/app/(auth)/sign-in.tsx
+steps:
+  - Add PKCE utilities and an in-memory attempt store (later Redis).
+  - Implement /auth/providers, /auth/mobile/authorize, /auth/mobile/attempts/{id}.
+  - Wire provider callback handlers to mark attempts succeeded & create your session JWT.
+  - Implement mobile sign-in screen calling startMobileOauth(provider).

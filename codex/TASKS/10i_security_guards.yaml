@@ -1,0 +1,15 @@
+id: 10i_security_guards
+title: Auth/CORS/rate limiting middleware
+branch: codex/10i_security_guards
+overview: >
+  Add JWT guard for bearer auth, CORS for web UI origin(s), and rate limiter on /auth/* and /jobs/migrate.
+acceptance:
+  - Protected routes reject unauthenticated requests with 401
+  - CORS allows configured origins; blocks others
+  - Rate limit thresholds are enforced (return 429)
+artifacts_to_touch:
+  - apps/api/src/plugins/auth.ts
+  - apps/api/src/plugins/cors.ts
+  - apps/api/src/plugins/rate-limit.ts
+steps:
+  - Fastify plugins; wire in app bootstrap; config via env schema.

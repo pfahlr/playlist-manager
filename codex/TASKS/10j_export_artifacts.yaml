@@ -1,0 +1,15 @@
+id: 10j_export_artifacts
+title: Export artifact storage (S3/MinIO) + presigned URLs
+branch: codex/10j_export_artifacts
+overview: >
+  Persist generated exports to S3/MinIO; store object key in DB; /jobs/{id} returns artifact_url
+  via presigned URL when succeeded.
+acceptance:
+  - After POST /exports/file, /jobs/{id} yields artifact_url once succeeded
+  - Local dev uses MinIO docker with credentials from env
+artifacts_to_touch:
+  - apps/worker/src/exports/file.ts
+  - apps/api/src/lib/storage/s3.ts
+  - docker-compose.yml (MinIO service, if not present)
+steps:
+  - Add S3 client; putObject; createPresignedUrl; wire into job completion path.
