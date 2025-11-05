@@ -49,7 +49,3 @@ LEFT JOIN LATERAL (
   WHERE ra.recording_id = r.id
 ) na ON TRUE;
 
--- (Optional) Helper indexes for view join performance (if not already present)
-CREATE INDEX IF NOT EXISTS idx_recording_album_id ON recording(album_id);
-CREATE INDEX IF NOT EXISTS idx_recording_artist_rec ON recording_artist(recording_id);
-CREATE INDEX IF NOT EXISTS idx_recording_artist_ord ON recording_artist(recording_id, ordinal);

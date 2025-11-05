@@ -3,9 +3,11 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-generator client { provider = "prisma-client-js" }
+generator client {
+  provider = "prisma-client-js"
+}
 
-/* ===================== Users & Accounts ===================== */
+/// ===================== Users & Accounts =====================
 
 model User {
   id          Int       @id @default(autoincrement())
@@ -37,7 +39,7 @@ model Account {
   @@map("account")
 }
 
-/* ===================== Playlists ===================== */
+/// ===================== Playlists =====================
 
 model Playlist {
   id                    Int       @id @default(autoincrement())
@@ -54,6 +56,7 @@ model Playlist {
   items                 PlaylistItem[]
   provider_maps         ProviderPlaylistMap[]
   jobs                  Job[]
+  active_records        ActivePlaylist[]
 
   @@unique([provider, provider_playlist_id])
   @@map("playlist")
@@ -70,7 +73,7 @@ model ActivePlaylist {
   @@map("active_playlist")
 }
 
-/* ===================== Catalog (Artist / Album / Recording) ===================== */
+/// ===================== Catalog (Artist / Album / Recording) =====================
 
 model Artist {
   id             Int       @id @default(autoincrement())
@@ -122,9 +125,10 @@ model Recording {
   artists         RecordingArtist[]
 
   @@map("recording")
+  @@index([album_id])
 }
 
-/* Join: who performed on a recording (enables normalized artists list) */
+/// Join: who performed on a recording (enables normalized artists list)
 model RecordingArtist {
   recording_id Int
   artist_id    Int
@@ -134,12 +138,14 @@ model RecordingArtist {
   recording    Recording @relation(fields: [recording_id], references: [id], onDelete: Cascade)
   artist       Artist    @relation(fields: [artist_id], references: [id], onDelete: Cascade)
 
-  @@id([recording_id, artist_id, ordinal, role])
+  @@id([recording_id, artist_id])
   @@index([artist_id])
+  @@index([recording_id])
+  @@index([recording_id, ordinal])
   @@map("recording_artist")
 }
 
-/* ===================== Provider Mappings ===================== */
+/// ===================== Provider Mappings =====================
 
 model ProviderTrackMap {
   id                Int       @id @default(autoincrement())
@@ -167,7 +173,7 @@ model ProviderPlaylistMap {
   @@map("provider_playlist_map")
 }
 
-/* ===================== Playlist Items (sparse snapshots) ===================== */
+/// ===================== Playlist Items (sparse snapshots) =====================
 
 model PlaylistItem {
   id                Int       @id @default(autoincrement())
@@ -197,7 +203,7 @@ model PlaylistItem {
   @@map("playlist_item")
 }
 
-/* ===================== Artist Knowledge & Follows ===================== */
+/// ===================== Artist Knowledge & Follows =====================
 
 model ArtistBio {
   id         Int       @id @default(autoincrement())
@@ -258,7 +264,7 @@ model ArtistFollow {
   @@map("artist_follow")
 }
 
-/* ===================== Jobs ===================== */
+/// ===================== Jobs =====================
 
 model Job {
   id            Int       @id @default(autoincrement())
