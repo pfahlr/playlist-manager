@@ -25,6 +25,7 @@
     "test:contract:st:server": "concurrently -k -s first \"API_FAKE_ENQUEUE=1 pnpm api:dev\" \"wait-on tcp:3101 && node ./scripts/schemathesis.mjs run openapi.yaml --url=http://127.0.0.1:3101 --checks all --phases=examples --include-operation-id playlists_items_list --include-operation-id exports_enqueueFile --include-operation-id jobs_requestMigration -H \\\"Authorization: Bearer test-token\\\"\""
   },
   "devDependencies": {
+    "@prisma/client": "^5.22.0",
     "@redocly/cli": "^1.25.0",
     "@useoptic/optic": "^1.0.9",
     "@stoplight/prism-cli": "^5.7.0",
@@ -35,6 +36,7 @@
     "supertest": "^7.1.4",
     "tsx": "^4.16.0",
     "wait-on": "^7.2.0",
+    "vitest": "^1.6.0",
     "yaml": "^2.5.0"
   }
 }
