@@ -1,0 +1,21 @@
+🚀 Codex Runner @ Wed Nov  5 07:24:24 PM EST 2025
+Working Dir: /home/rick/Development/playlist-manager
+Task Dir: codex/TASKS
+Log Dir: codex/LOGS
+Auto-Commit: true
+Config File: ./codex.toml
+Tasks: 03b_db_migration_ci_gate 03c_token_encryption_at_rest 04a_api_validation_wiring 04b_openapi_warning_silencer 04c_api_docs_ui 04d_config_feature_flags
+===========================================
+🟡 Executing task: 03b_db_migration_ci_gate
+✅ Task 03b_db_migration_ci_gate completed successfully.
+📝 Committing files for 03b_db_migration_ci_gate...
+[main 80467ea] Codex Task: 03b_db_migration_ci_gate
+ 3 files changed, 100 insertions(+), 28 deletions(-)
+📝 Commit created: 80467ea879b9101600700c596ed3290272ed450b
+🧯 Rollback with: git reset --soft 80467ea879b9101600700c596ed3290272ed450b^ && git restore --staged .
+-------------------------------------------
+🟡 Executing task: 03c_token_encryption_at_rest
+✅ Task 03c_token_encryption_at_rest completed successfully.
+⚠️  No new or modified files detected for commit (excluding logs).
+-------------------------------------------
+🟡 Executing task: 04a_api_validation_wiring

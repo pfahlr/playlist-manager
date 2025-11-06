@@ -1,0 +1,9 @@
+🚀 Codex Runner @ Wed Nov  5 07:37:43 PM EST 2025
+Working Dir: /home/rick/Development/playlist-manager
+Task Dir: codex/TASKS
+Log Dir: codex/LOGS
+Auto-Commit: true
+Config File: ./codex.toml
+Tasks: 03c_token_encryption_at_rest 04a_api_validation_wiring 04b_openapi_warning_silencer 04c_api_docs_ui 04d_config_feature_flags
+===========================================
+🟡 Executing task: 03c_token_encryption_at_rest
