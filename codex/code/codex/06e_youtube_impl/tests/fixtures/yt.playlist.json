@@ -1,0 +1,51 @@
+{
+  "playlist": {
+    "items": [
+      {
+        "id": "PL123",
+        "snippet": {
+          "title": "Sample Mix",
+          "description": "demo playlist"
+        }
+      }
+    ]
+  },
+  "playlistItems": {
+    "items": [
+      {
+        "contentDetails": {
+          "videoId": "vid1"
+        }
+      },
+      {
+        "contentDetails": {
+          "videoId": "vid2"
+        }
+      }
+    ]
+  },
+  "videos": {
+    "items": [
+      {
+        "id": "vid1",
+        "snippet": {
+          "title": "Song One (Official Video)",
+          "channelTitle": "Artist One - Topic"
+        },
+        "contentDetails": {
+          "duration": "PT3M5S"
+        }
+      },
+      {
+        "id": "vid2",
+        "snippet": {
+          "title": "Song Two",
+          "channelTitle": "Artist Two"
+        },
+        "contentDetails": {
+          "duration": "PT4M10S"
+        }
+      }
+    ]
+  }
+}
