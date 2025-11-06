@@ -9,5 +9,6 @@ export default defineConfig({
       'codex/code/**/tests/**/*.test.ts',
     ],
     testTimeout: 30000,
+    pool: 'threads',
   },
 });

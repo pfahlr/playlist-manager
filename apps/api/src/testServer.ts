@@ -2,6 +2,7 @@
 import fastify, { FastifyInstance } from 'fastify';
 import type { Server } from 'http';
 import { problem } from './lib/problem.js';
+import { registerMiddleware } from './middleware.js';
 import { registerRouteHandlers } from './routes/register-handlers.js';
 
 /**
@@ -24,7 +25,7 @@ export async function makeServer(): Promise<Server> {
     }
   });
 
-  // TODO (later task): attach OpenAPI req/resp validator middleware here.
+  await registerMiddleware(app);
 
   await registerRouteHandlers(app);
 
