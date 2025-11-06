@@ -20,8 +20,8 @@ Spec-first, TDD, incremental. ✅ = done. New/updated items marked **← NEW**.
 - ✅ 04d_config_feature_flags.yaml **← NEW**
 
 ### Phase 1A.5 — Interchange
-- ☐ 05a_pif_validator.yaml
-- ☐ 05b_file_exporters.yaml
+- ✅ 05a_pif_validator.yaml
+- ✅ 05b_file_exporters.yaml
 - ☐ 05c_importers_file.yaml
 
 ## Phase 1B — Providers (abstractions + Spotify first)

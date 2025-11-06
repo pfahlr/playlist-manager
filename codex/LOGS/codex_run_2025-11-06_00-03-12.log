@@ -1,0 +1,9 @@
+🚀 Codex Runner @ Thu Nov  6 12:03:12 AM EST 2025
+Working Dir: /home/rick/Development/playlist-manager
+Task Dir: codex/TASKS
+Log Dir: codex/LOGS
+Auto-Commit: true
+Config File: ./codex.toml
+Tasks: 05c_importers_file 06a_provider_interfaces 06b_spotify_impl 06c_deezer_impl 06d_tidal_impl 06e_youtube_impl 06f_provider_factory_tests 06g_provider_cache_backoff 06h_provider_fixture_harness 06z_track_matching_heuristics
+===========================================
+🟡 Executing task: 05c_importers_file
