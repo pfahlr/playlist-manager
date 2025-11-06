@@ -12,12 +12,12 @@ Spec-first, TDD, incremental. ✅ = done. New/updated items marked **← NEW**.
 - ✅ 02c_prisma_seeds.yaml
 - ✅ 02d_db_indexes_bench.yaml **← NEW**
 - ✅ 03a_dbpkg_singleton.yaml
-- ☐ 03b_db_migration_ci_gate.yaml
-- ☐ 03c_token_encryption_at_rest.yaml **← NEW**
-- ☐ 04a_api_validation_wiring.yaml
-- ☐ 04b_openapi_warning_silencer.yaml
-- ☐ 04c_api_docs_ui.yaml **← NEW**
-- ☐ 04d_config_feature_flags.yaml **← NEW**
+- ✅ 03b_db_migration_ci_gate.yaml
+- ✅ 03c_token_encryption_at_rest.yaml **← NEW**
+- ✅ 04a_api_validation_wiring.yaml
+- ✅ 04b_openapi_warning_silencer.yaml
+- ✅ 04c_api_docs_ui.yaml **← NEW**
+- ✅ 04d_config_feature_flags.yaml **← NEW**
 
 ### Phase 1A.5 — Interchange
 - ☐ 05a_pif_validator.yaml
