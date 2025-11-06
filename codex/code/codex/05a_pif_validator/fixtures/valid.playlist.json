@@ -1,0 +1,46 @@
+{
+  "name": "Chill Mix 2024",
+  "description": "Lo-fi instrumentals to stay productive",
+  "source_service": "spotify",
+  "source_playlist_id": "37i9dQZF1DX4WYpdgoIcn6",
+  "tracks": [
+    {
+      "position": 1,
+      "title": "Sunrise Drive",
+      "artists": ["Lofi Dreams"],
+      "album": "Morning Glow",
+      "duration_ms": 187000,
+      "explicit": false,
+      "release_date": "2023-05-12",
+      "isrc": "USABC2300001",
+      "mb_recording_id": "123e4567-e89b-12d3-a456-426614174000",
+      "mb_release_id": "987e6543-e21b-12d3-a456-426614174999",
+      "provider_ids": {
+        "spotify_track_id": "6rqhFgbbKwnb9MLmUQDhG6",
+        "deezer_track_id": "123456789",
+        "tidal_track_id": null,
+        "youtube_video_id": "dQw4w9WgXcQ",
+        "amazon_track_id": null
+      }
+    },
+    {
+      "position": 2,
+      "title": "City Lights",
+      "artists": ["Neon Echoes", "Cityline"],
+      "album": null,
+      "duration_ms": 201000,
+      "explicit": null,
+      "release_date": "2022",
+      "isrc": null,
+      "mb_recording_id": null,
+      "mb_release_id": null,
+      "provider_ids": {
+        "spotify_track_id": null,
+        "deezer_track_id": null,
+        "tidal_track_id": "84569012",
+        "youtube_video_id": null,
+        "amazon_track_id": null
+      }
+    }
+  ]
+}

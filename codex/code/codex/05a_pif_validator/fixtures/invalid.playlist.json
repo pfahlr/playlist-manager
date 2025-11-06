@@ -1,0 +1,13 @@
+{
+  "name": "Broken Playlist",
+  "description": 123,
+  "source_service": "soundcloud",
+  "tracks": [
+    {
+      "position": 0,
+      "title": 42,
+      "artists": []
+    }
+  ],
+  "extra_field": true
+}

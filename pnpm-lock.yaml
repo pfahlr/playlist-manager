@@ -65,6 +65,10 @@ importers:
         version: 8.0.5
 
   packages/contracts:
+    dependencies:
+      ajv:
+        specifier: ^8.17.1
+        version: 8.17.1
     devDependencies:
       typescript:
         specifier: ^5.6.3
