@@ -4,9 +4,61 @@
     <meta charset="utf-8" />
     <title>playlist-manager API Docs</title>
     <script type="module" src="https://unpkg.com/rapidoc/dist/rapidoc-min.js"></script>
-    <style>body{margin:0}</style>
+    <style>
+      :root {
+        font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+      }
+
+      body {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      .docs-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 1rem;
+        padding: 0.75rem 1.5rem;
+        background: rgba(15, 23, 42, 0.92);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+      }
+
+      .docs-toolbar a {
+        text-decoration: none;
+        color: inherit;
+        font-weight: 600;
+        padding: 0.35rem 0.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid rgba(148, 163, 184, 0.45);
+        transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+      }
+
+      .docs-toolbar a:hover {
+        background: #38bdf8;
+        color: #0f172a;
+        border-color: transparent;
+      }
+
+      rapi-doc {
+        flex: 1;
+      }
+    </style>
   </head>
   <body>
-    <rapi-doc spec-url="/openapi.yaml" render-style="read" show-header="false"></rapi-doc>
+    <div class="docs-toolbar">
+      <a href="/openapi.yaml" download rel="noopener">Download OpenAPI (YAML)</a>
+    </div>
+    <rapi-doc
+      spec-url="/openapi.yaml"
+      render-style="read"
+      show-header="false"
+      sort-endpoints-by="path"
+      theme="dark"
+    ></rapi-doc>
   </body>
 </html>

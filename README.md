@@ -12,6 +12,12 @@ before proposing spec changes:
    Optic. The command exits non-zero when it detects a breaking change so you can spot
    incompatible edits early (set `SPEC_BASE_REF` to diff against another git ref if needed).
 
+## API docs
+
+Run `pnpm api:dev` to boot the Fastify dev server. Once the server is listening on port 3101,
+visit `http://localhost:3101/docs` for the interactive Redoc UI or download the raw OpenAPI
+definition at `http://localhost:3101/openapi.yaml`.
+
 ## Database seeding
 
 With `DATABASE_URL` pointing at a migrated Postgres instance you can load deterministic
