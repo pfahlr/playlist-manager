@@ -1,0 +1,3 @@
+position,title,artists,album,release_date,disc_number,track_number,duration_ms,explicit,isrc,mb_recording_id,mb_release_id,mb_release_group_id,mb_artist_ids,spotify_track_id,spotify_album_id,deezer_track_id,deezer_album_id,tidal_track_id,tidal_album_id,youtube_video_id,amazon_track_id,upc,iswc,genres,source_service,source_playlist_id
+1,"Analog ""Sunset""",Neon Echoes; Cityline,"Signals, Vol. 2",2023-03-01,,,200500,false,US-ABC-23-00002,,,,,spotify123,,,,,,yt123456,,,,,spotify,abc123
+2,Orbital Drift,Lofi Dreams,,,,,,,,,,,,,,,,tidal987,,,,,,,spotify,abc123
