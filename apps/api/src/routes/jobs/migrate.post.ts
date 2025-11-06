@@ -28,6 +28,10 @@ export default async function handler(
     throw problem({ status: 400, code: 'invalid_migration_request', message: 'Invalid migration request' });
   }
 
+  const body = request.body;
+  request.requireProvider(body.source_provider);
+  request.requireProvider(body.dest_provider);
+
   const { jobRef } = enqueueJob('migrate');
   return reply.status(202).send(jobRef);
 }

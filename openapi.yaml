@@ -18,6 +18,8 @@ servers:
 security:
   - {}
 tags:
+  - name: auth
+    description: Authentication provider metadata
   - name: playlists
     description: Playlist management endpoints
   - name: active-playlist
@@ -29,6 +31,25 @@ tags:
   - name: artists
     description: Artist catalogue and follow operations
 paths:
+  /auth/providers:
+    get:
+      summary: List enabled auth providers
+      operationId: authProviders_list
+      tags: [auth]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/AuthProvider' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
   /playlists:
     get:
       summary: List user playlists
@@ -264,6 +285,7 @@ paths:
                   value: { job_id: 456, status: "queued" }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /jobs/{id}:
     get:
@@ -458,6 +480,11 @@ components:
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }
+    ServiceUnavailable:
+      description: Service unavailable
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
     UnprocessableEntity:
       description: Unprocessable entity
       content:
@@ -482,6 +509,13 @@ components:
             -
               type: object
               additionalProperties: true
+    AuthProvider:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          enum: [spotify, deezer, tidal, youtube]
 
     PagedPlaylists:
       type: object

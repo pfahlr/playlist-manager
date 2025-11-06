@@ -2,7 +2,10 @@
 import fastify, { FastifyInstance } from 'fastify';
 import type { Server } from 'http';
 import { problem } from './lib/problem.js';
+import errorsPlugin from './plugins/errors.js';
+import featureGuard from './plugins/feature-guard.js';
 import { registerMiddleware } from './middleware.js';
+import authProviders from './routes/auth.providers.js';
 import { registerRouteHandlers } from './routes/register-handlers.js';
 
 /**
@@ -25,8 +28,11 @@ export async function makeServer(): Promise<Server> {
     }
   });
 
+  await app.register(errorsPlugin);
+  await app.register(featureGuard);
   await registerMiddleware(app);
 
+  await app.register(authProviders);
   await registerRouteHandlers(app);
 
   await app.ready();
