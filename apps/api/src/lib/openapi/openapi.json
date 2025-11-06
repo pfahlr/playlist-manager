@@ -1,0 +1,1288 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "playlist-manager API",
+    "version": "1.0.0",
+    "license": {
+      "name": "MIT",
+      "identifier": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://{host}/api/v1",
+      "variables": {
+        "host": {
+          "default": "dev.api.playlist-manager.app"
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:3101"
+    }
+  ],
+  "security": [
+    {}
+  ],
+  "tags": [
+    {
+      "name": "playlists",
+      "description": "Playlist management endpoints"
+    },
+    {
+      "name": "active-playlist",
+      "description": "Active playlist controls for a user session"
+    },
+    {
+      "name": "jobs",
+      "description": "Background job submission and status"
+    },
+    {
+      "name": "exports",
+      "description": "Export playlist snapshots into provider formats"
+    },
+    {
+      "name": "artists",
+      "description": "Artist catalogue and follow operations"
+    }
+  ],
+  "paths": {
+    "/playlists": {
+      "get": {
+        "summary": "List user playlists",
+        "operationId": "playlists_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "provider",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "spotify",
+                "deezer",
+                "tidal",
+                "youtube"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedPlaylists"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/playlists/{id}": {
+      "get": {
+        "summary": "Get a playlist",
+        "operationId": "playlists_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "example": 101,
+            "schema": {
+              "type": "integer",
+              "example": 101,
+              "default": 101
+            },
+            "examples": {
+              "default": {
+                "value": 101
+              }
+            },
+            "x-example": 101
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Playlist"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/playlists/{id}/items": {
+      "get": {
+        "summary": "List playlist items (effective fields by default)",
+        "operationId": "playlists_items_list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "example": 101,
+            "schema": {
+              "type": "integer",
+              "example": 101,
+              "default": 101
+            },
+            "examples": {
+              "default": {
+                "value": 101
+              }
+            },
+            "x-example": 101
+          },
+          {
+            "in": "query",
+            "name": "effective",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "order",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "position",
+                "added_at"
+              ],
+              "default": "position"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedPlaylistItems"
+                },
+                "examples": {
+                  "demo": {
+                    "summary": "Example effective items page",
+                    "value": {
+                      "data": [
+                        {
+                          "id": 101,
+                          "position": 1,
+                          "title": "Losing My Religion",
+                          "artists": "R.E.M.",
+                          "album": "Out of Time",
+                          "duration_ms": 269000,
+                          "isrc": "USWB19902945",
+                          "recording_id": 5551,
+                          "mb_recording_id": "b8d0d7c0-8e1c-4b34-8bc3-38d78a0c2b1f",
+                          "mb_release_id": "b7a6d2e4-1c77-4a9f-9d5b-0c3b2ea0f4a1",
+                          "provider_track_id": "3urbQpVxWn"
+                        },
+                        {
+                          "id": 102,
+                          "position": 2,
+                          "title": "Hurt",
+                          "artists": "Nine Inch Nails",
+                          "album": "The Downward Spiral",
+                          "duration_ms": 371000,
+                          "isrc": "USIR19400383",
+                          "recording_id": 5552,
+                          "mb_recording_id": "f2d9f7d3-7a61-485f-9b1e-2f4d8b3b7d1a",
+                          "mb_release_id": "9c0b3c90-1e37-4b9b-8c7e-9b7a86a1e5fd",
+                          "provider_track_id": "9zYpqAbC12"
+                        }
+                      ],
+                      "next_cursor": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          }
+        }
+      }
+    },
+    "/active-playlist": {
+      "get": {
+        "summary": "Get the active playlist pointer",
+        "operationId": "activePlaylist_get",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivePlaylist"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "put": {
+        "summary": "Set the active playlist",
+        "operationId": "activePlaylist_set",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "playlist_id"
+                ],
+                "properties": {
+                  "playlist_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/active-playlist/items": {
+      "post": {
+        "summary": "Append item to active playlist",
+        "operationId": "activePlaylist_addItem",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "recording_id"
+                    ],
+                    "properties": {
+                      "recording_id": {
+                        "type": "integer"
+                      },
+                      "position": {
+                        "type": "string",
+                        "enum": [
+                          "append",
+                          "head"
+                        ],
+                        "default": "append"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "isrc"
+                    ],
+                    "properties": {
+                      "isrc": {
+                        "type": "string"
+                      },
+                      "position": {
+                        "type": "string",
+                        "enum": [
+                          "append",
+                          "head"
+                        ],
+                        "default": "append"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "title",
+                      "primary_artist"
+                    ],
+                    "properties": {
+                      "title": {
+                        "type": "string"
+                      },
+                      "primary_artist": {
+                        "type": "string"
+                      },
+                      "position": {
+                        "type": "string",
+                        "enum": [
+                          "append",
+                          "head"
+                        ],
+                        "default": "append"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaylistItemEffective"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/active-playlist/items/{itemId}": {
+      "delete": {
+        "summary": "Remove item from active playlist",
+        "operationId": "activePlaylist_removeItem",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "itemId",
+            "required": true,
+            "example": 4001,
+            "schema": {
+              "type": "integer",
+              "example": 4001
+            },
+            "x-example": 4001
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/jobs/migrate": {
+      "post": {
+        "summary": "Migrate a playlist between providers",
+        "operationId": "jobs_requestMigration",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "source_provider",
+                  "source_playlist_id",
+                  "dest_provider"
+                ],
+                "properties": {
+                  "source_provider": {
+                    "type": "string",
+                    "enum": [
+                      "spotify",
+                      "deezer",
+                      "tidal",
+                      "youtube"
+                    ]
+                  },
+                  "source_playlist_id": {
+                    "type": "integer"
+                  },
+                  "dest_provider": {
+                    "type": "string",
+                    "enum": [
+                      "spotify",
+                      "deezer",
+                      "tidal",
+                      "youtube"
+                    ]
+                  },
+                  "dest_playlist_name": {
+                    "type": "string"
+                  }
+                }
+              },
+              "examples": {
+                "basic": {
+                  "value": {
+                    "source_provider": "spotify",
+                    "source_playlist_id": 1,
+                    "dest_provider": "tidal",
+                    "dest_playlist_name": "Migrated \u2014 My Mix"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobRef"
+                },
+                "examples": {
+                  "accepted": {
+                    "value": {
+                      "job_id": 456,
+                      "status": "queued"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/jobs/{id}": {
+      "get": {
+        "summary": "Get job status/report",
+        "operationId": "jobs_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "example": 5001,
+            "schema": {
+              "type": "integer",
+              "example": 5001,
+              "default": 5001
+            },
+            "examples": {
+              "default": {
+                "value": 5001
+              }
+            },
+            "x-example": 5001
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/exports/file": {
+      "post": {
+        "summary": "Export a playlist to file",
+        "operationId": "exports_enqueueFile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "playlist_id",
+                  "format"
+                ],
+                "properties": {
+                  "playlist_id": {
+                    "type": "integer"
+                  },
+                  "format": {
+                    "type": "string",
+                    "enum": [
+                      "m3u",
+                      "xspf",
+                      "csv"
+                    ]
+                  },
+                  "variant": {
+                    "type": "string",
+                    "enum": [
+                      "lean",
+                      "verbose"
+                    ],
+                    "default": "lean"
+                  }
+                }
+              },
+              "examples": {
+                "csvLean": {
+                  "value": {
+                    "playlist_id": 1,
+                    "format": "csv",
+                    "variant": "lean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobRef"
+                },
+                "examples": {
+                  "accepted": {
+                    "value": {
+                      "job_id": 123,
+                      "status": "queued"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/artists/{mbid}/follow": {
+      "post": {
+        "summary": "Follow an artist by MBID",
+        "operationId": "artists_follow",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mbid",
+            "required": true,
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F-]{36}$",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "default": "123e4567-e89b-12d3-a456-426614174000"
+            },
+            "examples": {
+              "default": {
+                "value": "123e4567-e89b-12d3-a456-426614174000"
+              }
+            },
+            "x-example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unfollow artist",
+        "operationId": "artists_unfollow",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mbid",
+            "required": true,
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F-]{36}$",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "default": "123e4567-e89b-12d3-a456-426614174000"
+            },
+            "examples": {
+              "default": {
+                "value": "123e4567-e89b-12d3-a456-426614174000"
+              }
+            },
+            "x-example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/artists/{mbid}": {
+      "get": {
+        "summary": "Get artist basics (bio + links)",
+        "operationId": "artists_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mbid",
+            "required": true,
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F-]{36}$",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "default": "123e4567-e89b-12d3-a456-426614174000"
+            },
+            "examples": {
+              "default": {
+                "value": "123e4567-e89b-12d3-a456-426614174000"
+              }
+            },
+            "x-example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Artist"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/artists/{mbid}/relations": {
+      "get": {
+        "summary": "Get artist relations",
+        "operationId": "artists_relations",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mbid",
+            "required": true,
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F-]{36}$",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "default": "123e4567-e89b-12d3-a456-426614174000"
+            },
+            "examples": {
+              "default": {
+                "value": "123e4567-e89b-12d3-a456-426614174000"
+              }
+            },
+            "x-example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          {
+            "in": "query",
+            "name": "types",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "influences",
+                  "influenced_by",
+                  "collaborated_with",
+                  "member_of",
+                  "has_members"
+                ]
+              },
+              "uniqueItems": true
+            },
+            "style": "form",
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ArtistRelation"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "responses": {
+      "NotFound": {
+        "description": "Not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Bad request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "UnprocessableEntity": {
+        "description": "Unprocessable entity",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": [
+          "type",
+          "code",
+          "message"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "about:blank"
+          },
+          "code": {
+            "type": "string",
+            "example": "provider_disabled"
+          },
+          "message": {
+            "type": "string",
+            "example": "TIDAL is disabled"
+          },
+          "request_id": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "details": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": true
+              }
+            ]
+          }
+        }
+      },
+      "PagedPlaylists": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Playlist"
+            }
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "Playlist": {
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "provider": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "provider_playlist_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "updated_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "PagedPlaylistItems": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlaylistItemEffective"
+            }
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "PlaylistItemEffective": {
+        "type": "object",
+        "required": [
+          "id",
+          "position",
+          "title",
+          "artists"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "position": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "artists": {
+            "type": "string"
+          },
+          "album": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "duration_ms": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "recording_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "isrc": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mb_recording_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-fA-F-]{36}$",
+            "example": "b8d0d7c0-8e1c-4b34-8bc3-38d78a0c2b1f"
+          },
+          "mb_release_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-fA-F-]{36}$",
+            "example": "b7a6d2e4-1c77-4a9f-9d5b-0c3b2ea0f4a1"
+          },
+          "provider_track_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "ActivePlaylist": {
+        "type": "object",
+        "required": [
+          "playlist_id",
+          "updated_at"
+        ],
+        "properties": {
+          "playlist_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "JobRef": {
+        "type": "object",
+        "required": [
+          "job_id",
+          "status"
+        ],
+        "properties": {
+          "job_id": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed"
+            ]
+          }
+        }
+      },
+      "Job": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "created_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed"
+            ]
+          },
+          "report": {
+            "type": "object",
+            "properties": {
+              "matched_isrc_pct": {
+                "type": "number"
+              },
+              "matched_fuzzy_pct": {
+                "type": "number"
+              },
+              "unresolved": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "artifact_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "Artist": {
+        "type": "object",
+        "required": [
+          "mbid",
+          "name"
+        ],
+        "properties": {
+          "mbid": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F-]{36}$",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string"
+          },
+          "bio": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "summary": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uri"
+              }
+            }
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "kind",
+                "url"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            }
+          },
+          "updated_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "ArtistRelation": {
+        "type": "object",
+        "required": [
+          "type",
+          "artist"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "influences",
+              "influenced_by",
+              "collaborated_with",
+              "member_of",
+              "has_members"
+            ]
+          },
+          "artist": {
+            "type": "object",
+            "required": [
+              "mbid",
+              "name"
+            ],
+            "properties": {
+              "mbid": {
+                "type": "string",
+                "pattern": "^[0-9a-fA-F-]{36}$",
+                "example": "abcdefab-1234-5678-90ab-abcdefabcdef"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
