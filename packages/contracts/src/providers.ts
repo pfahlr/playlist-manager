@@ -59,11 +59,7 @@ export interface ProviderAuth {
 /** Importer: read a provider playlist into PIF */
 export interface Importer {
   readonly name: ProviderName;
-  readPlaylist(input: ReadPlaylistInput, opts?: ReadOptions): Promise<PIF>;
-}
-
-export interface ReadPlaylistInput {
-  id: string | number;
+  readPlaylist(id: string, opts?: ReadOptions): Promise<PIF>;
 }
 
 export interface ReadOptions {
@@ -74,14 +70,7 @@ export interface ReadOptions {
 /** Exporter: write a PIF playlist to a provider */
 export interface Exporter {
   readonly name: ProviderName;
-  writePlaylist(input: WritePlaylistInput, opts?: WriteOptions): Promise<WritePlaylistResult>;
-}
-
-export interface WritePlaylistInput {
-  /** PIF to write */
-  pif: PIF;
-  /** Optional destination playlist name override */
-  nameOverride?: string;
+  writePlaylist(pif: PIF, opts?: WriteOptions): Promise<WritePlaylistResult>;
 }
 
 export interface WriteOptions {
