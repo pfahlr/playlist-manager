@@ -171,11 +171,18 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm -w install
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
       - name: Prisma migrate deploy
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/playlistmgr
         run: pnpm -F @app/db prisma migrate deploy
+
+      - name: Seed database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/playlistmgr
+        run: pnpm --filter @app/db exec prisma db seed
 
       - name: DB healthcheck
         env:
@@ -186,3 +193,13 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/playlistmgr
         run: node -e "import('pg').then(async m=>{const c=new m.Client({connectionString:process.env.DATABASE_URL});await c.connect();const r=await c.query('SELECT 1');console.log(r.rows[0]);await c.end();})"
+
+      - name: EXPLAIN benchmarks
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/playlistmgr
+        run: |
+          for script in scripts/explain/*.sql; do
+            echo "::group::${script}"
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$script"
+            echo "::endgroup::"
+          done
