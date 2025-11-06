@@ -4,13 +4,17 @@ info:
   version: 1.0.0
   license:
     name: MIT
-    identifier: MIT
+    url: https://opensource.org/licenses/MIT
 servers:
-  - url: https://{host}/api/v1
+  - url: https://api.playlist-manager.app/api/v1
+    description: Production API
+  - url: http://{host}:{port}/api/v1
+    description: Local development
     variables:
       host:
-        default: dev.api.playlist-manager.app
-  - url: http://127.0.0.1:3101
+        default: 127.0.0.1
+      port:
+        default: '3101'
 security:
   - {}
 tags:
