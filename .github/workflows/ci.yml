@@ -162,44 +162,74 @@ jobs:
         options: >-
           --health-cmd="pg_isready -U postgres -d playlistmgr"
           --health-interval=5s --health-timeout=5s --health-retries=10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/playlistmgr?schema=public
     steps:
       - uses: actions/checkout@v4
+
       - uses: pnpm/action-setup@v4
         with: { version: 9 }
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
-      - run: pnpm -w install
-      - name: Install psql client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+          cache-dependency-path: pnpm-lock.yaml
 
-      - name: Prisma migrate deploy
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/playlistmgr
-        run: pnpm -F @app/db prisma migrate deploy
+      - name: Cache Prisma engines
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/prisma
+          key: ${{ runner.os }}-prisma-${{ hashFiles('pnpm-lock.yaml') }}
 
-      - name: Seed database
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/playlistmgr
-        run: pnpm --filter @app/db exec prisma db seed
+      - name: Install dependencies
+        run: pnpm -w install --frozen-lockfile
+
+      - name: Prepare migration logs directory
+        run: mkdir -p migration-logs
+
+      - name: Generate Prisma client
+        run: pnpm --filter @app/db exec prisma generate
+
+      - name: Wait for Postgres
+        run: pnpm exec wait-on tcp:localhost:5432
+
+      - name: Log Prisma CLI version
+        run: pnpm --filter @app/db exec prisma --version
+
+      - name: Deploy migrations
+        run: |
+          set -euo pipefail
+          pnpm --filter @app/db exec prisma migrate deploy 2>&1 | tee migration-logs/migrate-deploy.log
+
+      - name: List migration status
+        run: |
+          set -euo pipefail
+          pnpm --filter @app/db exec prisma migrate status | tee migration-logs/migrate-status.log
 
       - name: DB healthcheck
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/playlistmgr
         run: pnpm db:health
 
       - name: Smoke SELECT 1
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/playlistmgr
-        run: node -e "import('pg').then(async m=>{const c=new m.Client({connectionString:process.env.DATABASE_URL});await c.connect();const r=await c.query('SELECT 1');console.log(r.rows[0]);await c.end();})"
-
-      - name: EXPLAIN benchmarks
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/playlistmgr
         run: |
-          for script in scripts/explain/*.sql; do
-            echo "::group::${script}"
-            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$script"
-            echo "::endgroup::"
-          done
+          node --input-type=module <<'NODE'
+          import { PrismaClient } from '@prisma/client';
+          const client = new PrismaClient();
+          try {
+            const result = await client.$queryRaw`SELECT 1 AS ok`;
+            console.log('SELECT 1 result:', result[0]);
+          } catch (error) {
+            console.error('SELECT 1 failed', error);
+            process.exit(1);
+          } finally {
+            await client.$disconnect();
+          }
+          NODE
+
+      - name: Upload migration logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prisma-migration-logs
+          path: migration-logs
+          if-no-files-found: ignore

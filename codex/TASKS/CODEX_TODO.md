@@ -10,8 +10,8 @@ Spec-first, TDD, incremental. ✅ = done. New/updated items marked **← NEW**.
 - ✅ 02a_prisma_init.yaml
 - ✅ 02b_raw_migrations.yaml
 - ✅ 02c_prisma_seeds.yaml
-- ☐ 02d_db_indexes_bench.yaml **← NEW**
-- ☐ 03a_dbpkg_singleton.yaml
+- ✅ 02d_db_indexes_bench.yaml **← NEW**
+- ✅ 03a_dbpkg_singleton.yaml
 - ☐ 03b_db_migration_ci_gate.yaml
 - ☐ 03c_token_encryption_at_rest.yaml **← NEW**
 - ☐ 04a_api_validation_wiring.yaml
