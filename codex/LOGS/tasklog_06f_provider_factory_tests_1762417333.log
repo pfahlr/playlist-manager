@@ -1,0 +1,3159 @@
+OpenAI Codex v0.55.0 (research preview)
+--------
+workdir: /var/home/rick/Development/playlist-manager
+model: gpt-5-codex
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: high
+reasoning summaries: auto
+session id: 019a5842-540b-7e62-8cd5-a7392f206ae3
+--------
+user
+Implement the functionality described in codex/TASKS/06f_provider_factory_tests.yaml, then verify with any available tests.
+
+thinking
+**Preparing to read task file**
+exec
+bash -lc 'ls codex/TASKS' in /var/home/rick/Development/playlist-manager succeeded in 40ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+00_repo_sanity_review.yaml
+01a_spec_bootstrap.yaml
+02a_prisma_init.yaml
+02b_raw_migrations.yaml
+02c_prisma_seeds.yaml
+02d_db_indexes_bench.yaml
+03a_dbpkg_singleton.yaml
+03b_db_migration_ci_gate.yaml
+03c_token_encryption_at_rest.yaml
+04a_api_validation_wiring.yaml
+04b_openapi_warning_silencer.yaml
+04c_api_docs_ui.yaml
+04d_config_feature_flags.yaml
+05a_pif_validator.yaml
+05b_file_exporters.yaml
+05c_importers_file.yaml
+06a_provider_interfaces.yaml
+06b_spotify_impl.yaml
+
+thinking
+**Opening the 06f file**
+exec
+bash -lc 'cat codex/TASKS/06f_provider_factory_tests.yaml' in /var/home/rick/Development/playlist-manager succeeded in 42ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+id: 06f_provider_factory_tests
+title: Provider factory tests (tokens, flags, class mapping)
+branch: codex/06f_provider_factory_tests
+overview: >
+  Add unit tests for the provider factory. Verify token fetch from Prisma, provider enable/disable via env flags,
+  correct class instances for spotify/deezer/tidal/youtube, and getProviderForUser behavior.
+acceptance:
+  - Tests in codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts pass.
+  - No production code changes are required; only tests and (if missing) vitest config/deps.
+artifacts_to_touch:
+  - codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+constraints:
+  - No network. Mock '@app/db' Prisma client.
+  - Feature flags must be validated by reloading the factory with env vars set.
+steps:
+  - Write a Vitest suite that:
+      1) Mocks prisma.account.findFirst to return access_token (then null) and asserts success/throw.
+      2) Asserts createProvider returns instances of the correct classes and names.
+
+thinking
+**Preparing test files for TDD approach**
+exec
+bash -lc 'ls apps/worker/src' in /var/home/rick/Development/playlist-manager succeeded in 50ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+providers
+
+thinking
+**Inspecting provider module**
+exec
+bash -lc 'ls apps/worker/src/providers' in /var/home/rick/Development/playlist-manager succeeded in 41ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+config.ts
+index.ts
+
+thinking
+**Reading index.ts file**
+exec
+bash -lc "sed -n '1,200p' apps/worker/src/providers/index.ts" in /var/home/rick/Development/playlist-manager succeeded in 39ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+import type {
+  ProviderName, ProviderImpl, ProviderAuth,
+  WriteOptions, ReadOptions
+} from '@app/contracts';
+
+import { prisma } from '@app/db';
+import Spotify from '@app/providers-spotify';
+import Deezer  from '@app/providers-deezer';
+import Tidal   from '@app/providers-tidal';
+import YouTube from '@app/providers-youtube';
+import { assertEnabled } from './config';
+
+/** Thrown when a user has not linked the requested provider. */
+export class MissingProviderAuthError extends Error {
+  constructor(public userId: number, public provider: ProviderName) {
+    super(`No linked account for provider "${provider}" (user_id=${userId})`);
+  }
+}
+
+thinking
+**Identifying need for config file**
+exec
+bash -lc "sed -n '1,200p' apps/worker/src/providers/config.ts" in /var/home/rick/Development/playlist-manager succeeded in 43ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+import type { ProviderName } from '@app/contracts';
+
+export type ProviderFlags = Record<ProviderName, boolean>;
+
+export const providerFlags: ProviderFlags = {
+  spotify: envBool(process.env.PROVIDERS_SPOTIFY ?? 'true'),
+  deezer:  envBool(process.env.PROVIDERS_DEEZER  ?? 'true'),
+  tidal:   envBool(process.env.PROVIDERS_TIDAL   ?? 'true'),
+  youtube: envBool(process.env.PROVIDERS_YOUTUBE ?? 'true'),
+};
+
+export function assertEnabled(name: ProviderName) {
+  if (!providerFlags[name]) {
+    throw new Error(`Provider "${name}" is disabled by feature flag`);
+  }
+}
+
+function envBool(v: string) {
+
+thinking
+**Preparing to add and run tests**
+exec
+bash -lc 'ls codex/code' in /var/home/rick/Development/playlist-manager succeeded in 57ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+codex
+
+thinking
+**Noting list presence**
+exec
+bash -lc 'ls codex/code/codex' in /var/home/rick/Development/playlist-manager succeeded in 39ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+02a_prisma_init
+02b_raw_migrations
+03a_dbpkg_singleton
+04a_api_validation_wiring
+05a_pif_validator
+05b_file_exporters
+06a_provider_interfaces
+06b_spotify_impl
+06c_deezer_impl
+06d_tidal_impl
+06e_youtube_impl
+
+thinking
+**Planning multi-step test creation and commit**
+
+I’m laying out a clear multi-step plan to create new test directories and files for the provider factory, run the tests with Vitest to confirm they behave as expected, and then stage and commit the changes. It’s a structured task, so I’ll organize it into a few manageable steps to keep things tidy.
+Plan update
+  → Add Vitest suite for provider factory covering auth fetch, class mapping, flags, user helper
+  • Run relevant tests (Vitest) to ensure passing
+  • Stage changes and commit with descriptive message
+
+thinking
+**Preparing to add tests and verify structure**
+exec
+bash -lc "find codex/code -maxdepth 2 -type f -name 'package.json'" in /var/home/rick/Development/playlist-manager succeeded in 99ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+
+thinking
+**Checking for root package.json**
+exec
+bash -lc ls in /var/home/rick/Development/playlist-manager succeeded in 40ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+AGENTS.md
+apps
+codex
+codex.toml
+docker-compose.yml
+docs
+dredd.server.yml
+dredd.yml
+env.json
+node_modules
+openapi.dredd.yaml
+openapi.yaml
+package.json
+packages
+pnpm-lock.yaml
+pnpm-workspace.yaml
+README.md
+schemas
+
+thinking
+**Checking test scripts in package.json**
+exec
+bash -lc 'cat package.json' in /var/home/rick/Development/playlist-manager succeeded in 38ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+{
+  "name": "playlist-manager",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@9.12.3",
+  "engines": {
+    "node": ">=18.18"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "lint:api": "redocly lint openapi.yaml --extends recommended",
+    "gen:types": "openapi-typescript openapi.yaml -o packages/contracts/src/api.types.ts",
+    "mock:api": "prism mock openapi.yaml",
+    "check:breaking": "oasdiff breaking origin:openapi.yaml openapi.yaml --warn-added",
+
+thinking
+**Checking test script and configuration**
+exec
+bash -lc 'cat vitest.config.ts' in /var/home/rick/Development/playlist-manager succeeded in 52ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { defineConfig } from 'vitest/config';
+
+const rootDir = path.dirname(fileURLToPath(import.meta.url));
+
+export default defineConfig({
+  resolve: {
+    alias: {
+      '@app/contracts': path.resolve(rootDir, 'packages/contracts/src/index.ts'),
+      '@app/interop': path.resolve(rootDir, 'packages/interop/src'),
+      nock: path.resolve(rootDir, 'codex/support/nock.ts'),
+    },
+  },
+  test: {
+    include: [
+      'packages/**/test/**/*.test.ts',
+
+thinking
+**Verifying module alias configuration**
+exec
+bash -lc 'cat packages/db/package.json' in /var/home/rick/Development/playlist-manager succeeded in 40ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+{
+  "name": "@app/db",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prisma": "prisma",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0"
+  },
+  "devDependencies": {
+
+thinking
+**Checking package exports**
+exec
+bash -lc 'ls packages/db/src' in /var/home/rick/Development/playlist-manager succeeded in 40ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+client.ts
+encryption
+healthcheck.ts
+index.ts
+
+thinking
+**Checking mock alignment in client.ts and index.ts**
+exec
+bash -lc "sed -n '1,200p' packages/db/src/client.ts" in /var/home/rick/Development/playlist-manager succeeded in 51ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+import { PrismaClient } from '@prisma/client';
+
+const globalForPrisma = globalThis as unknown as {
+  prisma?: PrismaClient;
+};
+
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log:
+      process.env.NODE_ENV === 'development'
+        ? ['query', 'warn', 'error']
+        : ['error'],
+  });
+
+// Avoid creating multiple clients in dev (hot reload)
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma;
+
+thinking
+**Checking file reference**
+exec
+bash -lc "sed -n '1,200p' packages/db/src/index.ts" in /var/home/rick/Development/playlist-manager succeeded in 38ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+export { prisma } from './client';
+export { dbHealthcheck } from './healthcheck';
+
+
+thinking
+**Preparing to create tests from YAML**
+exec
+bash -lc "sed -n '1,200p' packages/providers/spotify/src/index.ts" in /var/home/rick/Development/playlist-manager succeeded in 45ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+import type {
+  BackoffOptions,
+  Exporter,
+  Importer,
+  PIF,
+  ProviderAuth,
+  ProviderImpl,
+  ProviderName,
+  ReadOptions,
+  WriteOptions,
+  WritePlaylistResult,
+} from '@app/contracts';
+import { RateLimitError } from '@app/contracts';
+
+import {
+  SpotifyClient,
+  type SpotifyPlaylist,
+  type SpotifyPlaylistItem,
+
+thinking
+**Analyzing constructor argument mismatch**
+exec
+bash -lc "sed -n '1,200p' packages/contracts/src/index.ts" in /var/home/rick/Development/playlist-manager succeeded in 42ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+export * from './pif';
+export * from './providers';
+
+thinking
+**Locating providers definitions**
+exec
+bash -lc "sed -n '1,200p' packages/contracts/src/providers.ts" in /var/home/rick/Development/playlist-manager succeeded in 44ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+// packages/contracts/src/providers.ts
+
+/** Canonical provider IDs used across the app & OpenAPI spec */
+export type ProviderName = 'spotify' | 'deezer' | 'tidal' | 'youtube';
+
+/** Minimal PIF v1 types (keep in sync with /schemas/pif-v1.schema.json) */
+export interface PIF {
+  name: string;
+  description?: string | null;
+  source_service?: ProviderName | 'amazon' | null;
+  source_playlist_id?: string | null;
+  tracks: PIFTrack[];
+}
+
+export interface PIFTrack {
+  position: number;                // 1-based
+  title: string;
+  artists: string[];               // primary first; features after
+
+thinking
+**Inspecting provider constructor signatures**
+exec
+bash -lc "sed -n '1,120p' packages/providers/deezer/src/index.ts" in /var/home/rick/Development/playlist-manager succeeded in 38ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+import type {
+  Exporter,
+  Importer,
+  PIF,
+  PIFTrack,
+  ProviderAuth,
+  ProviderImpl,
+  ProviderName,
+  ReadOptions,
+  WriteOptions,
+  WritePlaylistResult,
+} from '@app/contracts';
+
+import {
+  DeezerClient,
+  type DeezerTrack,
+} from './deezer.client.ts';
+
+
+thinking
+**Analyzing Deezer provider constructor usage**
+exec
+bash -lc "python - <<'PY'
+import os
+path='codex/code/codex/06f_provider_factory_tests/tests'
+print(os.path.abspath(path))
+print(os.path.relpath('../packages/db/src/client', path))
+PY" in /var/home/rick/Development/playlist-manager succeeded in 121ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/var/home/rick/Development/playlist-manager/codex/code/codex/06f_provider_factory_tests/tests
+../../../../../../packages/db/src/client
+
+thinking
+**Analyzing relative path calculations**
+exec
+bash -lc "python - <<'PY'
+import os
+root=os.getcwd()
+path='codex/code/codex/06f_provider_factory_tests/tests'
+print('path', os.path.abspath(path))
+print('rel', os.path.relpath(os.path.join(root,'packages/db/src/client.ts'), os.path.abspath(path)))
+PY" in /var/home/rick/Development/playlist-manager succeeded in 53ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+path /var/home/rick/Development/playlist-manager/codex/code/codex/06f_provider_factory_tests/tests
+rel ../../../../../packages/db/src/client.ts
+
+thinking
+**Verifying module path styles in tests**
+exec
+bash -lc "rg \"vi\\.mock\" codex -n" in /var/home/rick/Development/playlist-manager succeeded in 51ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+codex/TASKS/06f_provider_factory_tests.yaml:27:    vi.mock('../../../../packages/db/src/client', () => {
+codex/TASKS/06f_provider_factory_tests.yaml:31:    vi.mock('@app/db', async () => {
+codex/LOGS/tasklog_04d_config_feature_flags_1762396882.log:13953:I’m figuring out how to stub `fastify-plugin` to avoid bundler failures by mocking it to just return the plugin function directly. Since the tests dynamically import modules after resetting modules, I’ll ensure to call `vi.doMock` with an identity function and `__esModule: true` before each import to keep the mock effective. It seems safest to place a top-level `vi.mock` after importing `vi` from 'vitest' so the mock persists across tests without interfering. This approach should smooth out plugin-related issues during testing.
+codex/LOGS/tasklog_04d_config_feature_flags_1762396882.log:13958:+vi.mock('fastify-plugin', () => ({
+codex/LOGS/tasklog_04d_config_feature_flags_1762396882.log:14076:+vi.mock('fastify-plugin', () => ({
+codex/LOGS/tasklog_04d_config_feature_flags_1762396882.log:14459:+vi.mock('fastify-plugin', () => ({
+codex/LOGS/tasklog_04d_config_feature_flags_1762396882.log:14859:+vi.mock('fastify-plugin', () => ({
+codex/LOGS/tasklog_04d_config_feature_flags_1762396882.log:15251:+vi.mock('fastify-plugin', () => ({
+codex/LOGS/tasklog_04d_config_feature_flags_1762396882.log:15659:+vi.mock('fastify-plugin', () => ({
+codex/LOGS/tasklog_04d_config_feature_flags_1762396882.log:16058:+vi.mock('fastify-plugin', () => ({
+codex/LOGS/tasklog_04d_config_feature_flags_1762396882.log:16466:+vi.mock('fastify-plugin', () => ({
+codex/LOGS/tasklog_04d_config_feature_flags_1762396882.log:16874:+vi.mock('fastify-plugin', () => ({
+codex/LOGS/tasklog_04d_config_feature_flags_1762396882.log:17282:+vi.mock('fastify-plugin', () => ({
+codex/LOGS/tasklog_04d_config_feature_flags_1762396882.log:17690:+vi.mock('fastify-plugin', () => ({
+codex/LOGS/tasklog_04d_config_feature_flags_1762396882.log:18098:+vi.mock('fastify-plugin', () => ({
+codex/LOGS/tasklog_04d_config_feature_flags_1762396882.log:18489:+vi.mock('fastify-plugin', () => ({
+codex/LOGS/tasklog_04d_config_feature_flags_1762396882.log:18897:+vi.mock('fastify-plugin', () => ({
+codex/LOGS/tasklog_04d_config_feature_flags_1762396882.log:19305:+vi.mock('fastify-plugin', () => ({
+
+thinking
+**Preparing test import paths**
+exec
+bash -lc "python - <<'PY'
+import os
+path=os.path.abspath('codex/code/codex/06f_provider_factory_tests/tests')
+root=os.getcwd()
+for target in ['apps/worker/src/providers/index.ts','packages/db/src/index.ts','packages/providers/spotify/src/index.ts','packages/providers/deezer/src/index.ts','packages/providers/tidal/src/index.ts','packages/providers/youtube/src/index.ts']:
+    print(target, os.path.relpath(os.path.join(root,target), path))
+PY" in /var/home/rick/Development/playlist-manager succeeded in 51ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+apps/worker/src/providers/index.ts ../../../../../apps/worker/src/providers/index.ts
+packages/db/src/index.ts ../../../../../packages/db/src/index.ts
+packages/providers/spotify/src/index.ts ../../../../../packages/providers/spotify/src/index.ts
+packages/providers/deezer/src/index.ts ../../../../../packages/providers/deezer/src/index.ts
+packages/providers/tidal/src/index.ts ../../../../../packages/providers/tidal/src/index.ts
+packages/providers/youtube/src/index.ts ../../../../../packages/providers/youtube/src/index.ts
+
+thinking
+**Verifying import paths in tests**
+exec
+bash -lc 'rg "apps/worker/src/providers" -n' in /var/home/rick/Development/playlist-manager succeeded in 46ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+codex/LOGS/tasklog_06f_provider_factory_tests_1762417333.log:76:bash -lc 'ls apps/worker/src/providers' in /var/home/rick/Development/playlist-manager succeeded in 41ms:
+codex/LOGS/tasklog_06f_provider_factory_tests_1762417333.log:85:bash -lc "sed -n '1,200p' apps/worker/src/providers/index.ts" in /var/home/rick/Development/playlist-manager succeeded in 39ms:
+codex/LOGS/tasklog_06f_provider_factory_tests_1762417333.log:110:bash -lc "sed -n '1,200p' apps/worker/src/providers/config.ts" in /var/home/rick/Development/playlist-manager succeeded in 43ms:
+codex/LOGS/tasklog_06f_provider_factory_tests_1762417333.log:465:for target in ['apps/worker/src/providers/index.ts','packages/db/src/index.ts','packages/providers/spotify/src/index.ts','packages/providers/deezer/src/index.ts','packages/providers/tidal/src/index.ts','packages/providers/youtube/src/index.ts']:
+codex/LOGS/tasklog_06f_provider_factory_tests_1762417333.log:470:apps/worker/src/providers/index.ts ../../../../../apps/worker/src/providers/index.ts
+codex/LOGS/tasklog_06f_provider_factory_tests_1762417333.log:480:bash -lc 'rg "apps/worker/src/providers" -n' in /var/home/rick/Development/playlist-manager
+codex/LOGS/tasklog_06c_deezer_impl_1762415964.log:2507:apps/worker/src/providers/config.ts:7:  deezer:  envBool(process.env.PROVIDERS_DEEZER  ?? 'true'),
+codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log:369:apps/worker/src/providers/index.ts:  ProviderName, ProviderImpl, ProviderAuth,
+codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log:370:apps/worker/src/providers/index.ts:): ProviderImpl {
+codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log:371:apps/worker/src/providers/index.ts:): Promise<ProviderImpl> {
+codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log:380:bash -lc "sed -n '1,200p' apps/worker/src/providers/index.ts" in /var/home/rick/Development/playlist-manager succeeded in 42ms:
+codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log:855:apps/worker/src/providers/index.ts:  ProviderName, ProviderImpl, ProviderAuth,
+codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log:856:apps/worker/src/providers/index.ts:export class MissingProviderAuthError extends Error {
+codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log:857:apps/worker/src/providers/index.ts:export async function getProviderAuthForUser(
+codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log:858:apps/worker/src/providers/index.ts:): Promise<ProviderAuth> {
+codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log:859:apps/worker/src/providers/index.ts:  if (!token) throw new MissingProviderAuthError(userId, provider);
+codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log:860:apps/worker/src/providers/index.ts:  auth: ProviderAuth,
+codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log:861:apps/worker/src/providers/index.ts: * Throws MissingProviderAuthError if the user hasn’t linked that provider.
+
+thinking
+**Verifying test paths and setup**
+exec
+bash -lc 'ls codex/code/codex/06f_provider_factory_tests' in /var/home/rick/Development/playlist-manager exited 2 in 41ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+ls: cannot access 'codex/code/codex/06f_provider_factory_tests': No such file or directory
+
+thinking
+**Preparing directories and files**
+exec
+bash -lc 'mkdir -p codex/code/codex/06f_provider_factory_tests/tests' in /var/home/rick/Development/playlist-manager succeeded in 45ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+
+thinking
+**Preparing test setup and mocks**
+
+I’m sorting out how to properly mock modules with vi, adjusting import paths to match the repo structure and ensuring mocks replicate actual exports plus stubbed prisma functions. I also need to keep track of mock instances across resets to verify calls, and double-check how the Spotify provider is constructed in tests to avoid constructor issues while just verifying instances. I’m making sure environment variables and cleanup happen properly in tests before writing the test file using apply_patch.
+file update
+A /var/home/rick/Development/playlist-manager/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
+
+// We'll mock @app/db BEFORE importing the factory
+vi.mock('../../../../../packages/db/src/client', () => {
+  // In case someone imports via @app/db barrel:
+  return { prisma: { account: { findFirst: vi.fn() } } };
+});
+vi.mock('@app/db', async () => {
+  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
+  // Ensure a mockable prisma exists no matter which path code uses
+  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
+});
+
+// Reusable getters to re-import modules after env or mocks change
+async function loadFactory() {
+  // Ensure a fresh module state to pick up env flags
+  await vi.resetModules();
+  // Re-apply mocks after reset
+  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
+  vi.doMock('@app/db', async () => {
+    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
+    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
+  });
+  const prov = await import('../../../../../apps/worker/src/providers');
+  const db = await import('@app/db');
+  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
+  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
+  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
+  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
+  return { prov, db, Spotify, Deezer, Tidal, YouTube };
+}
+
+describe('provider factory', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    process.env.PROVIDERS_SPOTIFY = 'true';
+    process.env.PROVIDERS_DEEZER  = 'true';
+    process.env.PROVIDERS_TIDAL   = 'true';
+    process.env.PROVIDERS_YOUTUBE = 'true';
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
+    const { prov, db } = await loadFactory();
+    // First call returns a token
+    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
+    const auth = await prov.getProviderAuthForUser(1, 'spotify');
+    expect(auth.token).toBe('tok-123');
+
+    // Next call returns null -> should throw
+    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
+    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
+  });
+
+  test('createProvider: returns correct classes with matching names', async () => {
+    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
+
+    const s = prov.createProvider('spotify', { token: 'x' });
+    expect(s.name).toBe('spotify');
+    expect(s).toBeInstanceOf(Spotify);
+
+    const d = prov.createProvider('deezer', { token: 'x' });
+    expect(d.name).toBe('deezer');
+    expect(d).toBeInstanceOf(Deezer);
+
+    const t = prov.createProvider('tidal', { token: 'x' });
+    expect(t.name).toBe('tidal');
+    expect(t).toBeInstanceOf(Tidal);
+
+    const y = prov.createProvider('youtube', { token: 'x' });
+    expect(y.name).toBe('youtube');
+    expect(y).toBeInstanceOf(YouTube);
+  });
+
+  test('feature flags: disabling a provider blocks creation', async () => {
+    process.env.PROVIDERS_SPOTIFY = 'false';
+    const { prov } = await loadFactory();
+    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
+  });
+
+  test('getProviderForUser: combines token fetch + instance creation', async () => {
+    const { prov, db, Spotify } = await loadFactory();
+    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
+    const inst = await prov.getProviderForUser(42, 'spotify');
+    expect(inst).toBeInstanceOf(Spotify);
+    expect(inst.name).toBe('spotify');
+  });
+});
+apply_patch(auto_approved=true) exited 0 in 5ms:
+Success. Updated the following files:
+A codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+file update:
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a292b7ad6b52a555fb9fbd268f5100da3bb5e5c7
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
++
++// Reusable getters to re-import modules after env or mocks change
++async function loadFactory() {
++  // Ensure a fresh module state to pick up env flags
++  await vi.resetModules();
++  // Re-apply mocks after reset
++  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
++  vi.doMock('@app/db', async () => {
++    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++  });
++  const prov = await import('../../../../../apps/worker/src/providers');
++  const db = await import('@app/db');
++  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
++  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
++  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
++  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
++  return { prov, db, Spotify, Deezer, Tidal, YouTube };
++}
++
++describe('provider factory', () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    process.env.PROVIDERS_SPOTIFY = 'true';
++    process.env.PROVIDERS_DEEZER  = 'true';
++    process.env.PROVIDERS_TIDAL   = 'true';
++    process.env.PROVIDERS_YOUTUBE = 'true';
++  });
++
++  afterEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
++    const { prov, db } = await loadFactory();
++    // First call returns a token
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
++    const auth = await prov.getProviderAuthForUser(1, 'spotify');
++    expect(auth.token).toBe('tok-123');
++
++    // Next call returns null -> should throw
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
++    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
++  });
++
++  test('createProvider: returns correct classes with matching names', async () => {
++    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
++
++    const s = prov.createProvider('spotify', { token: 'x' });
++    expect(s.name).toBe('spotify');
++    expect(s).toBeInstanceOf(Spotify);
++
++    const d = prov.createProvider('deezer', { token: 'x' });
++    expect(d.name).toBe('deezer');
++    expect(d).toBeInstanceOf(Deezer);
++
++    const t = prov.createProvider('tidal', { token: 'x' });
++    expect(t.name).toBe('tidal');
++    expect(t).toBeInstanceOf(Tidal);
++
++    const y = prov.createProvider('youtube', { token: 'x' });
++    expect(y.name).toBe('youtube');
++    expect(y).toBeInstanceOf(YouTube);
++  });
++
++  test('feature flags: disabling a provider blocks creation', async () => {
++    process.env.PROVIDERS_SPOTIFY = 'false';
++    const { prov } = await loadFactory();
++    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
++  });
++
++  test('getProviderForUser: combines token fetch + instance creation', async () => {
++    const { prov, db, Spotify } = await loadFactory();
++    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
++    const inst = await prov.getProviderForUser(42, 'spotify');
++    expect(inst).toBeInstanceOf(Spotify);
++    expect(inst.name).toBe('spotify');
++  });
++});
+
+file update:
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a292b7ad6b52a555fb9fbd268f5100da3bb5e5c7
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
++
++// Reusable getters to re-import modules after env or mocks change
++async function loadFactory() {
++  // Ensure a fresh module state to pick up env flags
++  await vi.resetModules();
++  // Re-apply mocks after reset
++  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
++  vi.doMock('@app/db', async () => {
++    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++  });
++  const prov = await import('../../../../../apps/worker/src/providers');
++  const db = await import('@app/db');
++  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
++  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
++  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
++  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
++  return { prov, db, Spotify, Deezer, Tidal, YouTube };
++}
++
++describe('provider factory', () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    process.env.PROVIDERS_SPOTIFY = 'true';
++    process.env.PROVIDERS_DEEZER  = 'true';
++    process.env.PROVIDERS_TIDAL   = 'true';
++    process.env.PROVIDERS_YOUTUBE = 'true';
++  });
++
++  afterEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
++    const { prov, db } = await loadFactory();
++    // First call returns a token
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
++    const auth = await prov.getProviderAuthForUser(1, 'spotify');
++    expect(auth.token).toBe('tok-123');
++
++    // Next call returns null -> should throw
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
++    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
++  });
++
++  test('createProvider: returns correct classes with matching names', async () => {
++    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
++
++    const s = prov.createProvider('spotify', { token: 'x' });
++    expect(s.name).toBe('spotify');
++    expect(s).toBeInstanceOf(Spotify);
++
++    const d = prov.createProvider('deezer', { token: 'x' });
++    expect(d.name).toBe('deezer');
++    expect(d).toBeInstanceOf(Deezer);
++
++    const t = prov.createProvider('tidal', { token: 'x' });
++    expect(t.name).toBe('tidal');
++    expect(t).toBeInstanceOf(Tidal);
++
++    const y = prov.createProvider('youtube', { token: 'x' });
++    expect(y.name).toBe('youtube');
++    expect(y).toBeInstanceOf(YouTube);
++  });
++
++  test('feature flags: disabling a provider blocks creation', async () => {
++    process.env.PROVIDERS_SPOTIFY = 'false';
++    const { prov } = await loadFactory();
++    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
++  });
++
++  test('getProviderForUser: combines token fetch + instance creation', async () => {
++    const { prov, db, Spotify } = await loadFactory();
++    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
++    const inst = await prov.getProviderForUser(42, 'spotify');
++    expect(inst).toBeInstanceOf(Spotify);
++    expect(inst.name).toBe('spotify');
++  });
++});
+
+
+thinking
+**Preparing to run tests**
+Plan update
+  ✓ Add Vitest suite for provider factory covering auth fetch, class mapping, flags, user helper
+  → Run relevant tests (Vitest) to ensure passing
+  • Stage changes and commit with descriptive message
+file update:
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a292b7ad6b52a555fb9fbd268f5100da3bb5e5c7
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
++
++// Reusable getters to re-import modules after env or mocks change
++async function loadFactory() {
++  // Ensure a fresh module state to pick up env flags
++  await vi.resetModules();
++  // Re-apply mocks after reset
++  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
++  vi.doMock('@app/db', async () => {
++    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++  });
++  const prov = await import('../../../../../apps/worker/src/providers');
++  const db = await import('@app/db');
++  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
++  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
++  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
++  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
++  return { prov, db, Spotify, Deezer, Tidal, YouTube };
++}
++
++describe('provider factory', () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    process.env.PROVIDERS_SPOTIFY = 'true';
++    process.env.PROVIDERS_DEEZER  = 'true';
++    process.env.PROVIDERS_TIDAL   = 'true';
++    process.env.PROVIDERS_YOUTUBE = 'true';
++  });
++
++  afterEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
++    const { prov, db } = await loadFactory();
++    // First call returns a token
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
++    const auth = await prov.getProviderAuthForUser(1, 'spotify');
++    expect(auth.token).toBe('tok-123');
++
++    // Next call returns null -> should throw
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
++    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
++  });
++
++  test('createProvider: returns correct classes with matching names', async () => {
++    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
++
++    const s = prov.createProvider('spotify', { token: 'x' });
++    expect(s.name).toBe('spotify');
++    expect(s).toBeInstanceOf(Spotify);
++
++    const d = prov.createProvider('deezer', { token: 'x' });
++    expect(d.name).toBe('deezer');
++    expect(d).toBeInstanceOf(Deezer);
++
++    const t = prov.createProvider('tidal', { token: 'x' });
++    expect(t.name).toBe('tidal');
++    expect(t).toBeInstanceOf(Tidal);
++
++    const y = prov.createProvider('youtube', { token: 'x' });
++    expect(y.name).toBe('youtube');
++    expect(y).toBeInstanceOf(YouTube);
++  });
++
++  test('feature flags: disabling a provider blocks creation', async () => {
++    process.env.PROVIDERS_SPOTIFY = 'false';
++    const { prov } = await loadFactory();
++    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
++  });
++
++  test('getProviderForUser: combines token fetch + instance creation', async () => {
++    const { prov, db, Spotify } = await loadFactory();
++    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
++    const inst = await prov.getProviderForUser(42, 'spotify');
++    expect(inst).toBeInstanceOf(Spotify);
++    expect(inst.name).toBe('spotify');
++  });
++});
+
+
+thinking
+**Running provider factory tests**
+exec
+bash -lc 'pnpm vitest --run codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts' in /var/home/rick/Development/playlist-manager exited 1 in 2.24s:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+
+ RUN  v3.1.1 /var/home/rick/Development/playlist-manager
+
+ ❯ codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts (4 tests | 4 failed) 54ms
+   × provider factory > getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing 38ms
+     → Failed to load url @app/providers-spotify (resolved id: @app/providers-spotify) in /var/home/rick/Development/playlist-manager/apps/worker/src/providers/index.ts. Does the file exist?
+   × provider factory > createProvider: returns correct classes with matching names 6ms
+     → Failed to load url @app/providers-spotify (resolved id: @app/providers-spotify) in /var/home/rick/Development/playlist-manager/apps/worker/src/providers/index.ts. Does the file exist?
+   × provider factory > feature flags: disabling a provider blocks creation 5ms
+     → Failed to load url @app/providers-spotify (resolved id: @app/providers-spotify) in /var/home/rick/Development/playlist-manager/apps/worker/src/providers/index.ts. Does the file exist?
+   × provider factory > getProviderForUser: combines token fetch + instance creation 4ms
+     → Failed to load url @app/providers-spotify (resolved id: @app/providers-spotify) in /var/home/rick/Development/playlist-manager/apps/worker/src/providers/index.ts. Does the file exist?
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts > provider factory > getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing
+Error: Failed to load url @app/providers-spotify (resolved id: @app/providers-spotify) in /var/home/rick/Development/playlist-manager/apps/worker/src/providers/index.ts. Does the file exist?
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-Bid9ssRr.js:41317:17
+file update:
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a292b7ad6b52a555fb9fbd268f5100da3bb5e5c7
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
++
++// Reusable getters to re-import modules after env or mocks change
++async function loadFactory() {
++  // Ensure a fresh module state to pick up env flags
++  await vi.resetModules();
++  // Re-apply mocks after reset
++  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
++  vi.doMock('@app/db', async () => {
++    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++  });
++  const prov = await import('../../../../../apps/worker/src/providers');
++  const db = await import('@app/db');
++  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
++  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
++  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
++  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
++  return { prov, db, Spotify, Deezer, Tidal, YouTube };
++}
++
++describe('provider factory', () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    process.env.PROVIDERS_SPOTIFY = 'true';
++    process.env.PROVIDERS_DEEZER  = 'true';
++    process.env.PROVIDERS_TIDAL   = 'true';
++    process.env.PROVIDERS_YOUTUBE = 'true';
++  });
++
++  afterEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
++    const { prov, db } = await loadFactory();
++    // First call returns a token
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
++    const auth = await prov.getProviderAuthForUser(1, 'spotify');
++    expect(auth.token).toBe('tok-123');
++
++    // Next call returns null -> should throw
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
++    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
++  });
++
++  test('createProvider: returns correct classes with matching names', async () => {
++    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
++
++    const s = prov.createProvider('spotify', { token: 'x' });
++    expect(s.name).toBe('spotify');
++    expect(s).toBeInstanceOf(Spotify);
++
++    const d = prov.createProvider('deezer', { token: 'x' });
++    expect(d.name).toBe('deezer');
++    expect(d).toBeInstanceOf(Deezer);
++
++    const t = prov.createProvider('tidal', { token: 'x' });
++    expect(t.name).toBe('tidal');
++    expect(t).toBeInstanceOf(Tidal);
++
++    const y = prov.createProvider('youtube', { token: 'x' });
++    expect(y.name).toBe('youtube');
++    expect(y).toBeInstanceOf(YouTube);
++  });
++
++  test('feature flags: disabling a provider blocks creation', async () => {
++    process.env.PROVIDERS_SPOTIFY = 'false';
++    const { prov } = await loadFactory();
++    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
++  });
++
++  test('getProviderForUser: combines token fetch + instance creation', async () => {
++    const { prov, db, Spotify } = await loadFactory();
++    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
++    const inst = await prov.getProviderForUser(42, 'spotify');
++    expect(inst).toBeInstanceOf(Spotify);
++    expect(inst.name).toBe('spotify');
++  });
++});
+
+
+thinking
+**Analyzing test failures due to missing aliases**
+exec
+bash -lc 'cat packages/providers/spotify/package.json' in /var/home/rick/Development/playlist-manager succeeded in 40ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+{
+  "name": "@app/providers-spotify",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "@app/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+file update:
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a292b7ad6b52a555fb9fbd268f5100da3bb5e5c7
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
++
++// Reusable getters to re-import modules after env or mocks change
++async function loadFactory() {
++  // Ensure a fresh module state to pick up env flags
++  await vi.resetModules();
++  // Re-apply mocks after reset
++  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
++  vi.doMock('@app/db', async () => {
++    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++  });
++  const prov = await import('../../../../../apps/worker/src/providers');
++  const db = await import('@app/db');
++  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
++  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
++  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
++  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
++  return { prov, db, Spotify, Deezer, Tidal, YouTube };
++}
++
++describe('provider factory', () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    process.env.PROVIDERS_SPOTIFY = 'true';
++    process.env.PROVIDERS_DEEZER  = 'true';
++    process.env.PROVIDERS_TIDAL   = 'true';
++    process.env.PROVIDERS_YOUTUBE = 'true';
++  });
++
++  afterEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
++    const { prov, db } = await loadFactory();
++    // First call returns a token
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
++    const auth = await prov.getProviderAuthForUser(1, 'spotify');
++    expect(auth.token).toBe('tok-123');
++
++    // Next call returns null -> should throw
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
++    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
++  });
++
++  test('createProvider: returns correct classes with matching names', async () => {
++    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
++
++    const s = prov.createProvider('spotify', { token: 'x' });
++    expect(s.name).toBe('spotify');
++    expect(s).toBeInstanceOf(Spotify);
++
++    const d = prov.createProvider('deezer', { token: 'x' });
++    expect(d.name).toBe('deezer');
++    expect(d).toBeInstanceOf(Deezer);
++
++    const t = prov.createProvider('tidal', { token: 'x' });
++    expect(t.name).toBe('tidal');
++    expect(t).toBeInstanceOf(Tidal);
++
++    const y = prov.createProvider('youtube', { token: 'x' });
++    expect(y.name).toBe('youtube');
++    expect(y).toBeInstanceOf(YouTube);
++  });
++
++  test('feature flags: disabling a provider blocks creation', async () => {
++    process.env.PROVIDERS_SPOTIFY = 'false';
++    const { prov } = await loadFactory();
++    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
++  });
++
++  test('getProviderForUser: combines token fetch + instance creation', async () => {
++    const { prov, db, Spotify } = await loadFactory();
++    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
++    const inst = await prov.getProviderForUser(42, 'spotify');
++    expect(inst).toBeInstanceOf(Spotify);
++    expect(inst.name).toBe('spotify');
++  });
++});
+
+
+thinking
+**Diagnosing Vite import errors with workspace packages**
+exec
+bash -lc 'ls node_modules/@app' in /var/home/rick/Development/playlist-manager exited 2 in 38ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+ls: cannot access 'node_modules/@app': No such file or directory
+file update:
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a292b7ad6b52a555fb9fbd268f5100da3bb5e5c7
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
++
++// Reusable getters to re-import modules after env or mocks change
++async function loadFactory() {
++  // Ensure a fresh module state to pick up env flags
++  await vi.resetModules();
++  // Re-apply mocks after reset
++  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
++  vi.doMock('@app/db', async () => {
++    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++  });
++  const prov = await import('../../../../../apps/worker/src/providers');
++  const db = await import('@app/db');
++  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
++  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
++  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
++  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
++  return { prov, db, Spotify, Deezer, Tidal, YouTube };
++}
++
++describe('provider factory', () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    process.env.PROVIDERS_SPOTIFY = 'true';
++    process.env.PROVIDERS_DEEZER  = 'true';
++    process.env.PROVIDERS_TIDAL   = 'true';
++    process.env.PROVIDERS_YOUTUBE = 'true';
++  });
++
++  afterEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
++    const { prov, db } = await loadFactory();
++    // First call returns a token
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
++    const auth = await prov.getProviderAuthForUser(1, 'spotify');
++    expect(auth.token).toBe('tok-123');
++
++    // Next call returns null -> should throw
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
++    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
++  });
++
++  test('createProvider: returns correct classes with matching names', async () => {
++    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
++
++    const s = prov.createProvider('spotify', { token: 'x' });
++    expect(s.name).toBe('spotify');
++    expect(s).toBeInstanceOf(Spotify);
++
++    const d = prov.createProvider('deezer', { token: 'x' });
++    expect(d.name).toBe('deezer');
++    expect(d).toBeInstanceOf(Deezer);
++
++    const t = prov.createProvider('tidal', { token: 'x' });
++    expect(t.name).toBe('tidal');
++    expect(t).toBeInstanceOf(Tidal);
++
++    const y = prov.createProvider('youtube', { token: 'x' });
++    expect(y.name).toBe('youtube');
++    expect(y).toBeInstanceOf(YouTube);
++  });
++
++  test('feature flags: disabling a provider blocks creation', async () => {
++    process.env.PROVIDERS_SPOTIFY = 'false';
++    const { prov } = await loadFactory();
++    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
++  });
++
++  test('getProviderForUser: combines token fetch + instance creation', async () => {
++    const { prov, db, Spotify } = await loadFactory();
++    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
++    const inst = await prov.getProviderForUser(42, 'spotify');
++    expect(inst).toBeInstanceOf(Spotify);
++    expect(inst.name).toBe('spotify');
++  });
++});
+
+
+thinking
+**Planning alias updates in vitest.config.ts**
+
+I’m considering adding explicit alias entries in vitest.config.ts for provider packages and possibly for @app/db to ensure proper module resolution during testing and mocking. I want to carefully extend the existing alias object with these paths using apply_patch, making sure the aliases don’t interfere with mocking behavior, especially for '@app/db'.
+file update
+M /var/home/rick/Development/playlist-manager/vitest.config.ts
+@@ -12,2 +12,7 @@
+       '@app/interop': path.resolve(rootDir, 'packages/interop/src'),
++      '@app/db': path.resolve(rootDir, 'packages/db/src/index.ts'),
++      '@app/providers-spotify': path.resolve(rootDir, 'packages/providers/spotify/src/index.ts'),
++      '@app/providers-deezer': path.resolve(rootDir, 'packages/providers/deezer/src/index.ts'),
++      '@app/providers-tidal': path.resolve(rootDir, 'packages/providers/tidal/src/index.ts'),
++      '@app/providers-youtube': path.resolve(rootDir, 'packages/providers/youtube/src/index.ts'),
+       nock: path.resolve(rootDir, 'codex/support/nock.ts'),
+apply_patch(auto_approved=true) exited 0 in 6ms:
+Success. Updated the following files:
+M vitest.config.ts
+file update:
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a292b7ad6b52a555fb9fbd268f5100da3bb5e5c7
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
++
++// Reusable getters to re-import modules after env or mocks change
++async function loadFactory() {
++  // Ensure a fresh module state to pick up env flags
++  await vi.resetModules();
++  // Re-apply mocks after reset
++  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
++  vi.doMock('@app/db', async () => {
++    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++  });
++  const prov = await import('../../../../../apps/worker/src/providers');
++  const db = await import('@app/db');
++  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
++  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
++  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
++  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
++  return { prov, db, Spotify, Deezer, Tidal, YouTube };
++}
++
++describe('provider factory', () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    process.env.PROVIDERS_SPOTIFY = 'true';
++    process.env.PROVIDERS_DEEZER  = 'true';
++    process.env.PROVIDERS_TIDAL   = 'true';
++    process.env.PROVIDERS_YOUTUBE = 'true';
++  });
++
++  afterEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
++    const { prov, db } = await loadFactory();
++    // First call returns a token
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
++    const auth = await prov.getProviderAuthForUser(1, 'spotify');
++    expect(auth.token).toBe('tok-123');
++
++    // Next call returns null -> should throw
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
++    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
++  });
++
++  test('createProvider: returns correct classes with matching names', async () => {
++    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
++
++    const s = prov.createProvider('spotify', { token: 'x' });
++    expect(s.name).toBe('spotify');
++    expect(s).toBeInstanceOf(Spotify);
++
++    const d = prov.createProvider('deezer', { token: 'x' });
++    expect(d.name).toBe('deezer');
++    expect(d).toBeInstanceOf(Deezer);
++
++    const t = prov.createProvider('tidal', { token: 'x' });
++    expect(t.name).toBe('tidal');
++    expect(t).toBeInstanceOf(Tidal);
++
++    const y = prov.createProvider('youtube', { token: 'x' });
++    expect(y.name).toBe('youtube');
++    expect(y).toBeInstanceOf(YouTube);
++  });
++
++  test('feature flags: disabling a provider blocks creation', async () => {
++    process.env.PROVIDERS_SPOTIFY = 'false';
++    const { prov } = await loadFactory();
++    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
++  });
++
++  test('getProviderForUser: combines token fetch + instance creation', async () => {
++    const { prov, db, Spotify } = await loadFactory();
++    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
++    const inst = await prov.getProviderForUser(42, 'spotify');
++    expect(inst).toBeInstanceOf(Spotify);
++    expect(inst.name).toBe('spotify');
++  });
++});
+diff --git a/vitest.config.ts b/vitest.config.ts
+index d6cc1e9cf053285a68ba81acd41fd0840bab88b2..c5c6d1a00d7c7bc9c3929f3fd1a175b8cacb2b4b
+--- a/vitest.config.ts
++++ b/vitest.config.ts
+@@ -10,6 +10,11 @@
+     alias: {
+       '@app/contracts': path.resolve(rootDir, 'packages/contracts/src/index.ts'),
+       '@app/interop': path.resolve(rootDir, 'packages/interop/src'),
++      '@app/db': path.resolve(rootDir, 'packages/db/src/index.ts'),
++      '@app/providers-spotify': path.resolve(rootDir, 'packages/providers/spotify/src/index.ts'),
++      '@app/providers-deezer': path.resolve(rootDir, 'packages/providers/deezer/src/index.ts'),
++      '@app/providers-tidal': path.resolve(rootDir, 'packages/providers/tidal/src/index.ts'),
++      '@app/providers-youtube': path.resolve(rootDir, 'packages/providers/youtube/src/index.ts'),
+       nock: path.resolve(rootDir, 'codex/support/nock.ts'),
+     },
+   },
+
+file update:
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a292b7ad6b52a555fb9fbd268f5100da3bb5e5c7
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
++
++// Reusable getters to re-import modules after env or mocks change
++async function loadFactory() {
++  // Ensure a fresh module state to pick up env flags
++  await vi.resetModules();
++  // Re-apply mocks after reset
++  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
++  vi.doMock('@app/db', async () => {
++    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++  });
++  const prov = await import('../../../../../apps/worker/src/providers');
++  const db = await import('@app/db');
++  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
++  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
++  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
++  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
++  return { prov, db, Spotify, Deezer, Tidal, YouTube };
++}
++
++describe('provider factory', () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    process.env.PROVIDERS_SPOTIFY = 'true';
++    process.env.PROVIDERS_DEEZER  = 'true';
++    process.env.PROVIDERS_TIDAL   = 'true';
++    process.env.PROVIDERS_YOUTUBE = 'true';
++  });
++
++  afterEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
++    const { prov, db } = await loadFactory();
++    // First call returns a token
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
++    const auth = await prov.getProviderAuthForUser(1, 'spotify');
++    expect(auth.token).toBe('tok-123');
++
++    // Next call returns null -> should throw
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
++    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
++  });
++
++  test('createProvider: returns correct classes with matching names', async () => {
++    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
++
++    const s = prov.createProvider('spotify', { token: 'x' });
++    expect(s.name).toBe('spotify');
++    expect(s).toBeInstanceOf(Spotify);
++
++    const d = prov.createProvider('deezer', { token: 'x' });
++    expect(d.name).toBe('deezer');
++    expect(d).toBeInstanceOf(Deezer);
++
++    const t = prov.createProvider('tidal', { token: 'x' });
++    expect(t.name).toBe('tidal');
++    expect(t).toBeInstanceOf(Tidal);
++
++    const y = prov.createProvider('youtube', { token: 'x' });
++    expect(y.name).toBe('youtube');
++    expect(y).toBeInstanceOf(YouTube);
++  });
++
++  test('feature flags: disabling a provider blocks creation', async () => {
++    process.env.PROVIDERS_SPOTIFY = 'false';
++    const { prov } = await loadFactory();
++    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
++  });
++
++  test('getProviderForUser: combines token fetch + instance creation', async () => {
++    const { prov, db, Spotify } = await loadFactory();
++    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
++    const inst = await prov.getProviderForUser(42, 'spotify');
++    expect(inst).toBeInstanceOf(Spotify);
++    expect(inst.name).toBe('spotify');
++  });
++});
+diff --git a/vitest.config.ts b/vitest.config.ts
+index d6cc1e9cf053285a68ba81acd41fd0840bab88b2..c5c6d1a00d7c7bc9c3929f3fd1a175b8cacb2b4b
+--- a/vitest.config.ts
++++ b/vitest.config.ts
+@@ -10,6 +10,11 @@
+     alias: {
+       '@app/contracts': path.resolve(rootDir, 'packages/contracts/src/index.ts'),
+       '@app/interop': path.resolve(rootDir, 'packages/interop/src'),
++      '@app/db': path.resolve(rootDir, 'packages/db/src/index.ts'),
++      '@app/providers-spotify': path.resolve(rootDir, 'packages/providers/spotify/src/index.ts'),
++      '@app/providers-deezer': path.resolve(rootDir, 'packages/providers/deezer/src/index.ts'),
++      '@app/providers-tidal': path.resolve(rootDir, 'packages/providers/tidal/src/index.ts'),
++      '@app/providers-youtube': path.resolve(rootDir, 'packages/providers/youtube/src/index.ts'),
+       nock: path.resolve(rootDir, 'codex/support/nock.ts'),
+     },
+   },
+
+
+thinking
+**Updating test imports and running tests**
+exec
+bash -lc 'pnpm vitest --run codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts' in /var/home/rick/Development/playlist-manager succeeded in 2.47s:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+
+ RUN  v3.1.1 /var/home/rick/Development/playlist-manager
+
+ ✓ codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts (4 tests) 263ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  03:25:37
+   Duration  654ms (transform 173ms, setup 0ms, collect 50ms, tests 263ms, environment 0ms, prepare 85ms)
+
+file update:
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a292b7ad6b52a555fb9fbd268f5100da3bb5e5c7
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
++
++// Reusable getters to re-import modules after env or mocks change
++async function loadFactory() {
++  // Ensure a fresh module state to pick up env flags
++  await vi.resetModules();
++  // Re-apply mocks after reset
++  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
++  vi.doMock('@app/db', async () => {
++    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++  });
++  const prov = await import('../../../../../apps/worker/src/providers');
++  const db = await import('@app/db');
++  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
++  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
++  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
++  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
++  return { prov, db, Spotify, Deezer, Tidal, YouTube };
++}
++
++describe('provider factory', () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    process.env.PROVIDERS_SPOTIFY = 'true';
++    process.env.PROVIDERS_DEEZER  = 'true';
++    process.env.PROVIDERS_TIDAL   = 'true';
++    process.env.PROVIDERS_YOUTUBE = 'true';
++  });
++
++  afterEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
++    const { prov, db } = await loadFactory();
++    // First call returns a token
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
++    const auth = await prov.getProviderAuthForUser(1, 'spotify');
++    expect(auth.token).toBe('tok-123');
++
++    // Next call returns null -> should throw
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
++    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
++  });
++
++  test('createProvider: returns correct classes with matching names', async () => {
++    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
++
++    const s = prov.createProvider('spotify', { token: 'x' });
++    expect(s.name).toBe('spotify');
++    expect(s).toBeInstanceOf(Spotify);
++
++    const d = prov.createProvider('deezer', { token: 'x' });
++    expect(d.name).toBe('deezer');
++    expect(d).toBeInstanceOf(Deezer);
++
++    const t = prov.createProvider('tidal', { token: 'x' });
++    expect(t.name).toBe('tidal');
++    expect(t).toBeInstanceOf(Tidal);
++
++    const y = prov.createProvider('youtube', { token: 'x' });
++    expect(y.name).toBe('youtube');
++    expect(y).toBeInstanceOf(YouTube);
++  });
++
++  test('feature flags: disabling a provider blocks creation', async () => {
++    process.env.PROVIDERS_SPOTIFY = 'false';
++    const { prov } = await loadFactory();
++    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
++  });
++
++  test('getProviderForUser: combines token fetch + instance creation', async () => {
++    const { prov, db, Spotify } = await loadFactory();
++    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
++    const inst = await prov.getProviderForUser(42, 'spotify');
++    expect(inst).toBeInstanceOf(Spotify);
++    expect(inst.name).toBe('spotify');
++  });
++});
+diff --git a/vitest.config.ts b/vitest.config.ts
+index d6cc1e9cf053285a68ba81acd41fd0840bab88b2..c5c6d1a00d7c7bc9c3929f3fd1a175b8cacb2b4b
+--- a/vitest.config.ts
++++ b/vitest.config.ts
+@@ -10,6 +10,11 @@
+     alias: {
+       '@app/contracts': path.resolve(rootDir, 'packages/contracts/src/index.ts'),
+       '@app/interop': path.resolve(rootDir, 'packages/interop/src'),
++      '@app/db': path.resolve(rootDir, 'packages/db/src/index.ts'),
++      '@app/providers-spotify': path.resolve(rootDir, 'packages/providers/spotify/src/index.ts'),
++      '@app/providers-deezer': path.resolve(rootDir, 'packages/providers/deezer/src/index.ts'),
++      '@app/providers-tidal': path.resolve(rootDir, 'packages/providers/tidal/src/index.ts'),
++      '@app/providers-youtube': path.resolve(rootDir, 'packages/providers/youtube/src/index.ts'),
+       nock: path.resolve(rootDir, 'codex/support/nock.ts'),
+     },
+   },
+
+
+thinking
+**Updating progress in plan**
+Plan update
+  ✓ Add Vitest suite for provider factory covering auth fetch, class mapping, flags, user helper
+  ✓ Run relevant tests (Vitest) to ensure passing
+  → Stage changes and commit with descriptive message
+file update:
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a292b7ad6b52a555fb9fbd268f5100da3bb5e5c7
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
++
++// Reusable getters to re-import modules after env or mocks change
++async function loadFactory() {
++  // Ensure a fresh module state to pick up env flags
++  await vi.resetModules();
++  // Re-apply mocks after reset
++  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
++  vi.doMock('@app/db', async () => {
++    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++  });
++  const prov = await import('../../../../../apps/worker/src/providers');
++  const db = await import('@app/db');
++  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
++  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
++  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
++  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
++  return { prov, db, Spotify, Deezer, Tidal, YouTube };
++}
++
++describe('provider factory', () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    process.env.PROVIDERS_SPOTIFY = 'true';
++    process.env.PROVIDERS_DEEZER  = 'true';
++    process.env.PROVIDERS_TIDAL   = 'true';
++    process.env.PROVIDERS_YOUTUBE = 'true';
++  });
++
++  afterEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
++    const { prov, db } = await loadFactory();
++    // First call returns a token
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
++    const auth = await prov.getProviderAuthForUser(1, 'spotify');
++    expect(auth.token).toBe('tok-123');
++
++    // Next call returns null -> should throw
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
++    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
++  });
++
++  test('createProvider: returns correct classes with matching names', async () => {
++    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
++
++    const s = prov.createProvider('spotify', { token: 'x' });
++    expect(s.name).toBe('spotify');
++    expect(s).toBeInstanceOf(Spotify);
++
++    const d = prov.createProvider('deezer', { token: 'x' });
++    expect(d.name).toBe('deezer');
++    expect(d).toBeInstanceOf(Deezer);
++
++    const t = prov.createProvider('tidal', { token: 'x' });
++    expect(t.name).toBe('tidal');
++    expect(t).toBeInstanceOf(Tidal);
++
++    const y = prov.createProvider('youtube', { token: 'x' });
++    expect(y.name).toBe('youtube');
++    expect(y).toBeInstanceOf(YouTube);
++  });
++
++  test('feature flags: disabling a provider blocks creation', async () => {
++    process.env.PROVIDERS_SPOTIFY = 'false';
++    const { prov } = await loadFactory();
++    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
++  });
++
++  test('getProviderForUser: combines token fetch + instance creation', async () => {
++    const { prov, db, Spotify } = await loadFactory();
++    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
++    const inst = await prov.getProviderForUser(42, 'spotify');
++    expect(inst).toBeInstanceOf(Spotify);
++    expect(inst.name).toBe('spotify');
++  });
++});
+diff --git a/vitest.config.ts b/vitest.config.ts
+index d6cc1e9cf053285a68ba81acd41fd0840bab88b2..c5c6d1a00d7c7bc9c3929f3fd1a175b8cacb2b4b
+--- a/vitest.config.ts
++++ b/vitest.config.ts
+@@ -10,6 +10,11 @@
+     alias: {
+       '@app/contracts': path.resolve(rootDir, 'packages/contracts/src/index.ts'),
+       '@app/interop': path.resolve(rootDir, 'packages/interop/src'),
++      '@app/db': path.resolve(rootDir, 'packages/db/src/index.ts'),
++      '@app/providers-spotify': path.resolve(rootDir, 'packages/providers/spotify/src/index.ts'),
++      '@app/providers-deezer': path.resolve(rootDir, 'packages/providers/deezer/src/index.ts'),
++      '@app/providers-tidal': path.resolve(rootDir, 'packages/providers/tidal/src/index.ts'),
++      '@app/providers-youtube': path.resolve(rootDir, 'packages/providers/youtube/src/index.ts'),
+       nock: path.resolve(rootDir, 'codex/support/nock.ts'),
+     },
+   },
+
+
+thinking
+**Checking git status before commit**
+exec
+bash -lc 'git status -sb' in /var/home/rick/Development/playlist-manager succeeded in 43ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+## main...origin/main [ahead 5]
+ M vitest.config.ts
+?? codex/LOGS/codex_run_2025-11-06_02-37-26.log
+?? codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log
+?? codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log.done
+?? codex/LOGS/tasklog_06b_spotify_impl_1762415175.log
+?? codex/LOGS/tasklog_06b_spotify_impl_1762415175.log.done
+?? codex/LOGS/tasklog_06c_deezer_impl_1762415964.log
+?? codex/LOGS/tasklog_06c_deezer_impl_1762415964.log.done
+?? codex/LOGS/tasklog_06d_tidal_impl_1762416484.log
+?? codex/LOGS/tasklog_06d_tidal_impl_1762416484.log.done
+?? codex/LOGS/tasklog_06e_youtube_impl_1762416891.log
+?? codex/LOGS/tasklog_06e_youtube_impl_1762416891.log.done
+?? codex/LOGS/tasklog_06f_provider_factory_tests_1762417333.log
+?? codex/TASKS/work_list
+?? codex/code/codex/06f_provider_factory_tests/
+file update:
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a292b7ad6b52a555fb9fbd268f5100da3bb5e5c7
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
++
++// Reusable getters to re-import modules after env or mocks change
++async function loadFactory() {
++  // Ensure a fresh module state to pick up env flags
++  await vi.resetModules();
++  // Re-apply mocks after reset
++  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
++  vi.doMock('@app/db', async () => {
++    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++  });
++  const prov = await import('../../../../../apps/worker/src/providers');
++  const db = await import('@app/db');
++  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
++  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
++  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
++  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
++  return { prov, db, Spotify, Deezer, Tidal, YouTube };
++}
++
++describe('provider factory', () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    process.env.PROVIDERS_SPOTIFY = 'true';
++    process.env.PROVIDERS_DEEZER  = 'true';
++    process.env.PROVIDERS_TIDAL   = 'true';
++    process.env.PROVIDERS_YOUTUBE = 'true';
++  });
++
++  afterEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
++    const { prov, db } = await loadFactory();
++    // First call returns a token
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
++    const auth = await prov.getProviderAuthForUser(1, 'spotify');
++    expect(auth.token).toBe('tok-123');
++
++    // Next call returns null -> should throw
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
++    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
++  });
++
++  test('createProvider: returns correct classes with matching names', async () => {
++    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
++
++    const s = prov.createProvider('spotify', { token: 'x' });
++    expect(s.name).toBe('spotify');
++    expect(s).toBeInstanceOf(Spotify);
++
++    const d = prov.createProvider('deezer', { token: 'x' });
++    expect(d.name).toBe('deezer');
++    expect(d).toBeInstanceOf(Deezer);
++
++    const t = prov.createProvider('tidal', { token: 'x' });
++    expect(t.name).toBe('tidal');
++    expect(t).toBeInstanceOf(Tidal);
++
++    const y = prov.createProvider('youtube', { token: 'x' });
++    expect(y.name).toBe('youtube');
++    expect(y).toBeInstanceOf(YouTube);
++  });
++
++  test('feature flags: disabling a provider blocks creation', async () => {
++    process.env.PROVIDERS_SPOTIFY = 'false';
++    const { prov } = await loadFactory();
++    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
++  });
++
++  test('getProviderForUser: combines token fetch + instance creation', async () => {
++    const { prov, db, Spotify } = await loadFactory();
++    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
++    const inst = await prov.getProviderForUser(42, 'spotify');
++    expect(inst).toBeInstanceOf(Spotify);
++    expect(inst.name).toBe('spotify');
++  });
++});
+diff --git a/vitest.config.ts b/vitest.config.ts
+index d6cc1e9cf053285a68ba81acd41fd0840bab88b2..c5c6d1a00d7c7bc9c3929f3fd1a175b8cacb2b4b
+--- a/vitest.config.ts
++++ b/vitest.config.ts
+@@ -10,6 +10,11 @@
+     alias: {
+       '@app/contracts': path.resolve(rootDir, 'packages/contracts/src/index.ts'),
+       '@app/interop': path.resolve(rootDir, 'packages/interop/src'),
++      '@app/db': path.resolve(rootDir, 'packages/db/src/index.ts'),
++      '@app/providers-spotify': path.resolve(rootDir, 'packages/providers/spotify/src/index.ts'),
++      '@app/providers-deezer': path.resolve(rootDir, 'packages/providers/deezer/src/index.ts'),
++      '@app/providers-tidal': path.resolve(rootDir, 'packages/providers/tidal/src/index.ts'),
++      '@app/providers-youtube': path.resolve(rootDir, 'packages/providers/youtube/src/index.ts'),
+       nock: path.resolve(rootDir, 'codex/support/nock.ts'),
+     },
+   },
+
+
+thinking
+**Preparing selective staging for commit**
+exec
+bash -lc 'git add vitest.config.ts codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts' in /var/home/rick/Development/playlist-manager succeeded in 40ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+file update:
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a292b7ad6b52a555fb9fbd268f5100da3bb5e5c7
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
++
++// Reusable getters to re-import modules after env or mocks change
++async function loadFactory() {
++  // Ensure a fresh module state to pick up env flags
++  await vi.resetModules();
++  // Re-apply mocks after reset
++  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
++  vi.doMock('@app/db', async () => {
++    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++  });
++  const prov = await import('../../../../../apps/worker/src/providers');
++  const db = await import('@app/db');
++  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
++  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
++  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
++  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
++  return { prov, db, Spotify, Deezer, Tidal, YouTube };
++}
++
++describe('provider factory', () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    process.env.PROVIDERS_SPOTIFY = 'true';
++    process.env.PROVIDERS_DEEZER  = 'true';
++    process.env.PROVIDERS_TIDAL   = 'true';
++    process.env.PROVIDERS_YOUTUBE = 'true';
++  });
++
++  afterEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
++    const { prov, db } = await loadFactory();
++    // First call returns a token
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
++    const auth = await prov.getProviderAuthForUser(1, 'spotify');
++    expect(auth.token).toBe('tok-123');
++
++    // Next call returns null -> should throw
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
++    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
++  });
++
++  test('createProvider: returns correct classes with matching names', async () => {
++    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
++
++    const s = prov.createProvider('spotify', { token: 'x' });
++    expect(s.name).toBe('spotify');
++    expect(s).toBeInstanceOf(Spotify);
++
++    const d = prov.createProvider('deezer', { token: 'x' });
++    expect(d.name).toBe('deezer');
++    expect(d).toBeInstanceOf(Deezer);
++
++    const t = prov.createProvider('tidal', { token: 'x' });
++    expect(t.name).toBe('tidal');
++    expect(t).toBeInstanceOf(Tidal);
++
++    const y = prov.createProvider('youtube', { token: 'x' });
++    expect(y.name).toBe('youtube');
++    expect(y).toBeInstanceOf(YouTube);
++  });
++
++  test('feature flags: disabling a provider blocks creation', async () => {
++    process.env.PROVIDERS_SPOTIFY = 'false';
++    const { prov } = await loadFactory();
++    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
++  });
++
++  test('getProviderForUser: combines token fetch + instance creation', async () => {
++    const { prov, db, Spotify } = await loadFactory();
++    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
++    const inst = await prov.getProviderForUser(42, 'spotify');
++    expect(inst).toBeInstanceOf(Spotify);
++    expect(inst.name).toBe('spotify');
++  });
++});
+diff --git a/vitest.config.ts b/vitest.config.ts
+index d6cc1e9cf053285a68ba81acd41fd0840bab88b2..c5c6d1a00d7c7bc9c3929f3fd1a175b8cacb2b4b
+--- a/vitest.config.ts
++++ b/vitest.config.ts
+@@ -10,6 +10,11 @@
+     alias: {
+       '@app/contracts': path.resolve(rootDir, 'packages/contracts/src/index.ts'),
+       '@app/interop': path.resolve(rootDir, 'packages/interop/src'),
++      '@app/db': path.resolve(rootDir, 'packages/db/src/index.ts'),
++      '@app/providers-spotify': path.resolve(rootDir, 'packages/providers/spotify/src/index.ts'),
++      '@app/providers-deezer': path.resolve(rootDir, 'packages/providers/deezer/src/index.ts'),
++      '@app/providers-tidal': path.resolve(rootDir, 'packages/providers/tidal/src/index.ts'),
++      '@app/providers-youtube': path.resolve(rootDir, 'packages/providers/youtube/src/index.ts'),
+       nock: path.resolve(rootDir, 'codex/support/nock.ts'),
+     },
+   },
+
+
+thinking
+**Checking staged changes**
+exec
+bash -lc 'git diff --cached' in /var/home/rick/Development/playlist-manager succeeded in 82ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000..a292b7a
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
+file update:
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a292b7ad6b52a555fb9fbd268f5100da3bb5e5c7
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
++
++// Reusable getters to re-import modules after env or mocks change
++async function loadFactory() {
++  // Ensure a fresh module state to pick up env flags
++  await vi.resetModules();
++  // Re-apply mocks after reset
++  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
++  vi.doMock('@app/db', async () => {
++    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++  });
++  const prov = await import('../../../../../apps/worker/src/providers');
++  const db = await import('@app/db');
++  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
++  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
++  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
++  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
++  return { prov, db, Spotify, Deezer, Tidal, YouTube };
++}
++
++describe('provider factory', () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    process.env.PROVIDERS_SPOTIFY = 'true';
++    process.env.PROVIDERS_DEEZER  = 'true';
++    process.env.PROVIDERS_TIDAL   = 'true';
++    process.env.PROVIDERS_YOUTUBE = 'true';
++  });
++
++  afterEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
++    const { prov, db } = await loadFactory();
++    // First call returns a token
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
++    const auth = await prov.getProviderAuthForUser(1, 'spotify');
++    expect(auth.token).toBe('tok-123');
++
++    // Next call returns null -> should throw
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
++    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
++  });
++
++  test('createProvider: returns correct classes with matching names', async () => {
++    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
++
++    const s = prov.createProvider('spotify', { token: 'x' });
++    expect(s.name).toBe('spotify');
++    expect(s).toBeInstanceOf(Spotify);
++
++    const d = prov.createProvider('deezer', { token: 'x' });
++    expect(d.name).toBe('deezer');
++    expect(d).toBeInstanceOf(Deezer);
++
++    const t = prov.createProvider('tidal', { token: 'x' });
++    expect(t.name).toBe('tidal');
++    expect(t).toBeInstanceOf(Tidal);
++
++    const y = prov.createProvider('youtube', { token: 'x' });
++    expect(y.name).toBe('youtube');
++    expect(y).toBeInstanceOf(YouTube);
++  });
++
++  test('feature flags: disabling a provider blocks creation', async () => {
++    process.env.PROVIDERS_SPOTIFY = 'false';
++    const { prov } = await loadFactory();
++    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
++  });
++
++  test('getProviderForUser: combines token fetch + instance creation', async () => {
++    const { prov, db, Spotify } = await loadFactory();
++    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
++    const inst = await prov.getProviderForUser(42, 'spotify');
++    expect(inst).toBeInstanceOf(Spotify);
++    expect(inst.name).toBe('spotify');
++  });
++});
+diff --git a/vitest.config.ts b/vitest.config.ts
+index d6cc1e9cf053285a68ba81acd41fd0840bab88b2..c5c6d1a00d7c7bc9c3929f3fd1a175b8cacb2b4b
+--- a/vitest.config.ts
++++ b/vitest.config.ts
+@@ -10,6 +10,11 @@
+     alias: {
+       '@app/contracts': path.resolve(rootDir, 'packages/contracts/src/index.ts'),
+       '@app/interop': path.resolve(rootDir, 'packages/interop/src'),
++      '@app/db': path.resolve(rootDir, 'packages/db/src/index.ts'),
++      '@app/providers-spotify': path.resolve(rootDir, 'packages/providers/spotify/src/index.ts'),
++      '@app/providers-deezer': path.resolve(rootDir, 'packages/providers/deezer/src/index.ts'),
++      '@app/providers-tidal': path.resolve(rootDir, 'packages/providers/tidal/src/index.ts'),
++      '@app/providers-youtube': path.resolve(rootDir, 'packages/providers/youtube/src/index.ts'),
+       nock: path.resolve(rootDir, 'codex/support/nock.ts'),
+     },
+   },
+
+
+thinking
+**Preparing to commit changes**
+exec
+bash -lc 'git status -sb' in /var/home/rick/Development/playlist-manager succeeded in 42ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+## main...origin/main [ahead 5]
+A  codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+M  vitest.config.ts
+?? codex/LOGS/codex_run_2025-11-06_02-37-26.log
+?? codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log
+?? codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log.done
+?? codex/LOGS/tasklog_06b_spotify_impl_1762415175.log
+?? codex/LOGS/tasklog_06b_spotify_impl_1762415175.log.done
+?? codex/LOGS/tasklog_06c_deezer_impl_1762415964.log
+?? codex/LOGS/tasklog_06c_deezer_impl_1762415964.log.done
+?? codex/LOGS/tasklog_06d_tidal_impl_1762416484.log
+?? codex/LOGS/tasklog_06d_tidal_impl_1762416484.log.done
+?? codex/LOGS/tasklog_06e_youtube_impl_1762416891.log
+?? codex/LOGS/tasklog_06e_youtube_impl_1762416891.log.done
+?? codex/LOGS/tasklog_06f_provider_factory_tests_1762417333.log
+?? codex/TASKS/work_list
+file update:
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a292b7ad6b52a555fb9fbd268f5100da3bb5e5c7
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
++
++// Reusable getters to re-import modules after env or mocks change
++async function loadFactory() {
++  // Ensure a fresh module state to pick up env flags
++  await vi.resetModules();
++  // Re-apply mocks after reset
++  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
++  vi.doMock('@app/db', async () => {
++    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++  });
++  const prov = await import('../../../../../apps/worker/src/providers');
++  const db = await import('@app/db');
++  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
++  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
++  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
++  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
++  return { prov, db, Spotify, Deezer, Tidal, YouTube };
++}
++
++describe('provider factory', () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    process.env.PROVIDERS_SPOTIFY = 'true';
++    process.env.PROVIDERS_DEEZER  = 'true';
++    process.env.PROVIDERS_TIDAL   = 'true';
++    process.env.PROVIDERS_YOUTUBE = 'true';
++  });
++
++  afterEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
++    const { prov, db } = await loadFactory();
++    // First call returns a token
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
++    const auth = await prov.getProviderAuthForUser(1, 'spotify');
++    expect(auth.token).toBe('tok-123');
++
++    // Next call returns null -> should throw
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
++    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
++  });
++
++  test('createProvider: returns correct classes with matching names', async () => {
++    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
++
++    const s = prov.createProvider('spotify', { token: 'x' });
++    expect(s.name).toBe('spotify');
++    expect(s).toBeInstanceOf(Spotify);
++
++    const d = prov.createProvider('deezer', { token: 'x' });
++    expect(d.name).toBe('deezer');
++    expect(d).toBeInstanceOf(Deezer);
++
++    const t = prov.createProvider('tidal', { token: 'x' });
++    expect(t.name).toBe('tidal');
++    expect(t).toBeInstanceOf(Tidal);
++
++    const y = prov.createProvider('youtube', { token: 'x' });
++    expect(y.name).toBe('youtube');
++    expect(y).toBeInstanceOf(YouTube);
++  });
++
++  test('feature flags: disabling a provider blocks creation', async () => {
++    process.env.PROVIDERS_SPOTIFY = 'false';
++    const { prov } = await loadFactory();
++    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
++  });
++
++  test('getProviderForUser: combines token fetch + instance creation', async () => {
++    const { prov, db, Spotify } = await loadFactory();
++    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
++    const inst = await prov.getProviderForUser(42, 'spotify');
++    expect(inst).toBeInstanceOf(Spotify);
++    expect(inst.name).toBe('spotify');
++  });
++});
+diff --git a/vitest.config.ts b/vitest.config.ts
+index d6cc1e9cf053285a68ba81acd41fd0840bab88b2..c5c6d1a00d7c7bc9c3929f3fd1a175b8cacb2b4b
+--- a/vitest.config.ts
++++ b/vitest.config.ts
+@@ -10,6 +10,11 @@
+     alias: {
+       '@app/contracts': path.resolve(rootDir, 'packages/contracts/src/index.ts'),
+       '@app/interop': path.resolve(rootDir, 'packages/interop/src'),
++      '@app/db': path.resolve(rootDir, 'packages/db/src/index.ts'),
++      '@app/providers-spotify': path.resolve(rootDir, 'packages/providers/spotify/src/index.ts'),
++      '@app/providers-deezer': path.resolve(rootDir, 'packages/providers/deezer/src/index.ts'),
++      '@app/providers-tidal': path.resolve(rootDir, 'packages/providers/tidal/src/index.ts'),
++      '@app/providers-youtube': path.resolve(rootDir, 'packages/providers/youtube/src/index.ts'),
+       nock: path.resolve(rootDir, 'codex/support/nock.ts'),
+     },
+   },
+
+
+thinking
+**Preparing commit with test coverage message**
+exec
+bash -lc 'git commit -m "test(providers): cover provider factory behaviors"' in /var/home/rick/Development/playlist-manager succeeded in 203ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+[main d160a91] test(providers): cover provider factory behaviors
+ 2 files changed, 96 insertions(+)
+ create mode 100644 codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+file update:
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a292b7ad6b52a555fb9fbd268f5100da3bb5e5c7
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
++
++// Reusable getters to re-import modules after env or mocks change
++async function loadFactory() {
++  // Ensure a fresh module state to pick up env flags
++  await vi.resetModules();
++  // Re-apply mocks after reset
++  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
++  vi.doMock('@app/db', async () => {
++    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++  });
++  const prov = await import('../../../../../apps/worker/src/providers');
++  const db = await import('@app/db');
++  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
++  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
++  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
++  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
++  return { prov, db, Spotify, Deezer, Tidal, YouTube };
++}
++
++describe('provider factory', () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    process.env.PROVIDERS_SPOTIFY = 'true';
++    process.env.PROVIDERS_DEEZER  = 'true';
++    process.env.PROVIDERS_TIDAL   = 'true';
++    process.env.PROVIDERS_YOUTUBE = 'true';
++  });
++
++  afterEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
++    const { prov, db } = await loadFactory();
++    // First call returns a token
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
++    const auth = await prov.getProviderAuthForUser(1, 'spotify');
++    expect(auth.token).toBe('tok-123');
++
++    // Next call returns null -> should throw
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
++    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
++  });
++
++  test('createProvider: returns correct classes with matching names', async () => {
++    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
++
++    const s = prov.createProvider('spotify', { token: 'x' });
++    expect(s.name).toBe('spotify');
++    expect(s).toBeInstanceOf(Spotify);
++
++    const d = prov.createProvider('deezer', { token: 'x' });
++    expect(d.name).toBe('deezer');
++    expect(d).toBeInstanceOf(Deezer);
++
++    const t = prov.createProvider('tidal', { token: 'x' });
++    expect(t.name).toBe('tidal');
++    expect(t).toBeInstanceOf(Tidal);
++
++    const y = prov.createProvider('youtube', { token: 'x' });
++    expect(y.name).toBe('youtube');
++    expect(y).toBeInstanceOf(YouTube);
++  });
++
++  test('feature flags: disabling a provider blocks creation', async () => {
++    process.env.PROVIDERS_SPOTIFY = 'false';
++    const { prov } = await loadFactory();
++    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
++  });
++
++  test('getProviderForUser: combines token fetch + instance creation', async () => {
++    const { prov, db, Spotify } = await loadFactory();
++    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
++    const inst = await prov.getProviderForUser(42, 'spotify');
++    expect(inst).toBeInstanceOf(Spotify);
++    expect(inst.name).toBe('spotify');
++  });
++});
+diff --git a/vitest.config.ts b/vitest.config.ts
+index d6cc1e9cf053285a68ba81acd41fd0840bab88b2..c5c6d1a00d7c7bc9c3929f3fd1a175b8cacb2b4b
+--- a/vitest.config.ts
++++ b/vitest.config.ts
+@@ -10,6 +10,11 @@
+     alias: {
+       '@app/contracts': path.resolve(rootDir, 'packages/contracts/src/index.ts'),
+       '@app/interop': path.resolve(rootDir, 'packages/interop/src'),
++      '@app/db': path.resolve(rootDir, 'packages/db/src/index.ts'),
++      '@app/providers-spotify': path.resolve(rootDir, 'packages/providers/spotify/src/index.ts'),
++      '@app/providers-deezer': path.resolve(rootDir, 'packages/providers/deezer/src/index.ts'),
++      '@app/providers-tidal': path.resolve(rootDir, 'packages/providers/tidal/src/index.ts'),
++      '@app/providers-youtube': path.resolve(rootDir, 'packages/providers/youtube/src/index.ts'),
+       nock: path.resolve(rootDir, 'codex/support/nock.ts'),
+     },
+   },
+
+
+thinking
+**Marking plan step completed**
+Plan update
+  ✓ Add Vitest suite for provider factory covering auth fetch, class mapping, flags, user helper
+  ✓ Run relevant tests (Vitest) to ensure passing
+  ✓ Stage changes and commit with descriptive message
+file update:
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a292b7ad6b52a555fb9fbd268f5100da3bb5e5c7
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
++
++// Reusable getters to re-import modules after env or mocks change
++async function loadFactory() {
++  // Ensure a fresh module state to pick up env flags
++  await vi.resetModules();
++  // Re-apply mocks after reset
++  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
++  vi.doMock('@app/db', async () => {
++    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++  });
++  const prov = await import('../../../../../apps/worker/src/providers');
++  const db = await import('@app/db');
++  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
++  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
++  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
++  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
++  return { prov, db, Spotify, Deezer, Tidal, YouTube };
++}
++
++describe('provider factory', () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    process.env.PROVIDERS_SPOTIFY = 'true';
++    process.env.PROVIDERS_DEEZER  = 'true';
++    process.env.PROVIDERS_TIDAL   = 'true';
++    process.env.PROVIDERS_YOUTUBE = 'true';
++  });
++
++  afterEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
++    const { prov, db } = await loadFactory();
++    // First call returns a token
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
++    const auth = await prov.getProviderAuthForUser(1, 'spotify');
++    expect(auth.token).toBe('tok-123');
++
++    // Next call returns null -> should throw
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
++    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
++  });
++
++  test('createProvider: returns correct classes with matching names', async () => {
++    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
++
++    const s = prov.createProvider('spotify', { token: 'x' });
++    expect(s.name).toBe('spotify');
++    expect(s).toBeInstanceOf(Spotify);
++
++    const d = prov.createProvider('deezer', { token: 'x' });
++    expect(d.name).toBe('deezer');
++    expect(d).toBeInstanceOf(Deezer);
++
++    const t = prov.createProvider('tidal', { token: 'x' });
++    expect(t.name).toBe('tidal');
++    expect(t).toBeInstanceOf(Tidal);
++
++    const y = prov.createProvider('youtube', { token: 'x' });
++    expect(y.name).toBe('youtube');
++    expect(y).toBeInstanceOf(YouTube);
++  });
++
++  test('feature flags: disabling a provider blocks creation', async () => {
++    process.env.PROVIDERS_SPOTIFY = 'false';
++    const { prov } = await loadFactory();
++    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
++  });
++
++  test('getProviderForUser: combines token fetch + instance creation', async () => {
++    const { prov, db, Spotify } = await loadFactory();
++    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
++    const inst = await prov.getProviderForUser(42, 'spotify');
++    expect(inst).toBeInstanceOf(Spotify);
++    expect(inst.name).toBe('spotify');
++  });
++});
+diff --git a/vitest.config.ts b/vitest.config.ts
+index d6cc1e9cf053285a68ba81acd41fd0840bab88b2..c5c6d1a00d7c7bc9c3929f3fd1a175b8cacb2b4b
+--- a/vitest.config.ts
++++ b/vitest.config.ts
+@@ -10,6 +10,11 @@
+     alias: {
+       '@app/contracts': path.resolve(rootDir, 'packages/contracts/src/index.ts'),
+       '@app/interop': path.resolve(rootDir, 'packages/interop/src'),
++      '@app/db': path.resolve(rootDir, 'packages/db/src/index.ts'),
++      '@app/providers-spotify': path.resolve(rootDir, 'packages/providers/spotify/src/index.ts'),
++      '@app/providers-deezer': path.resolve(rootDir, 'packages/providers/deezer/src/index.ts'),
++      '@app/providers-tidal': path.resolve(rootDir, 'packages/providers/tidal/src/index.ts'),
++      '@app/providers-youtube': path.resolve(rootDir, 'packages/providers/youtube/src/index.ts'),
+       nock: path.resolve(rootDir, 'codex/support/nock.ts'),
+     },
+   },
+
+
+thinking
+**Checking final git status**
+exec
+bash -lc 'git status -sb' in /var/home/rick/Development/playlist-manager succeeded in 45ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+## main...origin/main [ahead 6]
+?? codex/LOGS/codex_run_2025-11-06_02-37-26.log
+?? codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log
+?? codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log.done
+?? codex/LOGS/tasklog_06b_spotify_impl_1762415175.log
+?? codex/LOGS/tasklog_06b_spotify_impl_1762415175.log.done
+?? codex/LOGS/tasklog_06c_deezer_impl_1762415964.log
+?? codex/LOGS/tasklog_06c_deezer_impl_1762415964.log.done
+?? codex/LOGS/tasklog_06d_tidal_impl_1762416484.log
+?? codex/LOGS/tasklog_06d_tidal_impl_1762416484.log.done
+?? codex/LOGS/tasklog_06e_youtube_impl_1762416891.log
+?? codex/LOGS/tasklog_06e_youtube_impl_1762416891.log.done
+?? codex/LOGS/tasklog_06f_provider_factory_tests_1762417333.log
+?? codex/TASKS/work_list
+file update:
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a292b7ad6b52a555fb9fbd268f5100da3bb5e5c7
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
++
++// Reusable getters to re-import modules after env or mocks change
++async function loadFactory() {
++  // Ensure a fresh module state to pick up env flags
++  await vi.resetModules();
++  // Re-apply mocks after reset
++  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
++  vi.doMock('@app/db', async () => {
++    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++  });
++  const prov = await import('../../../../../apps/worker/src/providers');
++  const db = await import('@app/db');
++  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
++  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
++  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
++  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
++  return { prov, db, Spotify, Deezer, Tidal, YouTube };
++}
++
++describe('provider factory', () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    process.env.PROVIDERS_SPOTIFY = 'true';
++    process.env.PROVIDERS_DEEZER  = 'true';
++    process.env.PROVIDERS_TIDAL   = 'true';
++    process.env.PROVIDERS_YOUTUBE = 'true';
++  });
++
++  afterEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
++    const { prov, db } = await loadFactory();
++    // First call returns a token
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
++    const auth = await prov.getProviderAuthForUser(1, 'spotify');
++    expect(auth.token).toBe('tok-123');
++
++    // Next call returns null -> should throw
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
++    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
++  });
++
++  test('createProvider: returns correct classes with matching names', async () => {
++    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
++
++    const s = prov.createProvider('spotify', { token: 'x' });
++    expect(s.name).toBe('spotify');
++    expect(s).toBeInstanceOf(Spotify);
++
++    const d = prov.createProvider('deezer', { token: 'x' });
++    expect(d.name).toBe('deezer');
++    expect(d).toBeInstanceOf(Deezer);
++
++    const t = prov.createProvider('tidal', { token: 'x' });
++    expect(t.name).toBe('tidal');
++    expect(t).toBeInstanceOf(Tidal);
++
++    const y = prov.createProvider('youtube', { token: 'x' });
++    expect(y.name).toBe('youtube');
++    expect(y).toBeInstanceOf(YouTube);
++  });
++
++  test('feature flags: disabling a provider blocks creation', async () => {
++    process.env.PROVIDERS_SPOTIFY = 'false';
++    const { prov } = await loadFactory();
++    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
++  });
++
++  test('getProviderForUser: combines token fetch + instance creation', async () => {
++    const { prov, db, Spotify } = await loadFactory();
++    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
++    const inst = await prov.getProviderForUser(42, 'spotify');
++    expect(inst).toBeInstanceOf(Spotify);
++    expect(inst.name).toBe('spotify');
++  });
++});
+diff --git a/vitest.config.ts b/vitest.config.ts
+index d6cc1e9cf053285a68ba81acd41fd0840bab88b2..c5c6d1a00d7c7bc9c3929f3fd1a175b8cacb2b4b
+--- a/vitest.config.ts
++++ b/vitest.config.ts
+@@ -10,6 +10,11 @@
+     alias: {
+       '@app/contracts': path.resolve(rootDir, 'packages/contracts/src/index.ts'),
+       '@app/interop': path.resolve(rootDir, 'packages/interop/src'),
++      '@app/db': path.resolve(rootDir, 'packages/db/src/index.ts'),
++      '@app/providers-spotify': path.resolve(rootDir, 'packages/providers/spotify/src/index.ts'),
++      '@app/providers-deezer': path.resolve(rootDir, 'packages/providers/deezer/src/index.ts'),
++      '@app/providers-tidal': path.resolve(rootDir, 'packages/providers/tidal/src/index.ts'),
++      '@app/providers-youtube': path.resolve(rootDir, 'packages/providers/youtube/src/index.ts'),
+       nock: path.resolve(rootDir, 'codex/support/nock.ts'),
+     },
+   },
+
+
+thinking
+**Summarizing final commit details and test results**
+exec
+bash -lc "nl -ba vitest.config.ts | sed -n '1,80p'" in /var/home/rick/Development/playlist-manager succeeded in 41ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+     1	import path from 'node:path';
+     2	import { fileURLToPath } from 'node:url';
+     3	
+     4	import { defineConfig } from 'vitest/config';
+     5	
+     6	const rootDir = path.dirname(fileURLToPath(import.meta.url));
+     7	
+     8	export default defineConfig({
+     9	  resolve: {
+    10	    alias: {
+    11	      '@app/contracts': path.resolve(rootDir, 'packages/contracts/src/index.ts'),
+    12	      '@app/interop': path.resolve(rootDir, 'packages/interop/src'),
+    13	      '@app/db': path.resolve(rootDir, 'packages/db/src/index.ts'),
+    14	      '@app/providers-spotify': path.resolve(rootDir, 'packages/providers/spotify/src/index.ts'),
+    15	      '@app/providers-deezer': path.resolve(rootDir, 'packages/providers/deezer/src/index.ts'),
+    16	      '@app/providers-tidal': path.resolve(rootDir, 'packages/providers/tidal/src/index.ts'),
+    17	      '@app/providers-youtube': path.resolve(rootDir, 'packages/providers/youtube/src/index.ts'),
+    18	      nock: path.resolve(rootDir, 'codex/support/nock.ts'),
+file update:
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a292b7ad6b52a555fb9fbd268f5100da3bb5e5c7
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
++
++// Reusable getters to re-import modules after env or mocks change
++async function loadFactory() {
++  // Ensure a fresh module state to pick up env flags
++  await vi.resetModules();
++  // Re-apply mocks after reset
++  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
++  vi.doMock('@app/db', async () => {
++    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++  });
++  const prov = await import('../../../../../apps/worker/src/providers');
++  const db = await import('@app/db');
++  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
++  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
++  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
++  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
++  return { prov, db, Spotify, Deezer, Tidal, YouTube };
++}
++
++describe('provider factory', () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    process.env.PROVIDERS_SPOTIFY = 'true';
++    process.env.PROVIDERS_DEEZER  = 'true';
++    process.env.PROVIDERS_TIDAL   = 'true';
++    process.env.PROVIDERS_YOUTUBE = 'true';
++  });
++
++  afterEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
++    const { prov, db } = await loadFactory();
++    // First call returns a token
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
++    const auth = await prov.getProviderAuthForUser(1, 'spotify');
++    expect(auth.token).toBe('tok-123');
++
++    // Next call returns null -> should throw
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
++    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
++  });
++
++  test('createProvider: returns correct classes with matching names', async () => {
++    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
++
++    const s = prov.createProvider('spotify', { token: 'x' });
++    expect(s.name).toBe('spotify');
++    expect(s).toBeInstanceOf(Spotify);
++
++    const d = prov.createProvider('deezer', { token: 'x' });
++    expect(d.name).toBe('deezer');
++    expect(d).toBeInstanceOf(Deezer);
++
++    const t = prov.createProvider('tidal', { token: 'x' });
++    expect(t.name).toBe('tidal');
++    expect(t).toBeInstanceOf(Tidal);
++
++    const y = prov.createProvider('youtube', { token: 'x' });
++    expect(y.name).toBe('youtube');
++    expect(y).toBeInstanceOf(YouTube);
++  });
++
++  test('feature flags: disabling a provider blocks creation', async () => {
++    process.env.PROVIDERS_SPOTIFY = 'false';
++    const { prov } = await loadFactory();
++    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
++  });
++
++  test('getProviderForUser: combines token fetch + instance creation', async () => {
++    const { prov, db, Spotify } = await loadFactory();
++    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
++    const inst = await prov.getProviderForUser(42, 'spotify');
++    expect(inst).toBeInstanceOf(Spotify);
++    expect(inst.name).toBe('spotify');
++  });
++});
+diff --git a/vitest.config.ts b/vitest.config.ts
+index d6cc1e9cf053285a68ba81acd41fd0840bab88b2..c5c6d1a00d7c7bc9c3929f3fd1a175b8cacb2b4b
+--- a/vitest.config.ts
++++ b/vitest.config.ts
+@@ -10,6 +10,11 @@
+     alias: {
+       '@app/contracts': path.resolve(rootDir, 'packages/contracts/src/index.ts'),
+       '@app/interop': path.resolve(rootDir, 'packages/interop/src'),
++      '@app/db': path.resolve(rootDir, 'packages/db/src/index.ts'),
++      '@app/providers-spotify': path.resolve(rootDir, 'packages/providers/spotify/src/index.ts'),
++      '@app/providers-deezer': path.resolve(rootDir, 'packages/providers/deezer/src/index.ts'),
++      '@app/providers-tidal': path.resolve(rootDir, 'packages/providers/tidal/src/index.ts'),
++      '@app/providers-youtube': path.resolve(rootDir, 'packages/providers/youtube/src/index.ts'),
+       nock: path.resolve(rootDir, 'codex/support/nock.ts'),
+     },
+   },
+
+
+thinking
+**Annotating new test file with line numbers**
+exec
+bash -lc "nl -ba codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts | sed -n '1,120p'" in /var/home/rick/Development/playlist-manager succeeded in 53ms:
+/home/rick/.bashrc: line 30: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+/home/rick/.bash_profile: line 10: /home/rick/.config/broot/launcher/bash/br: No such file or directory
+     1	import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
+     2	
+     3	// We'll mock @app/db BEFORE importing the factory
+     4	vi.mock('../../../../../packages/db/src/client', () => {
+     5	  // In case someone imports via @app/db barrel:
+     6	  return { prisma: { account: { findFirst: vi.fn() } } };
+     7	});
+     8	vi.mock('@app/db', async () => {
+     9	  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
+    10	  // Ensure a mockable prisma exists no matter which path code uses
+    11	  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
+    12	});
+    13	
+    14	// Reusable getters to re-import modules after env or mocks change
+    15	async function loadFactory() {
+    16	  // Ensure a fresh module state to pick up env flags
+    17	  await vi.resetModules();
+    18	  // Re-apply mocks after reset
+file update:
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a292b7ad6b52a555fb9fbd268f5100da3bb5e5c7
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
++
++// Reusable getters to re-import modules after env or mocks change
++async function loadFactory() {
++  // Ensure a fresh module state to pick up env flags
++  await vi.resetModules();
++  // Re-apply mocks after reset
++  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
++  vi.doMock('@app/db', async () => {
++    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++  });
++  const prov = await import('../../../../../apps/worker/src/providers');
++  const db = await import('@app/db');
++  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
++  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
++  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
++  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
++  return { prov, db, Spotify, Deezer, Tidal, YouTube };
++}
++
++describe('provider factory', () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    process.env.PROVIDERS_SPOTIFY = 'true';
++    process.env.PROVIDERS_DEEZER  = 'true';
++    process.env.PROVIDERS_TIDAL   = 'true';
++    process.env.PROVIDERS_YOUTUBE = 'true';
++  });
++
++  afterEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
++    const { prov, db } = await loadFactory();
++    // First call returns a token
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
++    const auth = await prov.getProviderAuthForUser(1, 'spotify');
++    expect(auth.token).toBe('tok-123');
++
++    // Next call returns null -> should throw
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
++    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
++  });
++
++  test('createProvider: returns correct classes with matching names', async () => {
++    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
++
++    const s = prov.createProvider('spotify', { token: 'x' });
++    expect(s.name).toBe('spotify');
++    expect(s).toBeInstanceOf(Spotify);
++
++    const d = prov.createProvider('deezer', { token: 'x' });
++    expect(d.name).toBe('deezer');
++    expect(d).toBeInstanceOf(Deezer);
++
++    const t = prov.createProvider('tidal', { token: 'x' });
++    expect(t.name).toBe('tidal');
++    expect(t).toBeInstanceOf(Tidal);
++
++    const y = prov.createProvider('youtube', { token: 'x' });
++    expect(y.name).toBe('youtube');
++    expect(y).toBeInstanceOf(YouTube);
++  });
++
++  test('feature flags: disabling a provider blocks creation', async () => {
++    process.env.PROVIDERS_SPOTIFY = 'false';
++    const { prov } = await loadFactory();
++    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
++  });
++
++  test('getProviderForUser: combines token fetch + instance creation', async () => {
++    const { prov, db, Spotify } = await loadFactory();
++    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
++    const inst = await prov.getProviderForUser(42, 'spotify');
++    expect(inst).toBeInstanceOf(Spotify);
++    expect(inst.name).toBe('spotify');
++  });
++});
+diff --git a/vitest.config.ts b/vitest.config.ts
+index d6cc1e9cf053285a68ba81acd41fd0840bab88b2..c5c6d1a00d7c7bc9c3929f3fd1a175b8cacb2b4b
+--- a/vitest.config.ts
++++ b/vitest.config.ts
+@@ -10,6 +10,11 @@
+     alias: {
+       '@app/contracts': path.resolve(rootDir, 'packages/contracts/src/index.ts'),
+       '@app/interop': path.resolve(rootDir, 'packages/interop/src'),
++      '@app/db': path.resolve(rootDir, 'packages/db/src/index.ts'),
++      '@app/providers-spotify': path.resolve(rootDir, 'packages/providers/spotify/src/index.ts'),
++      '@app/providers-deezer': path.resolve(rootDir, 'packages/providers/deezer/src/index.ts'),
++      '@app/providers-tidal': path.resolve(rootDir, 'packages/providers/tidal/src/index.ts'),
++      '@app/providers-youtube': path.resolve(rootDir, 'packages/providers/youtube/src/index.ts'),
+       nock: path.resolve(rootDir, 'codex/support/nock.ts'),
+     },
+   },
+
+
+thinking
+**Preparing detailed test summary and commit message**
+
+I'm organizing a clear final message detailing the new Vitest tests for the provider factory, including file references, test commands, commit messages, modified files with brief descriptions, and a git status snippet highlighting untracked log files, all to provide a thorough but concise update.
+codex
+Added a Vitest suite that mocks Prisma, reloads the provider factory per env flag, and asserts auth retrieval, class mapping, flag gating, and `getProviderForUser` composition (`codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts:1`). Updated the Vitest resolve aliases so workspace provider and db packages load their TypeScript sources during tests (`vitest.config.ts:11`).
+
+**Tests**
+- `pnpm vitest --run codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts`
+
+**Commit**
+- `test(providers): cover provider factory behaviors`
+
+**Modified Files**
+- `codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts`
+- `vitest.config.ts`
+
+**Git status**
+```
+## main...origin/main [ahead 6]
+?? codex/LOGS/codex_run_2025-11-06_02-37-26.log
+?? codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log
+?? codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log.done
+?? codex/LOGS/tasklog_06b_spotify_impl_1762415175.log
+?? codex/LOGS/tasklog_06b_spotify_impl_1762415175.log.done
+?? codex/LOGS/tasklog_06c_deezer_impl_1762415964.log
+?? codex/LOGS/tasklog_06c_deezer_impl_1762415964.log.done
+?? codex/LOGS/tasklog_06d_tidal_impl_1762416484.log
+?? codex/LOGS/tasklog_06d_tidal_impl_1762416484.log.done
+?? codex/LOGS/tasklog_06e_youtube_impl_1762416891.log
+?? codex/LOGS/tasklog_06e_youtube_impl_1762416891.log.done
+?? codex/LOGS/tasklog_06f_provider_factory_tests_1762417333.log
+?? codex/TASKS/work_list
+```
+file update:
+diff --git a/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a292b7ad6b52a555fb9fbd268f5100da3bb5e5c7
+--- /dev/null
++++ b/codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts
+@@ -0,0 +1,91 @@
++import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
++
++// We'll mock @app/db BEFORE importing the factory
++vi.mock('../../../../../packages/db/src/client', () => {
++  // In case someone imports via @app/db barrel:
++  return { prisma: { account: { findFirst: vi.fn() } } };
++});
++vi.mock('@app/db', async () => {
++  const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++  // Ensure a mockable prisma exists no matter which path code uses
++  return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++});
++
++// Reusable getters to re-import modules after env or mocks change
++async function loadFactory() {
++  // Ensure a fresh module state to pick up env flags
++  await vi.resetModules();
++  // Re-apply mocks after reset
++  vi.doMock('../../../../../packages/db/src/client', () => ({ prisma: { account: { findFirst: vi.fn() } } }));
++  vi.doMock('@app/db', async () => {
++    const mod = await vi.importActual<any>('../../../../../packages/db/src/index.ts');
++    return { ...mod, prisma: { account: { findFirst: vi.fn() } } };
++  });
++  const prov = await import('../../../../../apps/worker/src/providers');
++  const db = await import('@app/db');
++  const Spotify = (await import('../../../../../packages/providers/spotify/src/index.ts')).default;
++  const Deezer  = (await import('../../../../../packages/providers/deezer/src/index.ts')).default;
++  const Tidal   = (await import('../../../../../packages/providers/tidal/src/index.ts')).default;
++  const YouTube = (await import('../../../../../packages/providers/youtube/src/index.ts')).default;
++  return { prov, db, Spotify, Deezer, Tidal, YouTube };
++}
++
++describe('provider factory', () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    process.env.PROVIDERS_SPOTIFY = 'true';
++    process.env.PROVIDERS_DEEZER  = 'true';
++    process.env.PROVIDERS_TIDAL   = 'true';
++    process.env.PROVIDERS_YOUTUBE = 'true';
++  });
++
++  afterEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  test('getProviderAuthForUser: returns token and throws MissingProviderAuthError when missing', async () => {
++    const { prov, db } = await loadFactory();
++    // First call returns a token
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce({ access_token: 'tok-123' });
++    const auth = await prov.getProviderAuthForUser(1, 'spotify');
++    expect(auth.token).toBe('tok-123');
++
++    // Next call returns null -> should throw
++    (db.prisma.account.findFirst as any).mockResolvedValueOnce(null);
++    await expect(prov.getProviderAuthForUser(1, 'spotify')).rejects.toBeInstanceOf(prov.MissingProviderAuthError);
++  });
++
++  test('createProvider: returns correct classes with matching names', async () => {
++    const { prov, Spotify, Deezer, Tidal, YouTube } = await loadFactory();
++
++    const s = prov.createProvider('spotify', { token: 'x' });
++    expect(s.name).toBe('spotify');
++    expect(s).toBeInstanceOf(Spotify);
++
++    const d = prov.createProvider('deezer', { token: 'x' });
++    expect(d.name).toBe('deezer');
++    expect(d).toBeInstanceOf(Deezer);
++
++    const t = prov.createProvider('tidal', { token: 'x' });
++    expect(t.name).toBe('tidal');
++    expect(t).toBeInstanceOf(Tidal);
++
++    const y = prov.createProvider('youtube', { token: 'x' });
++    expect(y.name).toBe('youtube');
++    expect(y).toBeInstanceOf(YouTube);
++  });
++
++  test('feature flags: disabling a provider blocks creation', async () => {
++    process.env.PROVIDERS_SPOTIFY = 'false';
++    const { prov } = await loadFactory();
++    expect(() => prov.createProvider('spotify', { token: 'z' })).toThrow(/disabled/i);
++  });
++
++  test('getProviderForUser: combines token fetch + instance creation', async () => {
++    const { prov, db, Spotify } = await loadFactory();
++    (db.prisma.account.findFirst as any).mockResolvedValue({ access_token: 'tok-xyz' });
++    const inst = await prov.getProviderForUser(42, 'spotify');
++    expect(inst).toBeInstanceOf(Spotify);
++    expect(inst.name).toBe('spotify');
++  });
++});
+diff --git a/vitest.config.ts b/vitest.config.ts
+index d6cc1e9cf053285a68ba81acd41fd0840bab88b2..c5c6d1a00d7c7bc9c3929f3fd1a175b8cacb2b4b
+--- a/vitest.config.ts
++++ b/vitest.config.ts
+@@ -10,6 +10,11 @@
+     alias: {
+       '@app/contracts': path.resolve(rootDir, 'packages/contracts/src/index.ts'),
+       '@app/interop': path.resolve(rootDir, 'packages/interop/src'),
++      '@app/db': path.resolve(rootDir, 'packages/db/src/index.ts'),
++      '@app/providers-spotify': path.resolve(rootDir, 'packages/providers/spotify/src/index.ts'),
++      '@app/providers-deezer': path.resolve(rootDir, 'packages/providers/deezer/src/index.ts'),
++      '@app/providers-tidal': path.resolve(rootDir, 'packages/providers/tidal/src/index.ts'),
++      '@app/providers-youtube': path.resolve(rootDir, 'packages/providers/youtube/src/index.ts'),
+       nock: path.resolve(rootDir, 'codex/support/nock.ts'),
+     },
+   },
+
+tokens used
+67,538
+Added a Vitest suite that mocks Prisma, reloads the provider factory per env flag, and asserts auth retrieval, class mapping, flag gating, and `getProviderForUser` composition (`codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts:1`). Updated the Vitest resolve aliases so workspace provider and db packages load their TypeScript sources during tests (`vitest.config.ts:11`).
+
+**Tests**
+- `pnpm vitest --run codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts`
+
+**Commit**
+- `test(providers): cover provider factory behaviors`
+
+**Modified Files**
+- `codex/code/codex/06f_provider_factory_tests/tests/providers.factory.test.ts`
+- `vitest.config.ts`
+
+**Git status**
+```
+## main...origin/main [ahead 6]
+?? codex/LOGS/codex_run_2025-11-06_02-37-26.log
+?? codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log
+?? codex/LOGS/tasklog_06a_provider_interfaces_1762414646.log.done
+?? codex/LOGS/tasklog_06b_spotify_impl_1762415175.log
+?? codex/LOGS/tasklog_06b_spotify_impl_1762415175.log.done
+?? codex/LOGS/tasklog_06c_deezer_impl_1762415964.log
+?? codex/LOGS/tasklog_06c_deezer_impl_1762415964.log.done
+?? codex/LOGS/tasklog_06d_tidal_impl_1762416484.log
+?? codex/LOGS/tasklog_06d_tidal_impl_1762416484.log.done
+?? codex/LOGS/tasklog_06e_youtube_impl_1762416891.log
+?? codex/LOGS/tasklog_06e_youtube_impl_1762416891.log.done
+?? codex/LOGS/tasklog_06f_provider_factory_tests_1762417333.log
+?? codex/TASKS/work_list
+```
