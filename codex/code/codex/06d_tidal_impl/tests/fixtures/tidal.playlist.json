@@ -1,0 +1,27 @@
+{
+  "name": "T",
+  "description": "tidal mix",
+  "numberOfTracks": 2,
+  "items": [
+    {
+      "track": {
+        "id": "t1",
+        "title": "A",
+        "isrc": "USX1",
+        "artists": [{ "name": "AA" }],
+        "album": { "title": "AL" },
+        "duration": 123000
+      }
+    },
+    {
+      "track": {
+        "id": "t2",
+        "title": "B",
+        "artists": [{ "name": "BB" }],
+        "album": { "title": "BL" },
+        "duration": 1000,
+        "externalIds": { "isrc": "USX2" }
+      }
+    }
+  ]
+}
