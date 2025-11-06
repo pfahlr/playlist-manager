@@ -1,0 +1,49 @@
+{
+  "data": [
+    {
+      "id": "901",
+      "title": "Eclipse",
+      "duration": 215,
+      "explicit_lyrics": false,
+      "isrc": "USABC1200001",
+      "link": "https://www.deezer.com/track/901",
+      "artist": {
+        "id": "111",
+        "name": "Aurora Duo"
+      },
+      "contributors": [
+        { "id": "111", "name": "Aurora Duo" },
+        { "id": "112", "name": "Solar Keys" }
+      ],
+      "album": {
+        "id": "301",
+        "title": "Skyline",
+        "cover": "https://cdn.test/cover.jpg",
+        "release_date": "2023-07-14"
+      }
+    },
+    {
+      "id": "902",
+      "title": "Mirage",
+      "duration": 189,
+      "explicit_lyrics": true,
+      "isrc": null,
+      "link": "https://www.deezer.com/track/902",
+      "artist": {
+        "id": "113",
+        "name": "Neon Pulse"
+      },
+      "contributors": [
+        { "id": "113", "name": "Neon Pulse" }
+      ],
+      "album": {
+        "id": "302",
+        "title": "Desert Bloom",
+        "cover": "https://cdn.test/cover2.jpg",
+        "release_date": "2022-04-22"
+      }
+    }
+  ],
+  "total": 2,
+  "next": null
+}
