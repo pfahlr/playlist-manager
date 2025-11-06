@@ -10,6 +10,11 @@ export default defineConfig({
     alias: {
       '@app/contracts': path.resolve(rootDir, 'packages/contracts/src/index.ts'),
       '@app/interop': path.resolve(rootDir, 'packages/interop/src'),
+      '@app/db': path.resolve(rootDir, 'packages/db/src/index.ts'),
+      '@app/providers-spotify': path.resolve(rootDir, 'packages/providers/spotify/src/index.ts'),
+      '@app/providers-deezer': path.resolve(rootDir, 'packages/providers/deezer/src/index.ts'),
+      '@app/providers-tidal': path.resolve(rootDir, 'packages/providers/tidal/src/index.ts'),
+      '@app/providers-youtube': path.resolve(rootDir, 'packages/providers/youtube/src/index.ts'),
       nock: path.resolve(rootDir, 'codex/support/nock.ts'),
     },
   },
