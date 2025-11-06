@@ -10,6 +10,7 @@ export default defineConfig({
     alias: {
       '@app/contracts': path.resolve(rootDir, 'packages/contracts/src/index.ts'),
       '@app/interop': path.resolve(rootDir, 'packages/interop/src'),
+      nock: path.resolve(rootDir, 'codex/support/nock.ts'),
     },
   },
   test: {

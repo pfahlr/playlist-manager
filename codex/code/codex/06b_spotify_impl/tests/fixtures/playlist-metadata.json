@@ -1,0 +1,32 @@
+{
+  "id": "test-playlist",
+  "name": "Focus Flow",
+  "description": "Deep work background music.",
+  "tracks": {
+    "limit": 1,
+    "offset": 0,
+    "total": 2,
+    "next": "https://api.spotify.com/v1/playlists/test-playlist/tracks?offset=1&limit=1",
+    "items": [
+      {
+        "added_at": "2024-01-01T12:00:00Z",
+        "track": {
+          "id": "track-001",
+          "name": "Deep Dive",
+          "duration_ms": 231000,
+          "explicit": false,
+          "external_ids": {
+            "isrc": "USRC12400001"
+          },
+          "artists": [
+            { "name": "Aurora Lane" }
+          ],
+          "album": {
+            "name": "Ocean Patterns",
+            "release_date": "2023-09-01"
+          }
+        }
+      }
+    ]
+  }
+}

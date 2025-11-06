@@ -1,0 +1,26 @@
+{
+  "limit": 1,
+  "offset": 1,
+  "total": 2,
+  "next": null,
+  "items": [
+    {
+      "added_at": "2024-01-01T12:03:00Z",
+      "track": {
+        "id": "track-002",
+        "name": "Shallow Breath",
+        "duration_ms": 198500,
+        "explicit": true,
+        "external_ids": {},
+        "artists": [
+          { "name": "Aurora Lane" },
+          { "name": "Synthline" }
+        ],
+        "album": {
+          "name": "Ocean Patterns",
+          "release_date": "2023"
+        }
+      }
+    }
+  ]
+}
