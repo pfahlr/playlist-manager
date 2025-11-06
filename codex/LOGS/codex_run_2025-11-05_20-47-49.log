@@ -1,0 +1,49 @@
+🚀 Codex Runner @ Wed Nov  5 08:47:49 PM EST 2025
+Working Dir: /home/rick/Development/playlist-manager
+Task Dir: codex/TASKS
+Log Dir: codex/LOGS
+Auto-Commit: true
+Config File: ./codex.toml
+Tasks: 03c_token_encryption_at_rest 04a_api_validation_wiring 04b_openapi_warning_silencer 04c_api_docs_ui 04d_config_feature_flags
+===========================================
+🟡 Executing task: 03c_token_encryption_at_rest
+✅ Task 03c_token_encryption_at_rest completed successfully.
+📝 Committing files for 03c_token_encryption_at_rest...
+[main 90f53dc] Codex Task: 03c_token_encryption_at_rest
+ 7 files changed, 349 insertions(+), 10 deletions(-)
+📝 Commit created: 90f53dc64952b8ae667146a9c0b0c28be3125ffb
+🧯 Rollback with: git reset --soft 90f53dc64952b8ae667146a9c0b0c28be3125ffb^ && git restore --staged .
+-------------------------------------------
+🟡 Executing task: 04a_api_validation_wiring
+✅ Task 04a_api_validation_wiring completed successfully.
+📝 Committing files for 04a_api_validation_wiring...
+[main c82043c] Codex Task: 04a_api_validation_wiring
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+📝 Commit created: c82043c8caabd334e94e93f677e767b9f053d3af
+🧯 Rollback with: git reset --soft c82043c8caabd334e94e93f677e767b9f053d3af^ && git restore --staged .
+-------------------------------------------
+🟡 Executing task: 04b_openapi_warning_silencer
+✅ Task 04b_openapi_warning_silencer completed successfully.
+📝 Committing files for 04b_openapi_warning_silencer...
+[main 9b22a74] Codex Task: 04b_openapi_warning_silencer
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+📝 Commit created: 9b22a74cff06954c4671def814dce712bca497b0
+🧯 Rollback with: git reset --soft 9b22a74cff06954c4671def814dce712bca497b0^ && git restore --staged .
+-------------------------------------------
+🟡 Executing task: 04c_api_docs_ui
+✅ Task 04c_api_docs_ui completed successfully.
+📝 Committing files for 04c_api_docs_ui...
+[main 1deee31] Codex Task: 04c_api_docs_ui
+ 2 files changed, 60 insertions(+), 2 deletions(-)
+📝 Commit created: 1deee31d7084f14151cd7766a755243ce04a6429
+🧯 Rollback with: git reset --soft 1deee31d7084f14151cd7766a755243ce04a6429^ && git restore --staged .
+-------------------------------------------
+🟡 Executing task: 04d_config_feature_flags
+✅ Task 04d_config_feature_flags completed successfully.
+📝 Committing files for 04d_config_feature_flags...
+[main f3f1280] Codex Task: 04d_config_feature_flags
+ 8 files changed, 80 insertions(+), 7 deletions(-)
+📝 Commit created: f3f128034c04540423889818bf059dce7a250e5e
+🧯 Rollback with: git reset --soft f3f128034c04540423889818bf059dce7a250e5e^ && git restore --staged .
+-------------------------------------------
+🎉 All tasks completed successfully.
