@@ -1,0 +1,38 @@
+{
+  "name": "Focus Flow",
+  "description": null,
+  "source_service": null,
+  "source_playlist_id": null,
+  "tracks": [
+    {
+      "position": 1,
+      "title": "Shadowboxing",
+      "artists": ["Neon District", "Aria Blaze"],
+      "album": "Midnight Canvas",
+      "duration_ms": 225000,
+      "explicit": null,
+      "release_date": null,
+      "isrc": null,
+      "mb_recording_id": null,
+      "mb_release_id": null,
+      "provider_ids": {
+        "spotify_track_id": "abc123"
+      }
+    },
+    {
+      "position": 2,
+      "title": "Daybreak",
+      "artists": ["Solar Mist"],
+      "album": "Aurora Dreams",
+      "duration_ms": 252000,
+      "explicit": null,
+      "release_date": null,
+      "isrc": null,
+      "mb_recording_id": null,
+      "mb_release_id": null,
+      "provider_ids": {
+        "youtube_video_id": "yt456"
+      }
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "name": "Imported playlist",
+  "description": null,
+  "source_service": "spotify",
+  "source_playlist_id": "focus123",
+  "tracks": [
+    {
+      "position": 1,
+      "title": "Shadowboxing",
+      "artists": ["Neon District", "Aria Blaze"],
+      "album": "Midnight Canvas",
+      "duration_ms": 225000,
+      "explicit": false,
+      "release_date": "2023-07-01",
+      "isrc": "US-AAA-23-00001",
+      "mb_recording_id": null,
+      "mb_release_id": null,
+      "provider_ids": {
+        "spotify_track_id": "spotify123",
+        "tidal_track_id": "tidal456"
+      }
+    },
+    {
+      "position": 2,
+      "title": "Daybreak",
+      "artists": ["Solar Mist"],
+      "album": "Aurora Dreams",
+      "duration_ms": 252000,
+      "explicit": null,
+      "release_date": null,
+      "isrc": "US-AAA-23-00002",
+      "mb_recording_id": null,
+      "mb_release_id": null,
+      "provider_ids": {
+        "youtube_video_id": "yt456"
+      }
+    }
+  ]
+}

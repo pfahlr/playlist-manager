@@ -1,0 +1,32 @@
+{
+  "name": "Imported playlist",
+  "description": null,
+  "source_service": null,
+  "source_playlist_id": null,
+  "tracks": [
+    {
+      "position": 1,
+      "title": "Shadowboxing",
+      "artists": ["Neon District", "Aria Blaze"],
+      "album": "Midnight Canvas",
+      "duration_ms": 225000,
+      "explicit": null,
+      "release_date": null,
+      "isrc": "US-AAA-23-00001",
+      "mb_recording_id": null,
+      "mb_release_id": null
+    },
+    {
+      "position": 2,
+      "title": "Daybreak",
+      "artists": ["Solar Mist"],
+      "album": "Aurora Dreams",
+      "duration_ms": 252000,
+      "explicit": null,
+      "release_date": null,
+      "isrc": "US-AAA-23-00002",
+      "mb_recording_id": null,
+      "mb_release_id": null
+    }
+  ]
+}

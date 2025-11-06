@@ -1,0 +1,22 @@
+<?wpl version="1.0"?>
+<smil>
+  <head>
+    <title>Focus Flow</title>
+  </head>
+  <body>
+    <seq>
+      <media src="https://open.spotify.com/track/abc123?si=foo">
+        <param name="Title" value="Shadowboxing" />
+        <param name="Author" value="Neon District; Aria Blaze" />
+        <param name="AlbumTitle" value="Midnight Canvas" />
+        <param name="Duration" value="225000" />
+      </media>
+      <media src="https://www.youtube.com/watch?v=yt456&amp;list=LL">
+        <param name="Title" value="Daybreak" />
+        <param name="Author" value="Solar Mist" />
+        <param name="AlbumTitle" value="Aurora Dreams" />
+        <param name="Duration" value="252000" />
+      </media>
+    </seq>
+  </body>
+</smil>

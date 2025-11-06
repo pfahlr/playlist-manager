@@ -2,5 +2,10 @@
   "name": "@app/interop",
   "private": true,
   "version": "0.1.0",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@app/contracts": "workspace:*",
+    "ajv": "^6.12.6",
+    "fast-xml-parser": "^4.5.1"
+  }
 }
