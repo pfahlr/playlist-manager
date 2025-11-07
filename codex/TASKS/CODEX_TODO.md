@@ -25,12 +25,12 @@ Spec-first, TDD, incremental. ✅ = done. New/updated items marked **← NEW**.
 - ✅ 05c_importers_file.yaml
 
 ## Phase 1B — Providers (abstractions + Spotify first)
-- ☐ 06a_provider_interfaces.yaml
-- ☐ 06g_provider_cache_backoff.yaml **← NEW**
-- ☐ 06h_provider_fixture_harness.yaml **← NEW**
-- ☐ 06z_track_matching_heuristics.yaml
-- ☐ 06f_provider_factory_tests.yaml
-- ☐ 06b_spotify_impl.yaml
+- ✅ 06a_provider_interfaces.yaml
+- ✅ 06g_provider_cache_backoff.yaml **← NEW**
+- ✅ 06h_provider_fixture_harness.yaml **← NEW**
+- ✅ 06z_track_matching_heuristics.yaml
+- ✅ 06f_provider_factory_tests.yaml
+- ✅ 06b_spotify_impl.yaml
 
 ### Phase 1B.5 — Core routes (real data)
 - ☐ 07a_routes_playlist_items_effective.yaml
