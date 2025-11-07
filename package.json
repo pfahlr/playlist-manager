@@ -28,7 +28,8 @@
     "test:contract:st:prism": "concurrently -k -s first \"pnpm mock:api\" \"wait-on tcp:4010 && docker run --rm --network=host -v $(pwd):/work -w /work docker.io/schemathesis/schemathesis:stable run openapi.yaml --url=http://127.0.0.1:4010 --phases=examples --checks not_a_server_error,status_code_conformance,content_type_conformance,response_headers_conformance,response_schema_conformance\"",
     "api:dev": "tsx apps/api/src/dev/start.ts",
     "test:contract:dredd:server": "concurrently -k -s first \"API_FAKE_ENQUEUE=1 tsx apps/api/src/dev/ensure-api-dev.cli.ts\" \"wait-on tcp:3101 && dredd openapi.yaml http://127.0.0.1:3101 --config dredd.server.yml\"",
-    "test:contract:st:server": "concurrently -k -s first \"API_FAKE_ENQUEUE=1 tsx apps/api/src/dev/ensure-api-dev.cli.ts\" \"wait-on tcp:3101 && docker run --rm --network=host -v $(pwd):/work -w /work docker.io/schemathesis/schemathesis:stable run openapi.yaml --url=http://127.0.0.1:3101 --phases=examples --checks not_a_server_error,status_code_conformance,content_type_conformance,response_headers_conformance,response_schema_conformance\""
+    "test:contract:st:server": "concurrently -k -s first \"API_FAKE_ENQUEUE=1 tsx apps/api/src/dev/ensure-api-dev.cli.ts\" \"wait-on tcp:3101 && docker run --rm --network=host -v $(pwd):/work -w /work docker.io/schemathesis/schemathesis:stable run openapi.yaml --url=http://127.0.0.1:3101 --phases=examples --checks not_a_server_error,status_code_conformance,content_type_conformance,response_headers_conformance,response_schema_conformance\"",
+    "test:update-fixtures": "node -e \"const fs=require('node:fs');const path=require('node:path');const dir=path.join(process.cwd(),'packages/providers/core/test/fixtures');fs.rmSync(dir,{recursive:true,force:true});\" && PROVIDER_RECORD=1 pnpm vitest run packages/providers"
   },
   "devDependencies": {
     "@redocly/cli": "^1.25.0",

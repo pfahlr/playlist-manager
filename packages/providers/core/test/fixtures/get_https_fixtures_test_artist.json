@@ -1,0 +1,11 @@
+{
+  "url": "https://fixtures.test/artist",
+  "method": "GET",
+  "status": 206,
+  "headers": {
+    "content-type": "application/json",
+    "x-fixture-source": "offline"
+  },
+  "body": "{\"artist\":\"Boards of Canada\"}",
+  "recordedAt": "2024-01-01T00:00:00.000Z"
+}
