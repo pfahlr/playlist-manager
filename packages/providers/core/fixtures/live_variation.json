@@ -1,0 +1,38 @@
+{
+  "name": "Live performance disambiguation",
+  "provider": {
+    "title": "Don't Stop Me Now - Live in Montreal 1981",
+    "artist": "Queen feat. Freddie Mercury",
+    "durationMs": 316500
+  },
+  "catalog": [
+    {
+      "mbid": "8a68cd44-1111-4c1f-b4b2-111111111111",
+      "title": "Dont Stop Me Now (Live In Montreal)",
+      "primaryArtist": "Queen",
+      "durationMs": 316200
+    },
+    {
+      "mbid": "a5f2ba31-2222-4cc4-bf9a-222222222222",
+      "title": "Don't Stop Me Now",
+      "primaryArtist": "Queen",
+      "durationMs": 210000
+    },
+    {
+      "mbid": "c59d4c77-3333-4e55-b4ce-333333333333",
+      "title": "Don't Stop Me Now (Live At Wembley '86)",
+      "primaryArtist": "Queen",
+      "durationMs": 283000
+    }
+  ],
+  "expected": {
+    "rule": "fuzzy",
+    "mbid": "8a68cd44-1111-4c1f-b4b2-111111111111",
+    "candidateOrder": [
+      "8a68cd44-1111-4c1f-b4b2-111111111111",
+      "c59d4c77-3333-4e55-b4ce-333333333333",
+      "a5f2ba31-2222-4cc4-bf9a-222222222222"
+    ],
+    "confidenceAtLeast": 0.7
+  }
+}

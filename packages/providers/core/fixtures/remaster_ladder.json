@@ -1,0 +1,38 @@
+{
+  "name": "Remaster prioritization",
+  "provider": {
+    "title": "Everything In Its Right Place [2008 Remaster]",
+    "artist": "Radiohead",
+    "durationMs": 257200
+  },
+  "catalog": [
+    {
+      "mbid": "db1f0a10-aaaa-4ce8-aaaa-aaaaaaaaaaaa",
+      "title": "Everything In Its Right Place - 2008 Remastered",
+      "primaryArtist": "Radiohead",
+      "durationMs": 257230
+    },
+    {
+      "mbid": "fb6d84c2-bbbb-4e4a-bbbb-bbbbbbbbbbbb",
+      "title": "Everything In Its Right Place",
+      "primaryArtist": "Radiohead",
+      "durationMs": 256800
+    },
+    {
+      "mbid": "8f3ddd63-cccc-4f20-cccc-cccccccccccc",
+      "title": "Everything In Its Right Place (Live From BBC Maida Vale)",
+      "primaryArtist": "Radiohead",
+      "durationMs": 311000
+    }
+  ],
+  "expected": {
+    "rule": "exact",
+    "mbid": "db1f0a10-aaaa-4ce8-aaaa-aaaaaaaaaaaa",
+    "candidateOrder": [
+      "db1f0a10-aaaa-4ce8-aaaa-aaaaaaaaaaaa",
+      "fb6d84c2-bbbb-4e4a-bbbb-bbbbbbbbbbbb",
+      "8f3ddd63-cccc-4f20-cccc-cccccccccccc"
+    ],
+    "confidenceAtLeast": 0.85
+  }
+}
