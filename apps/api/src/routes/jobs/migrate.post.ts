@@ -1,5 +1,11 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { enqueue } from '../../lib/jobs/enqueue';
+import {
+  fingerprintRequest,
+  resolveRequestIdempotencyKey,
+  reuseJobIdIfPresent,
+  storeJobForKey,
+} from '../../lib/idempotency';
 import { validateRequestBody } from '../../lib/openapi/validator';
 
 type Body = {
@@ -33,6 +39,13 @@ export default async function handler(
   request.requireProvider(payload.source_provider);
   request.requireProvider(payload.dest_provider);
 
+  const fingerprint = fingerprintRequest({ method: 'POST', path: '/jobs/migrate', body: payload });
+  const idempotencyKey = resolveRequestIdempotencyKey(request);
+  const existingJobId = reuseJobIdIfPresent(idempotencyKey, fingerprint);
+  if (existingJobId !== null) {
+    return reply.status(202).send({ job_id: existingJobId, status: 'queued' });
+  }
+
   const job = await enqueue({
     kind: 'migrate',
     source_provider: payload.source_provider,
@@ -41,5 +54,6 @@ export default async function handler(
     dest_playlist_name: payload.dest_playlist_name ?? null,
   });
 
+  storeJobForKey(idempotencyKey, fingerprint, job.id);
   return reply.status(202).send({ job_id: job.id, status: 'queued' });
 }

@@ -265,6 +265,18 @@ paths:
     post:
       summary: Migrate a playlist between providers
       operationId: jobs_requestMigration
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          schema:
+            type: string
+            minLength: 8
+            maxLength: 128
+          required: false
+          description: |
+            Optional key to deduplicate POST attempts for 15 minutes. Reusing the same key with
+            the same request payload returns the original job reference; mismatched payloads
+            return HTTP 422 with code `idempotency_conflict`.
       requestBody:
         required: true
         content:
@@ -297,6 +309,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/TooManyRequests' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
+        '422': { $ref: '#/components/responses/IdempotencyConflict' }
 
   /jobs/{id}:
     get:
@@ -520,6 +533,18 @@ paths:
     post:
       summary: Export a playlist to file
       operationId: exports_enqueueFile
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          schema:
+            type: string
+            minLength: 8
+            maxLength: 128
+          required: false
+          description: |
+            Optional key to deduplicate POST attempts for 15 minutes. Reusing the same key with
+            the same request payload returns the original job reference; mismatched payloads
+            return HTTP 422 with code `idempotency_conflict`.
       requestBody:
         required: true
         content:
@@ -549,6 +574,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/TooManyRequests' }
+        '422': { $ref: '#/components/responses/IdempotencyConflict' }
 
   /artists/{mbid}/follow:
     post:
@@ -738,6 +764,19 @@ components:
                 code: service_unavailable
                 message: Service temporarily unavailable
                 details: { request_id: req_503svc }
+    IdempotencyConflict:
+      description: Idempotency fingerprint conflict
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            mismatch:
+              summary: Key reused with a different request payload
+              value:
+                type: 'about:blank'
+                code: idempotency_conflict
+                message: Idempotency fingerprint mismatch for this key
+                details: { request_id: req_422idmp }
     UnprocessableEntity:
       description: Unprocessable entity
       content:

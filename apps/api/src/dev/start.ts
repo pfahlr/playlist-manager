@@ -10,6 +10,7 @@ import featureGuard from '../plugins/feature-guard.js';
 import errorsPlugin from '../plugins/errors.js';
 import jobEvents from '../routes/jobs.events.js';
 import importsFile from '../routes/imports.file.js';
+import idempotency from '../plugins/idempotency.js';
 
 const app = Fastify({ logger: true });
 
@@ -22,6 +23,7 @@ await app.register(logging);
 await app.register(metrics);
 await app.register(errorsPlugin);
 await app.register(featureGuard);
+await app.register(idempotency);
 
 await app.register(docsRoutes);
 await app.register(authProviders);

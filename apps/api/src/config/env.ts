@@ -8,6 +8,28 @@ const EnvSchema = z.object({
     .min(1),
 });
 
-export const env = EnvSchema.parse({
-  MASTER_KEY: process.env.MASTER_KEY,
+const IdempotencyTtlSchema = z.coerce
+  .number()
+  .int()
+  .positive()
+  .default(15 * 60);
+
+type Env = z.infer<typeof EnvSchema>;
+let envCache: Env | null = null;
+
+function loadEnv(): Env {
+  if (!envCache) {
+    envCache = EnvSchema.parse({
+      MASTER_KEY: process.env.MASTER_KEY,
+    });
+  }
+  return envCache;
+}
+
+export const env: Env = new Proxy({} as Env, {
+  get(_target, prop) {
+    return loadEnv()[prop as keyof Env];
+  },
 });
+
+export const IDEMPOTENCY_TTL_SECONDS = IdempotencyTtlSchema.parse(process.env.IDEMPOTENCY_TTL_SECONDS);
