@@ -7,6 +7,7 @@ import featureGuard from './plugins/feature-guard.js';
 import { registerMiddleware } from './middleware.js';
 import authProviders from './routes/auth.providers.js';
 import { registerRouteHandlers } from './routes/register-handlers.js';
+import jobEvents from './routes/jobs.events.js';
 
 /**
  * Create a Fastify server for tests.
@@ -33,6 +34,7 @@ export async function makeServer(): Promise<Server> {
   await registerMiddleware(app);
 
   await app.register(authProviders);
+  await app.register(jobEvents);
   await registerRouteHandlers(app);
 
   await app.ready();

@@ -325,6 +325,44 @@ paths:
         '429': { $ref: '#/components/responses/TooManyRequests' }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /jobs/{id}/events:
+    get:
+      summary: Stream job progress updates
+      operationId: jobs_events_stream
+      parameters:
+        - in: path
+          name: id
+          required: true
+          example: 5001
+          schema:
+            type: integer
+            example: 5001
+            default: 5001
+          examples:
+            default:
+              value: 5001
+          x-example: 5001
+      responses:
+        '200':
+          description: Server-Sent Events stream delivering job progress updates.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: |-
+                  Stream of SSE events with `data:` payload encoded as JSON matching `JobProgressUpdate`.
+              examples:
+                progress:
+                  summary: Progress stream
+                  value: |-
+                    event: progress
+                    data: {"job_id":5001,"percent":42,"status":"running"}
+                    event: complete
+                    data: {"job_id":5001,"status":"succeeded"}
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
   /imports/file:
     post:
       summary: Preview a playlist file import
@@ -968,6 +1006,28 @@ components:
             - 'null'
           format: uri
         created_at: { type: string, format: date-time }
+        updated_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+
+    JobProgressUpdate:
+      type: object
+      required: [job_id, status]
+      properties:
+        job_id: { type: integer }
+        status: { type: string, enum: [queued, running, succeeded, failed] }
+        percent:
+          type:
+            - number
+            - 'null'
+          minimum: 0
+          maximum: 100
+        message:
+          type:
+            - string
+            - 'null'
         updated_at:
           type:
             - string
