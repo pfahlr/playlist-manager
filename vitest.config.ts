@@ -16,6 +16,7 @@ export default defineConfig({
       '@app/providers-tidal': path.resolve(rootDir, 'packages/providers/tidal/src/index.ts'),
       '@app/providers-youtube': path.resolve(rootDir, 'packages/providers/youtube/src/index.ts'),
       nock: path.resolve(rootDir, 'codex/support/nock.ts'),
+      supertest: path.resolve(rootDir, 'codex/support/supertest.ts'),
     },
   },
   test: {
