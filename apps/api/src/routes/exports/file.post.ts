@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { enqueueJob } from '../_mockData';
-import { problem } from '../../lib/problem';
+import { enqueue } from '../../lib/jobs/enqueue';
+import { validateRequestBody } from '../../lib/openapi/validator';
 
 type Body = {
   playlist_id: number;
@@ -8,27 +8,33 @@ type Body = {
   variant?: 'lean' | 'verbose';
 };
 
-function isValid(body: Body | undefined): body is Body {
-  if (!body) return false;
-  const formats = new Set(['m3u', 'xspf', 'csv']);
-  const variants = new Set(['lean', 'verbose']);
-  const variantOk = body.variant ? variants.has(body.variant) : true;
-  return (
-    typeof body.playlist_id === 'number' &&
-    Number.isFinite(body.playlist_id) &&
-    formats.has(body.format) &&
-    variantOk
-  );
-}
-
 export default async function handler(
   request: FastifyRequest<{ Body: Body }>,
   reply: FastifyReply,
 ) {
-  if (!isValid(request.body)) {
-    throw problem({ status: 400, code: 'invalid_export_request', message: 'Invalid export request' });
-  }
+  const rawContentType = request.headers['content-type'];
+  const contentType = Array.isArray(rawContentType)
+    ? rawContentType[0]
+    : typeof rawContentType === 'string'
+      ? rawContentType
+      : undefined;
 
-  const { jobRef } = enqueueJob('export');
-  return reply.status(202).send(jobRef);
+  await validateRequestBody({
+    method: 'POST',
+    path: '/exports/file',
+    body: request.body,
+    contentType,
+    errorCode: 'invalid_export_request',
+    errorMessage: 'Invalid export request',
+  });
+
+  const payload = request.body;
+  const job = await enqueue({
+    kind: 'export_file',
+    playlist_id: payload.playlist_id,
+    format: payload.format,
+    variant: payload.variant ?? 'lean',
+  });
+
+  return reply.status(202).send({ job_id: job.id, status: 'queued' });
 }

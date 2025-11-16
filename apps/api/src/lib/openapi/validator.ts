@@ -45,8 +45,14 @@ type ResponseObject = {
   content?: Record<string, MediaTypeObject>;
 };
 
+type RequestBodyObject = {
+  required?: boolean;
+  content?: Record<string, MediaTypeObject>;
+};
+
 type OperationObject = {
   responses?: Record<string, ResponseObject | ReferenceObject>;
+  requestBody?: RequestBodyObject | ReferenceObject;
 };
 
 type PathItemObject = Partial<Record<HttpMethod, OperationObject>>;
@@ -102,6 +108,15 @@ type PreSerializationHook = (
   reply: FastifyLikeReply,
   payload: unknown,
 ) => Promise<unknown> | unknown;
+
+type RequestValidationOptions = {
+  method: string;
+  path: string;
+  body: unknown;
+  contentType?: string;
+  errorCode?: string;
+  errorMessage?: string;
+};
 
 const SPEC_JSON_PATH = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -480,6 +495,18 @@ function resolveResponse(
   return (target ?? null) as ResponseObject | null;
 }
 
+function resolveRequestBody(
+  document: OpenAPIDocument,
+  bodyOrRef?: RequestBodyObject | ReferenceObject,
+): RequestBodyObject | null {
+  if (!bodyOrRef) return null;
+  if (!isReferenceObject(bodyOrRef)) {
+    return bodyOrRef;
+  }
+  const target = resolveRef(document, bodyOrRef.$ref);
+  return (target ?? null) as RequestBodyObject | null;
+}
+
 function resolveRef(document: OpenAPIDocument, ref: string): unknown {
   if (!ref.startsWith('#/')) {
     throw new Error(`Only local $ref values are supported (received: ${ref})`);
@@ -634,6 +661,48 @@ function deepEqual(a: unknown, b: unknown): boolean {
 
 function isReferenceObject(value: Schema | ResponseObject | ReferenceObject): value is ReferenceObject {
   return typeof value === 'object' && value !== null && '$ref' in value;
+}
+
+export async function validateRequestBody(options: RequestValidationOptions): Promise<void> {
+  const method = options.method?.toLowerCase();
+  if (!method || !HTTP_METHODS.includes(method as HttpMethod)) {
+    return;
+  }
+
+  const document = await loadSpec();
+  const pathKey = toOpenApiPath(options.path);
+  const pathItem = document.paths?.[pathKey];
+  if (!pathItem) return;
+
+  const operation = pathItem[method as HttpMethod];
+  if (!operation) return;
+
+  const requestBody = resolveRequestBody(document, operation.requestBody);
+  if (!requestBody) return;
+
+  const normalizedContentType = normalizeContentType(options.contentType);
+  const content = requestBody.content ?? {};
+  const mediaType =
+    content[normalizedContentType] ??
+    content['application/json'] ??
+    Object.values(content)[0];
+
+  if (!mediaType || mediaType.schema === undefined) {
+    return;
+  }
+
+  const schemaValidator = new SchemaValidator(document);
+  const errors = schemaValidator.validate(mediaType.schema, options.body, '');
+  if (errors.length > 0) {
+    throw problem({
+      status: 400,
+      code: options.errorCode ?? 'invalid_request_body',
+      message:
+        options.errorMessage ??
+        `Request body validation failed for ${options.method.toUpperCase()} ${pathKey}`,
+      details: { errors },
+    });
+  }
 }
 
 export async function createResponseValidationHook(): Promise<PreSerializationHook> {
