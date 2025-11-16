@@ -79,6 +79,15 @@ export function createProvider(
   }
 }
 
+/** Lightweight factory alias to reduce callsites touching createProvider directly. */
+export function getProvider(
+  name: ProviderName,
+  auth: ProviderAuth,
+  opts: ProviderCreateOpts = {}
+): ProviderImpl {
+  return createProvider(name, auth, opts);
+}
+
 /**
  * Convenience: build a provider instance for a specific user.
  * Throws MissingProviderAuthError if the user hasn’t linked that provider.
@@ -89,5 +98,5 @@ export async function getProviderForUser(
   opts: ProviderCreateOpts = {}
 ): Promise<ProviderImpl> {
   const auth = await getProviderAuthForUser(userId, name);
-  return createProvider(name, auth, opts);
+  return getProvider(name, auth, opts);
 }
