@@ -9,8 +9,7 @@ export type ProblemBody = {
   type: string;
   code: string;
   message: string;
-  request_id: string | null;
-  details: Record<string, unknown> | null;
+  details: Record<string, unknown> & { request_id: string | null };
 };
 
 export function problem(options: ProblemOptions): Error {
@@ -26,11 +25,17 @@ export function problem(options: ProblemOptions): Error {
 
 export function toProblemBody(options: ProblemOptions & { requestId?: string | null }): ProblemBody {
   const { status: _status, code, message, details, requestId } = options;
+  const safeDetails =
+    details && typeof details === 'object'
+      ? { ...(details as Record<string, unknown>) }
+      : ({} as Record<string, unknown>);
   return {
     type: 'about:blank',
     code,
     message,
-    request_id: requestId ?? null,
-    details: details ?? null,
+    details: {
+      ...safeDetails,
+      request_id: requestId ?? null,
+    },
   };
 }

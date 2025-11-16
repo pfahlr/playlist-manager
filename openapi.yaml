@@ -51,6 +51,7 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/AuthProvider' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
 
   /playlists:
     get:
@@ -74,6 +75,7 @@ paths:
               schema: { $ref: '#/components/schemas/PagedPlaylists' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
 
   /playlists/{id}:
     get:
@@ -99,6 +101,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Playlist' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
         '404': { $ref: '#/components/responses/NotFound' }
 
   /playlists/{id}/items:
@@ -168,6 +171,7 @@ paths:
                         provider_track_id: "9zYpqAbC12"
                     next_cursor: null
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { $ref: '#/components/responses/UnprocessableEntity' }
 
@@ -183,6 +187,7 @@ paths:
               schema: { $ref: '#/components/schemas/ActivePlaylist' }
         '404': { $ref: '#/components/responses/NotFound' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
     put:
       summary: Set the active playlist
       operationId: activePlaylist_set
@@ -199,6 +204,7 @@ paths:
         '204': { description: No Content }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
 
   /active-playlist/items:
     post:
@@ -234,6 +240,7 @@ paths:
               schema: { $ref: '#/components/schemas/PlaylistItemEffective' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
 
   /active-playlist/items/{itemId}:
     delete:
@@ -252,6 +259,7 @@ paths:
         '204': { description: No Content }
         '404': { $ref: '#/components/responses/NotFound' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
 
   /jobs/migrate:
     post:
@@ -287,6 +295,7 @@ paths:
                   value: { job_id: 456, status: "queued" }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /jobs/{id}:
@@ -313,6 +322,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Job' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
         '404': { $ref: '#/components/responses/NotFound' }
 
   /imports/file:
@@ -466,6 +476,7 @@ paths:
                     counts:
                       tracks: 2
         '400': { $ref: '#/components/responses/BadRequest' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
 
   /exports/file:
     post:
@@ -499,6 +510,7 @@ paths:
                   value: { job_id: 123, status: "queued" }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
 
   /artists/{mbid}/follow:
     post:
@@ -522,6 +534,7 @@ paths:
         "204": { description: No Content }
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
     delete:
       summary: Unfollow artist
       operationId: artists_unfollow
@@ -543,6 +556,7 @@ paths:
         "204": { description: No Content }
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
 
   /artists/{mbid}:
     get:
@@ -569,6 +583,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Artist' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
         '404': { $ref: '#/components/responses/NotFound' }
 
   /artists/{mbid}/relations:
@@ -609,6 +624,7 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/ArtistRelation' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
         '404': { $ref: '#/components/responses/NotFound' }
 
 components:
@@ -619,50 +635,106 @@ components:
       bearerFormat: JWT
 
   responses:
-    NotFound:
-      description: Not found
-      content:
-        application/json:
-          schema: { $ref: "#/components/schemas/Error" }
     BadRequest:
       description: Bad request
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            invalid_request:
+              summary: Invalid request payload
+              value:
+                type: 'about:blank'
+                code: bad_request
+                message: Invalid request parameters
+                details: { request_id: req_123456abcdef }
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            missing_resource:
+              summary: Resource not found
+              value:
+                type: 'about:blank'
+                code: not_found
+                message: Requested resource was not found
+                details: { request_id: req_missing404 }
+    TooManyRequests:
+      description: Too many requests
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            throttled:
+              summary: Rate limit exceeded
+              value:
+                type: 'about:blank'
+                code: rate_limited
+                message: Too many requests
+                details: { request_id: req_rate429 }
     Unauthorized:
       description: Unauthorized
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            unauthorized:
+              summary: Missing or invalid credentials
+              value:
+                type: 'about:blank'
+                code: unauthorized
+                message: Invalid or missing Authorization header
+                details: { request_id: req_unauth123 }
     ServiceUnavailable:
       description: Service unavailable
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            maintenance:
+              summary: Service temporarily unavailable
+              value:
+                type: 'about:blank'
+                code: service_unavailable
+                message: Service temporarily unavailable
+                details: { request_id: req_503svc }
     UnprocessableEntity:
       description: Unprocessable entity
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            invalid_payload:
+              summary: Body failed validation
+              value:
+                type: 'about:blank'
+                code: unprocessable_entity
+                message: Body failed validation
+                details: { request_id: req_422body }
 
   schemas:
     Error:
       type: object
-      required: [type, code, message]
+      required: [type, code, message, details]
       properties:
-        type: { type: string, example: "about:blank" }
-        code: { type: string, example: "provider_disabled" }
-        message: { type: string, example: "TIDAL is disabled" }
-        request_id:
-          oneOf:
-            - { type: string }
-            - { type: 'null' }
+        type: { type: string, example: 'about:blank' }
+        code: { type: string, example: 'provider_disabled' }
+        message: { type: string, example: 'TIDAL is disabled' }
         details:
-          oneOf:
-            - { type: 'null' }
-            -
-              type: object
-              additionalProperties: true
+          type: object
+          description: Additional metadata for debugging, always includes request_id.
+          required: [request_id]
+          additionalProperties: true
+          properties:
+            request_id:
+              description: Correlates the server log entry for this error.
+              oneOf:
+                - { type: string }
+                - { type: 'null' }
+          example:
+            request_id: req_abc123
     FileImportPreviewResponse:
       type: object
       required: [preview, counts]

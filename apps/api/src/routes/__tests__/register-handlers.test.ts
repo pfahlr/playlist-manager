@@ -38,6 +38,9 @@ describe('registerRouteHandlers', () => {
         code: 'not_found',
       });
       expect(typeof body.message).toBe('string');
+      expect(body.details).toMatchObject({
+        request_id: expect.any(String),
+      });
     } finally {
       await app.close();
     }

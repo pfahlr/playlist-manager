@@ -221,8 +221,8 @@ export interface components {
             code: string;
             /** @example TIDAL is disabled */
             message: string;
-            request_id?: string | null;
-            details?: null | {
+            details: {
+                request_id: string | null;
                 [key: string]: unknown;
             };
         };
