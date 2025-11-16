@@ -11,6 +11,7 @@ export default defineConfig({
       '@app/contracts': path.resolve(rootDir, 'packages/contracts/src/index.ts'),
       '@app/interop': path.resolve(rootDir, 'packages/interop/src'),
       '@app/db': path.resolve(rootDir, 'packages/db/src/index.ts'),
+      '@app/providers-file-exporters': path.resolve(rootDir, 'packages/providers/file-exporters/src/index.ts'),
       '@app/providers-spotify': path.resolve(rootDir, 'packages/providers/spotify/src/index.ts'),
       '@app/providers-deezer': path.resolve(rootDir, 'packages/providers/deezer/src/index.ts'),
       '@app/providers-tidal': path.resolve(rootDir, 'packages/providers/tidal/src/index.ts'),
