@@ -46,6 +46,95 @@ columns, all prefixed with `pmse-v1.<keyId>.<payload>`. To rotate keys without d
 3. Re-run without `--dry-run` to apply the rotation; the script is idempotent and skips rows
    already sealed with the new key.
 
+## Backups
+
+The project includes scripts for creating and restoring database backups with configurable retention
+policies and optional S3 sync.
+
+### Creating backups
+
+Run `scripts/backup.sh` to create a compressed database dump:
+
+```bash
+bash scripts/backup.sh
+```
+
+The script will:
+- Create a timestamped backup file in `backups/` directory (e.g., `playlist_manager_20240101_120000.sql.gz`)
+- Apply retention policy (default: 30 days) and delete old backups
+- Optionally sync to S3 if configured
+
+### Restoring from backup
+
+Run `scripts/restore.sh` with the backup file path:
+
+```bash
+bash scripts/restore.sh backups/playlist_manager_20240101_120000.sql.gz
+```
+
+The script will:
+- Prompt for confirmation (set `SKIP_CONFIRMATION=true` to skip in automation)
+- Test database connectivity
+- Restore the backup using `gunzip | psql`
+- Verify the restore by checking table count
+
+### Configuration
+
+Both scripts use environment variables for configuration:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:postgres@localhost:5432/playlistmgr?schema=public` |
+| `BACKUP_DIR` | Directory for backup files | `$PROJECT_ROOT/backups` |
+| `BACKUP_RETENTION_DAYS` | Days to keep old backups | `30` |
+| `DRY_RUN` | Preview mode without making changes | `false` |
+| `S3_BUCKET` | S3 bucket for remote backup storage (optional) | (not set) |
+| `AWS_REGION` | AWS region for S3 bucket | `us-east-1` |
+| `SKIP_CONFIRMATION` | Skip restore confirmation prompt (restore only) | `false` |
+
+### S3 sync (optional)
+
+To enable automatic S3 sync for backups:
+
+1. Configure AWS credentials using environment variables or AWS CLI
+2. Set `S3_BUCKET` environment variable to your bucket name
+3. Run backup script - it will automatically sync to `s3://$S3_BUCKET/backups/`
+
+```bash
+export S3_BUCKET=my-backups
+export AWS_REGION=us-west-2
+bash scripts/backup.sh
+```
+
+### Retention strategy
+
+The backup script implements a simple time-based retention policy:
+
+- Backups older than `BACKUP_RETENTION_DAYS` (default: 30 days) are automatically deleted
+- Both local and S3 backups follow the same retention policy
+- Use `DRY_RUN=true` to preview which backups would be deleted
+
+### Dry run mode
+
+Test backup or restore operations without making changes:
+
+```bash
+# Preview backup without creating files
+DRY_RUN=true bash scripts/backup.sh
+
+# Preview restore without modifying database
+DRY_RUN=true bash scripts/restore.sh backups/playlist_manager_20240101_120000.sql.gz
+```
+
+### Backup schedule
+
+For production environments, schedule backups using cron or your orchestration platform:
+
+```cron
+# Daily backup at 2:00 AM
+0 2 * * * cd /path/to/playlist-manager && bash scripts/backup.sh
+```
+
 ## Performance regression testing
 
 The project includes EXPLAIN-based performance regression checks to ensure critical queries use
