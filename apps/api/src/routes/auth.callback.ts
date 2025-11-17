@@ -180,19 +180,20 @@ const authCallbackRoutes: FastifyPluginAsync = async (fastify) => {
           expiresIn,
         });
 
-        // Sign JWT session token
-        const sessionToken = signSession({
+        // Create session with refresh token rotation
+        const { createSession } = await import('../lib/auth/sessions.js');
+        const session = await createSession({
           userId: user.id,
-          email: user.email,
-          provider,
+          deviceInfo: request.headers['user-agent'],
+          ipAddress: request.ip,
         });
 
-        // Update attempt as succeeded with session token
+        // Update attempt as succeeded with session access token and refresh token
         await succeedAttempt(
           attempt.id,
           user.id,
-          sessionToken, // Return session JWT instead of provider access token
-          refreshToken || '', // Keep refresh token for token refresh
+          session.accessToken, // Session JWT
+          session.refreshToken, // Session refresh token for rotation
           expiresIn
         );
 
