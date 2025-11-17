@@ -4,11 +4,12 @@ import type {
 } from '@app/contracts';
 
 import { prisma } from '@app/db';
+import { createKeystore, decryptProviderTokens } from '@app/db/encryption';
 import Spotify from '@app/providers-spotify';
 import Deezer  from '@app/providers-deezer';
 import Tidal   from '@app/providers-tidal';
 import YouTube from '@app/providers-youtube';
-import { assertEnabled } from './config';
+import { assertEnabled, workerConfig } from './config';
 
 /** Thrown when a user has not linked the requested provider. */
 export class MissingProviderAuthError extends Error {
@@ -32,11 +33,33 @@ export async function getProviderAuthForUser(
   // Our schema stores provider as a string; use same literals as ProviderName
   const acct = await prisma.account.findFirst({
     where: { user_id: userId, provider },
-    select: { access_token: true },
+    select: {
+      id: true,
+      access_token_ciphertext: true,
+      refresh_token_ciphertext: true,
+    },
   });
 
-  const token = acct?.access_token ?? '';
-  if (!token) throw new MissingProviderAuthError(userId, provider);
+  if (!acct) {
+    throw new MissingProviderAuthError(userId, provider);
+  }
+
+  // Decrypt the tokens using the encryption keystore
+  const keystore = createKeystore({ masterKey: workerConfig.masterKey });
+  const decrypted = decryptProviderTokens(
+    {
+      accountId: acct.id,
+      access_token_ciphertext: acct.access_token_ciphertext,
+      refresh_token_ciphertext: acct.refresh_token_ciphertext,
+    },
+    keystore
+  );
+
+  const token = decrypted.accessToken;
+  if (!token) {
+    throw new MissingProviderAuthError(userId, provider);
+  }
+
   return { token };
 }
 

@@ -14,15 +14,21 @@ const EnvSchema = z.object({
     .string()
     .url()
     .default('redis://127.0.0.1:6379'),
+  MASTER_KEY: z
+    .string()
+    .min(1, 'MASTER_KEY is required for token encryption')
+    .describe('Master encryption key for provider tokens'),
 });
 
 const parsedEnv = EnvSchema.parse({
   WORKER_REDIS_URL:
     process.env.WORKER_REDIS_URL ?? process.env.REDIS_URL ?? 'redis://127.0.0.1:6379',
+  MASTER_KEY: process.env.MASTER_KEY,
 });
 
 export const workerConfig = {
   redisUrl: parsedEnv.WORKER_REDIS_URL,
+  masterKey: parsedEnv.MASTER_KEY,
   snapshotGcCron: '0 3 * * *',
 } as const;
 
