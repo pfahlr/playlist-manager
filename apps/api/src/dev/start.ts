@@ -4,6 +4,7 @@ import path from 'node:path';
 import docsRoutes from '../routes/docs.js'; // ensure .ts resolves via tsx; .js is ok too
 import authProviders from '../routes/auth.providers.js';
 import authSessions from '../routes/auth.sessions.js';
+import spotifyPlaylists from '../routes/playlists.spotify.js';
 import { registerRouteHandlers } from '../routes/register-handlers.js';
 import logging from '../plugins/logging.js';
 import metrics from '../plugins/metrics.js';
@@ -40,6 +41,7 @@ await app.register(idempotency);
 await app.register(docsRoutes);
 await app.register(authProviders);
 await app.register(authSessions);
+await app.register(spotifyPlaylists);
 await app.register(jobEvents);
 await app.register(importsFile);
 
