@@ -1,0 +1,45 @@
+id: 08x_003_idempotency_redis_store
+title: Replace in-memory idempotency store with Redis
+branch: codex/08x_003_idempotency_redis_store
+overview: >
+  Replace the in-memory Map-based idempotency store (from 08z) with Redis to support multi-instance API deployments.
+  The current implementation breaks when multiple API instances are load-balanced, as each instance has its own in-memory store.
+  Use Redis with TTL to maintain idempotency guarantees across instances.
+acceptance:
+  - Idempotency works correctly across multiple API instances (integration test with 2+ instances)
+  - Redis stores entries with automatic TTL expiration (no manual cleanup needed)
+  - Fallback to in-memory store if Redis unavailable (dev mode, with warning log)
+  - Idempotency tests pass with both in-memory and Redis backends
+  - Redis connection pooling and error handling
+artifacts_to_touch:
+  - apps/api/src/lib/idempotency.ts (replace Map with RedisStore)
+  - apps/api/src/lib/redis/client.ts (shared Redis client)
+  - apps/api/src/config/env.ts (REDIS_URL, IDEMPOTENCY_STORE_BACKEND)
+  - apps/api/src/lib/__tests__/idempotency.test.ts (add Redis backend tests)
+  - apps/api/src/dev/start.ts (Redis connection lifecycle)
+  - apps/api/package.json (add ioredis, ioredis-mock dependencies)
+steps:
+  - Add dependencies: pnpm add ioredis in apps/api, pnpm add -D ioredis-mock
+  - Create shared Redis client module with connection pooling (ioredis)
+  - Define IdempotencyStore interface (get, set, delete)
+  - Implement RedisIdempotencyStore: use SET with EX for TTL
+  - Implement InMemoryIdempotencyStore: keep existing Map-based logic for dev/tests
+  - Add backend selection via IDEMPOTENCY_STORE_BACKEND env var (redis|memory, default: redis)
+  - Add Redis health check to API startup (fail gracefully with warning if unavailable in dev)
+  - Update idempotency middleware to use abstract IdempotencyStore interface
+  - Add Redis connection/disconnection hooks in API lifecycle
+  - Unit tests for both backends (use ioredis-mock for Redis tests)
+  - Integration test: start 2 API instances, verify shared idempotency
+notes: |
+  This fixes production correctness issue from 08z audit findings.
+  Current implementation: apps/api/src/lib/idempotency.ts line 13 uses Map().
+
+  Redis key format: `idempotency:{key}` → JSON{fingerprint, job_id, created_at}
+  TTL matches IDEMPOTENCY_TTL_SECONDS env var (default 86400 = 24h).
+
+  Error handling:
+  - Startup: If Redis is down in production, API should fail to start (not silently fallback).
+  - Runtime: If Redis fails during a request, log error and fail request with 503 (don't silently skip idempotency check)
+  - Dev mode: Allow fallback to in-memory with warning log at startup.
+
+  Performance: Redis adds ~1-2ms latency per request, acceptable for job enqueue endpoints.
