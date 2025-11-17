@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "id": "example-uuid-1234",
+      "title": "Example Recording",
+      "length": 180000,
+      "artist-credit": [
+        {
+          "name": "Example Artist",
+          "artist": {
+            "id": "artist-uuid-5678",
+            "name": "Example Artist"
+          }
+        }
+      ]
+    }
+  ],
+  "count": 1
+}
