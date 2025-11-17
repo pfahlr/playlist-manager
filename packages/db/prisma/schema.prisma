@@ -21,6 +21,7 @@ model User {
   follows   ArtistFollow[]
   active    ActivePlaylist?
   jobs      Job[]
+  sessions  Session[]
 
   @@map("app_user")
 }
@@ -41,6 +42,50 @@ model Account {
 
   @@unique([provider, provider_user_id])
   @@map("account")
+}
+
+model OAuthAttempt {
+  id                String    @id @default(cuid())
+  provider          String
+  code_challenge    String
+  code_verifier     String?
+  redirect_uri      String
+  state             String?
+  nonce             String?
+  status            String    @default("pending") // pending|succeeded|failed|expired
+  user_id           Int?
+  access_token      String?
+  refresh_token     String?
+  expires_in        Int?
+  error             String?
+  error_description String?
+  expires_at        DateTime  @db.Timestamptz
+  created_at        DateTime  @default(now()) @db.Timestamptz
+  updated_at        DateTime  @default(now()) @db.Timestamptz
+
+  @@index([status, expires_at])
+  @@map("oauth_attempt")
+}
+
+model Session {
+  id                 String    @id @default(cuid())
+  user_id            Int
+  token_family       String    // For refresh token rotation
+  refresh_token_hash String    // Hashed refresh token
+  access_token_jti   String?   // JWT ID (jti claim) of current access token
+  device_info        String?   // User agent or device name
+  ip_address         String?   // IP address for security audit
+  created_at         DateTime  @default(now()) @db.Timestamptz
+  last_used_at       DateTime  @default(now()) @db.Timestamptz
+  expires_at         DateTime  @db.Timestamptz
+  revoked_at         DateTime? @db.Timestamptz
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([token_family])
+  @@index([expires_at])
+  @@map("session")
 }
 
 // ===================== Playlists =====================
