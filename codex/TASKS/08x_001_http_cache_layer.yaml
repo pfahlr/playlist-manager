@@ -1,0 +1,34 @@
+id: 08x_001_http_cache_layer
+title: HTTP response cache layer with TTL and LRU eviction
+branch: codex/08x_001_http_cache_layer
+overview: >
+  Complete the missing cache layer from task 06g. Implement LRU cache with configurable TTL for provider HTTP responses,
+  reducing duplicate API calls to upstream services (Spotify, Deezer, TIDAL, YouTube). Support both in-memory (dev) and
+  Redis (production) backends.
+acceptance:
+  - Cache reduces duplicate GET requests in provider tests (verify via metrics/logs)
+  - TTL expiration works correctly (test with fake timers)
+  - Cache key includes method, URL, and auth context
+  - Cache miss/hit stats available for observability
+  - Redis backend works in multi-instance scenarios
+artifacts_to_touch:
+  - packages/providers/core/src/http/cache.ts
+  - packages/providers/core/src/http/client.ts (integrate cache)
+  - packages/providers/core/test/cache.test.ts
+  - packages/providers/core/src/config.ts (cache TTL, max size)
+steps:
+  - Define CacheBackend interface (get, set, delete, clear)
+  - Implement InMemoryCache with LRU eviction (lru-cache or Map-based)
+  - Implement RedisCache backend (ioredis)
+  - Add cache middleware to HTTP client (before fetch, after response)
+  - Cache only GET requests with 2xx responses
+  - Compute cache key: hash(method + url + auth.userId)
+  - Add metrics: cache_hits, cache_misses, cache_evictions
+  - Unit tests with fake timers for TTL expiration
+  - Integration tests verifying backend selection via env vars
+notes: |
+  This completes acceptance criteria from 06g: "caching reduces duplicate calls in tests".
+  The circuit breaker (08x_002) will integrate with this cache layer.
+
+  Cache invalidation strategy: TTL-based only (no manual invalidation for MVP).
+  Future enhancement: allow per-provider TTL overrides.

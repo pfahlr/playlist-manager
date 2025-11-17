@@ -8,14 +8,46 @@ acceptance:
   - GET /auth/callback/spotify completes end-to-end with a real or mocked exchange (feature flag)
   - Mobile polling at /auth/mobile/attempts/{id} returns {status:succeeded, session_jwt}
   - Session JWT validates via bearer auth on protected routes
+  - CRITICAL: Provider tokens stored ONLY as ciphertext (no plaintext in DB)
+  - Verify provider_accounts table has access_token_ciphertext and refresh_token_ciphertext populated
+  - Verify access_token and refresh_token columns remain NULL (deprecated plaintext fields)
 artifacts_to_touch:
   - apps/api/src/routes/auth.callback.ts
   - apps/api/src/lib/auth/session.ts
   - apps/api/src/lib/auth/providers/spotify.ts
   - apps/api/src/lib/auth/attempts.ts (extend)
   - apps/api/src/config/env.ts
+  - packages/db/src/encryption/index.ts (use existing encryption utilities)
 steps:
   - Add provider client (Spotify) with code->tokens exchange, PKCE verifier retrieval (from attempt).
-  - Link or create user; upsert provider account row; store refresh token securely.
+  - Link or create user; upsert provider account row
+  - CRITICAL: Encrypt tokens using encryptProviderTokens() from @app/db/encryption before storing
+  - Store ONLY ciphertext fields (access_token_ciphertext, refresh_token_ciphertext)
+  - Never store plaintext tokens in access_token or refresh_token columns
+  - Add integration test verifying tokens are encrypted (query DB directly, assert ciphertext exists)
   - Issue your JWT; mark attempt succeeded; redirect a tiny HTML page that instructs users to return to the app.
   - Add feature flag to simulate exchange in CI.
+notes: |
+  SECURITY REQUIREMENT: This task MUST use the encryption infrastructure from task 03c.
+  The encryption functions already exist in packages/db/src/encryption/index.ts:
+    - createKeystore({ masterKey: process.env.MASTER_KEY })
+    - encryptProviderTokens(account, keystore)
+    - decryptProviderTokens(account, keystore)
+
+  Example usage:
+    const keystore = createKeystore({ masterKey: process.env.MASTER_KEY });
+    const encrypted = encryptProviderTokens(
+      { access_token: '...', refresh_token: '...' },
+      keystore
+    );
+    await prisma.provider_accounts.create({
+      data: {
+        user_id: userId,
+        provider: 'spotify',
+        access_token_ciphertext: encrypted.access_token_ciphertext,
+        refresh_token_ciphertext: encrypted.refresh_token_ciphertext,
+        // access_token and refresh_token must remain NULL
+      }
+    });
+
+  Also update provider auth fetching (apps/worker/src/providers/index.ts) to decrypt tokens.

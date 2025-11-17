@@ -1,0 +1,41 @@
+id: 08x_002_circuit_breaker
+title: Circuit breaker for provider HTTP client
+branch: codex/08x_002_circuit_breaker
+overview: >
+  Complete the missing circuit breaker from task 06g. Implement a circuit breaker that opens after threshold consecutive
+  failures, preventing cascading failures and giving upstream services time to recover. Supports open/half-open/closed states
+  with configurable failure threshold and cooldown period.
+acceptance:
+  - Circuit opens after N consecutive failures (configurable, default 5)
+  - Requests fail-fast with 503 when circuit is open
+  - Circuit transitions to half-open after cooldown (default 30s)
+  - Half-open allows 1 probe request; closes on success or reopens on failure
+  - Circuit state exposed via metrics for observability
+  - Per-provider circuit isolation (Spotify failures don't affect Deezer)
+artifacts_to_touch:
+  - packages/providers/core/src/http/circuit-breaker.ts
+  - packages/providers/core/src/http/client.ts (integrate breaker)
+  - packages/providers/core/test/circuit-breaker.test.ts
+  - packages/providers/core/src/config.ts (threshold, cooldown, probe timeout)
+steps:
+  - Define CircuitBreaker class with state machine (closed/open/half-open)
+  - Track consecutive failures and success counts
+  - Open circuit after threshold failures, start cooldown timer
+  - Transition to half-open after cooldown expires
+  - Allow single probe request in half-open; close on success, reopen on failure
+  - Reset failure count on successful request in closed state
+  - Emit events for state transitions (for metrics)
+  - Integrate with HTTP client: wrap fetch with breaker.execute()
+  - Add per-provider isolation: separate breaker instance per provider name
+  - Unit tests with fake timers for state transitions
+  - Integration tests verifying fail-fast behavior
+notes: |
+  This completes acceptance criteria from 06g: "breaker opens after threshold".
+  Integrates with cache layer (08x_001) and retry logic (already implemented in 06g).
+
+  Failure definition: HTTP 5xx, network errors, timeouts.
+  NOT failures: HTTP 4xx, 429 (rate limit handled by retry logic).
+
+  State transitions:
+    closed --[N failures]--> open --[cooldown]--> half-open --[success]--> closed
+    half-open --[failure]--> open

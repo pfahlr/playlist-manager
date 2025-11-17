@@ -5,7 +5,10 @@ overview: >
   Set up Vitest (or Jest) monorepo config, supertest for API integration tests, and a coverage gate (>=70%) for changed packages.
 acceptance:
   - pnpm test runs unit & integration suites
-  - CI fails PRs under coverage threshold for touched code
+  - CI fails PRs under coverage threshold for touched code (>=70%)
+  - Integration tests exist for all completed Phase 1A-C features
+  - Coverage reports generated for apps/api/src/routes and apps/worker/src/processors
+  - Test fixtures and helpers organized for reuse
 artifacts_to_touch:
   - vitest.workspace.ts (or jest.config.ts)
   - apps/api/test/**/*.test.ts
@@ -14,3 +17,28 @@ artifacts_to_touch:
 steps:
   - Configure ts-node/tsx path aliases
   - Add sample tests for routes and providers
+  - Add integration tests for missing coverage areas:
+    * Exports file route validation (07b)
+    * SSE job progress streaming (07d)
+    * Idempotency key conflict handling (08z)
+    * Effective playlist items view fallback (02b)
+    * Feature flag 503 behavior (04d)
+    * Provider factory with mocked tokens (06f)
+  - Configure coverage thresholds: branches: 70, functions: 70, lines: 70, statements: 70
+  - Add coverage reports to CI: upload to Codecov or generate HTML reports
+  - Add test utilities: createTestUser, createTestPlaylist, mockProviderAuth
+notes: |
+  Audit findings showed missing test coverage for:
+  - View v_playlist_item_effective snapshot fallback (02b acceptance criteria)
+  - Feature flag 503 behavior (04d acceptance criteria)
+  - Golden file comparisons for exporters (05b spec mentions goldens)
+  - Provider factory comprehensive tests (06f uncertain implementation)
+  - Effective items route (07a spec mentions route.items.test.ts)
+  - Exports route validation (07b spec mentions exports.route.test.ts)
+
+  This task should fill those gaps with integration tests.
+
+  Test organization:
+  - Unit tests: packages/*/test/*.test.ts (pure functions, no DB)
+  - Integration tests: apps/api/test/*.test.ts (with DB, supertest)
+  - E2E tests: (future, not in this task)

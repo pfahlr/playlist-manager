@@ -1,0 +1,49 @@
+id: 08x_004_explain_ci_integration
+title: Integrate EXPLAIN scripts into CI workflow
+branch: codex/08x_004_explain_ci_integration
+overview: >
+  Complete the missing CI integration from task 02d. The EXPLAIN scripts exist (scripts/explain/*.sql) but are not
+  executed in CI, defeating the purpose of catching query plan regressions. Add a CI step that runs EXPLAIN ANALYZE
+  against seeded data and fails if indexes are not being used or plans degrade.
+acceptance:
+  - CI job runs all scripts/explain/*.sql after db-migrations job
+  - Scripts execute against seeded database (prisma db seed must run first)
+  - EXPLAIN output includes "Index Scan" for critical queries (not "Seq Scan")
+  - CI fails if any script returns non-zero exit code
+  - Scripts documented in README with local execution instructions
+artifacts_to_touch:
+  - .github/workflows/ci.yml (add explain-checks step in db-migrations job)
+  - scripts/run-explain-checks.sh (wrapper script for all EXPLAIN queries)
+  - scripts/explain/playlists.sql (ensure has assertions/expected output)
+  - scripts/explain/items.sql
+  - scripts/explain/fuzzy_search.sql
+  - README.md (document EXPLAIN check workflow)
+steps:
+  - Create scripts/run-explain-checks.sh wrapper
+  - Parse EXPLAIN output to verify Index Scan usage (grep or JSON format)
+  - Exit non-zero if Seq Scan detected on large tables or if costs exceed thresholds
+  - Update .github/workflows/ci.yml db-migrations job:
+    * After "Run migrations" step
+    * Add "Seed database" step (pnpm --filter @app/db prisma db seed)
+    * Add "Run EXPLAIN checks" step (bash scripts/run-explain-checks.sh)
+  - Update each .sql file to use EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) for parseable output
+  - Extract and validate: "Node Type" should be "Index Scan" or "Bitmap Index Scan", not "Seq Scan"
+  - Add README section: "Performance Regression Testing" explaining EXPLAIN checks
+  - Test locally: verify scripts pass after seeding, fail if indexes dropped
+notes: |
+  This completes acceptance criteria from 02d: "CI job runs them against seeded data".
+  Current state: Scripts exist but unused (audit findings).
+
+  EXPLAIN scripts validate:
+  - playlists.sql: Verify playlist lookups use playlist_user_scope_idx
+  - items.sql: Verify playlist items use playlist_item_recording_id_idx
+  - fuzzy_search.sql: Verify title/artist search uses trigram GIN indexes
+
+  Wrapper script should:
+  1. Source DATABASE_URL from env
+  2. Run each .sql file via psql
+  3. Parse JSON output to extract plan nodes
+  4. Fail if any query uses Seq Scan on tables with >100 rows
+  5. Log summary: "✓ 3/3 queries using indexes"
+
+  Future enhancement: Track query costs over time, fail if costs increase >20%.
