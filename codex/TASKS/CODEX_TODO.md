@@ -33,13 +33,13 @@ Spec-first, TDD, incremental. ✅ = done. New/updated items marked **← NEW**.
 - ✅ 06b_spotify_impl.yaml
 
 ### Phase 1B.5 — Core routes (real data)
-- ☐ 07a_routes_playlist_items_effective.yaml
-- ☐ 07c_error_contracts.yaml
-- ☐ 07b_route_exports_file.yaml
-- ☐ 07d_sse_job_progress.yaml **← NEW**
+- ✅ 07a_routes_playlist_items_effective.yaml
+- ✅ 07c_error_contracts.yaml
+- ✅ 07b_route_exports_file.yaml
+- ✅ 07d_sse_job_progress.yaml **← NEW**
 
 ## Phase 1C — Jobs & workers
-- ☐ 08z_idempotency_keys.yaml
+- ✅ 08z_idempotency_keys.yaml
 - ☐ 08a_worker_jobs_gc.yaml
 - ☐ 08b_worker_export_file.yaml
 - ☐ 08c_route_jobs_migrate.yaml
