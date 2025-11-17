@@ -11,6 +11,9 @@ import errorsPlugin from '../plugins/errors.js';
 import jobEvents from '../routes/jobs.events.js';
 import importsFile from '../routes/imports.file.js';
 import idempotency from '../plugins/idempotency.js';
+import corsPlugin from '../plugins/cors.js';
+import rateLimitPlugin from '../plugins/rate-limit.js';
+import authPlugin from '../plugins/auth.js';
 
 const app = Fastify({ logger: true });
 
@@ -19,9 +22,17 @@ await app.register(fastifyStatic, {
   prefix: '/',
 });
 
+// Register core plugins
 await app.register(logging);
 await app.register(metrics);
 await app.register(errorsPlugin);
+
+// Register security plugins
+await app.register(corsPlugin);
+await app.register(rateLimitPlugin);
+await app.register(authPlugin);
+
+// Register feature plugins
 await app.register(featureGuard);
 await app.register(idempotency);
 
