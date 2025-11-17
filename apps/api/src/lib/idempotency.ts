@@ -1,4 +1,4 @@
-import { env, IDEMPOTENCY_TTL_SECONDS } from '../config/env';
+import { env } from '../config/env';
 import { problem } from './problem';
 import { createIdempotencyStore, type IdempotencyStore, type IdempotencyEntry } from './idempotencyStore';
 import { getRedisClient, checkRedisHealth } from './redis/client';
@@ -53,7 +53,7 @@ export async function remember(key: string, fingerprint: string, jobId: number):
     jobId,
     createdAt: Date.now(),
   };
-  await store.set(key, entry, IDEMPOTENCY_TTL_SECONDS);
+  await store.set(key, entry, env.IDEMPOTENCY_TTL_SECONDS);
 }
 
 export async function lookup(key: string): Promise<IdempotencyEntry | null> {
