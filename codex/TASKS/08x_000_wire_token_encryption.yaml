@@ -1,0 +1,54 @@
+id: 08x_000_wire_token_encryption
+title: Wire token encryption into provider auth flow
+branch: codex/08x_000_wire_token_encryption
+overview: >
+  CRITICAL FIX: The encryption infrastructure from 03c exists but is NOT wired into the provider auth flow.
+  Worker code at apps/worker/src/providers/index.ts:35 queries non-existent 'access_token' column.
+  Schema only has 'access_token_ciphertext'. This makes provider operations fail at runtime.
+  Wire decryption into getProviderAuthForUser() and any other code paths that fetch tokens.
+acceptance:
+  - getProviderAuthForUser() queries access_token_ciphertext and refresh_token_ciphertext
+  - Tokens are decrypted using decryptProviderTokens() from @app/db/encryption
+  - MASTER_KEY environment variable is required (fail fast if missing)
+  - Integration test verifies end-to-end: create encrypted account, fetch and decrypt token
+  - Worker can successfully instantiate providers with real auth
+  - No code attempts to access plaintext access_token or refresh_token columns
+artifacts_to_touch:
+  - apps/worker/src/providers/index.ts (fix getProviderAuthForUser)
+  - apps/worker/src/config/env.ts (add MASTER_KEY validation)
+  - apps/worker/test/providers.test.ts (integration test)
+  - packages/db/src/encryption/index.ts (verify exports)
+steps:
+  - Update getProviderAuthForUser() to select ciphertext columns
+  - Import createKeystore and decryptProviderTokens from @app/db/encryption
+  - Read MASTER_KEY from env (apps/worker/src/config/env.ts)
+  - Decrypt tokens before returning ProviderAuth
+  - Add error handling for decryption failures (corrupted data, wrong key)
+  - Add integration test that creates account with encrypted tokens, fetches via getProviderAuthForUser
+  - Search codebase for any other references to plaintext token columns
+  - Update any other code paths that might query account tokens
+notes: |
+  CRITICAL SECURITY FIX: This is not a "future work" item - current code is broken.
+
+  Current broken code (apps/worker/src/providers/index.ts:35):
+    select: { access_token: true }  // ❌ Column doesn't exist!
+
+  Should be:
+    select: {
+      id: true,
+      access_token_ciphertext: true,
+      refresh_token_ciphertext: true
+    }
+
+  Then decrypt:
+    const keystore = createKeystore({ masterKey: process.env.MASTER_KEY });
+    const { accessToken } = decryptProviderTokens(acct, keystore);
+    return { token: accessToken };
+
+  This is separate from 10d because:
+  - 10d handles OAuth callback (storing NEW tokens with encryption)
+  - This task fixes fetching EXISTING tokens (or any tokens)
+  - Both are needed for complete encryption wiring
+
+  Priority: CRITICAL - must run BEFORE any worker jobs that use providers (08a, 08b, 08d)
+  Can run in parallel with other 08x_* tasks.

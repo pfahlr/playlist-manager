@@ -16,9 +16,12 @@ artifacts_to_touch:
   - packages/providers/core/src/http/client.ts (integrate cache)
   - packages/providers/core/test/cache.test.ts
   - packages/providers/core/src/config.ts (cache TTL, max size)
+  - packages/providers/core/package.json (add ioredis, lru-cache dependencies)
+  - packages/providers/core/tsconfig.json (verify ioredis types)
 steps:
+  - Add dependencies: pnpm add ioredis lru-cache @types/ioredis in packages/providers/core
   - Define CacheBackend interface (get, set, delete, clear)
-  - Implement InMemoryCache with LRU eviction (lru-cache or Map-based)
+  - Implement InMemoryCache with LRU eviction using lru-cache package
   - Implement RedisCache backend (ioredis)
   - Add cache middleware to HTTP client (before fetch, after response)
   - Cache only GET requests with 2xx responses

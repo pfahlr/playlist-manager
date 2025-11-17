@@ -34,6 +34,10 @@ notes: |
     - encryptProviderTokens(account, keystore)
     - decryptProviderTokens(account, keystore)
 
+  PREREQUISITE: Task 08x_000 must be complete first (wires decryption into existing auth flow).
+  This task (10d) handles encrypting NEW tokens from OAuth callbacks.
+  Task 08x_000 handles decrypting EXISTING tokens when workers fetch them.
+
   Example usage:
     const keystore = createKeystore({ masterKey: process.env.MASTER_KEY });
     const encrypted = encryptProviderTokens(
@@ -50,4 +54,5 @@ notes: |
       }
     });
 
-  Also update provider auth fetching (apps/worker/src/providers/index.ts) to decrypt tokens.
+  Provider auth fetching is handled by task 08x_000 (separate concern).
+  This task focuses on the OAuth callback flow and encrypting NEW tokens.

@@ -17,7 +17,9 @@ artifacts_to_touch:
   - apps/api/src/config/env.ts (REDIS_URL, IDEMPOTENCY_STORE_BACKEND)
   - apps/api/src/lib/__tests__/idempotency.test.ts (add Redis backend tests)
   - apps/api/src/dev/start.ts (Redis connection lifecycle)
+  - apps/api/package.json (add ioredis, ioredis-mock dependencies)
 steps:
+  - Add dependencies: pnpm add ioredis in apps/api, pnpm add -D ioredis-mock
   - Create shared Redis client module with connection pooling (ioredis)
   - Define IdempotencyStore interface (get, set, delete)
   - Implement RedisIdempotencyStore: use SET with EX for TTL
@@ -35,7 +37,9 @@ notes: |
   Redis key format: `idempotency:{key}` → JSON{fingerprint, job_id, created_at}
   TTL matches IDEMPOTENCY_TTL_SECONDS env var (default 86400 = 24h).
 
-  Error handling: If Redis is down in production, API should fail to start (not silently fallback).
-  Dev mode: Allow fallback to in-memory with warning log.
+  Error handling:
+  - Startup: If Redis is down in production, API should fail to start (not silently fallback).
+  - Runtime: If Redis fails during a request, log error and fail request with 503 (don't silently skip idempotency check)
+  - Dev mode: Allow fallback to in-memory with warning log at startup.
 
   Performance: Redis adds ~1-2ms latency per request, acceptable for job enqueue endpoints.

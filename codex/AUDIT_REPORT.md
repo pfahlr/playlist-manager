@@ -1,35 +1,50 @@
 # Phase 1 Audit Report
 **Date:** 2025-11-17
 **Branch:** claude/review-phase-1-tasks-013ZSJKJHwt1DEUz7BWELtxL
-**Status:** 🟡 MOSTLY COMPLETE with **1 CRITICAL SECURITY GAP**
+**Status:** 🟡 MOSTLY COMPLETE with **1 CRITICAL BUG** (broken provider auth)
 
 ## Executive Summary
 
 Conducted comprehensive audit of 29+ completed tasks (Phase 0 through Phase 1C). The codebase has solid infrastructure but several gaps prevent production readiness:
 
-- **Critical Security Issue**: Token encryption infrastructure exists but is NOT wired into OAuth flow
+- **Critical Bug**: Provider auth fetching queries non-existent database columns (broken code)
 - **Production Reliability**: Missing cache layer, circuit breaker, and Redis-backed idempotency
 - **CI/CD Gap**: EXPLAIN scripts exist but not executed in CI
 - **Test Coverage**: Integration tests missing for several completed features
 
 ## Critical Findings
 
-### 🔴 CRITICAL: Token Encryption Not Wired (Task 03c)
+### 🔴 CRITICAL #1: Token Encryption Not Wired (Task 03c)
 
-**Impact:** Provider tokens (Spotify, Deezer, TIDAL, YouTube) stored in plaintext despite encryption infrastructure
+**Impact:** Provider auth fetching is BROKEN - queries non-existent columns
 
 **Evidence:**
 - Encryption functions exist in `/packages/db/src/encryption/index.ts`
-- Schema has `access_token_ciphertext` and `refresh_token_ciphertext` columns
-- Provider auth fetching uses WRONG fields: `apps/worker/src/providers/index.ts:33-36`
+- Schema has ONLY `access_token_ciphertext` and `refresh_token_ciphertext` columns (no plaintext)
+- Worker code queries non-existent column: `apps/worker/src/providers/index.ts:35`
 ```typescript
 const acct = await prisma.account.findFirst({
   where: { user_id: userId, provider },
-  select: { access_token: true },  // ❌ Should use access_token_ciphertext
+  select: { access_token: true },  // ❌ Column doesn't exist in schema!
 });
 ```
+- This code would fail at runtime with Prisma error
 
-**Remediation:** Task 10d (OAuth callbacks) updated with explicit encryption requirements
+**Remediation:**
+- NEW task **08x_000_wire_token_encryption.yaml** fixes getProviderAuthForUser()
+- Task 10d handles encrypting NEW tokens from OAuth callbacks
+- Both needed for complete encryption wiring
+
+### 🔴 CRITICAL #2: Missing Package Dependencies
+
+**Impact:** Tasks 08x_001 and 08x_003 cannot execute without dependencies
+
+**Evidence:**
+- 08x_001 requires `ioredis`, `lru-cache`, `@types/ioredis`
+- 08x_003 requires `ioredis`, `ioredis-mock`
+- Original task specs didn't specify package.json modifications
+
+**Remediation:** Updated 08x_001 and 08x_003 with explicit dependency installation steps
 
 ---
 
@@ -113,7 +128,14 @@ Integration tests needed for:
 
 ### New Tasks Created (Phase 1C.5)
 
-Four new tasks added to fill gaps before Phase 1D:
+Five new tasks added to fill gaps before Phase 1D:
+
+0. **08x_000_wire_token_encryption.yaml** 🔴
+   - Fix broken getProviderAuthForUser() function
+   - Wire decryption into provider auth flow
+   - Query ciphertext columns, decrypt with MASTER_KEY
+   - Integration test verifying end-to-end encryption/decryption
+   - Priority: CRITICAL (current code is broken)
 
 1. **08x_001_http_cache_layer.yaml**
    - Implement LRU cache with TTL (in-memory + Redis backends)
@@ -145,7 +167,8 @@ Four new tasks added to fill gaps before Phase 1D:
    - Added CRITICAL requirement to use `encryptProviderTokens()`
    - Added acceptance criteria: tokens must be ciphertext only
    - Added example code and security notes
-   - Must also update `apps/worker/src/providers/index.ts` to decrypt
+   - Added prerequisite note: 08x_000 must be complete first
+   - Clarified separation: 10d encrypts NEW tokens, 08x_000 decrypts EXISTING tokens
 
 2. **09h_tests_scaffold.yaml**
    - Added specific integration test requirements
@@ -168,16 +191,17 @@ Four new tasks added to fill gaps before Phase 1D:
 - 06e_youtube_impl.yaml (had .done log)
 
 **Added (☐):**
-- Phase 1C.5 section with 4 new tasks (08x_001 through 08x_004)
+- Phase 1C.5 section with 5 new tasks (08x_000 through 08x_004)
 
 ---
 
 ## Recommended Execution Order
 
-**Immediate (can run in parallel):**
-1. 08x_001 (cache) + 08x_002 (circuit breaker) - both touch HTTP client
-2. 08x_003 (Redis idempotency) - independent
-3. 08x_004 (EXPLAIN CI) - independent
+**Immediate Priority:**
+1. 08x_000 (CRITICAL - fixes broken provider auth)
+2. 08x_001 + 08x_002 (HTTP infrastructure, can run in parallel)
+3. 08x_003 (Redis idempotency)
+4. 08x_004 (CI integration)
 
 **After 08x_* complete:**
 - Proceed with Phase 1D: 09a → 09h (including integration tests)
@@ -194,10 +218,10 @@ Four new tasks added to fill gaps before Phase 1D:
 | **Total Tasks Audited** | 33 | 29 marked complete, 4 in logs only |
 | **Fully Implemented** | 15 | ✅ |
 | **Partially Implemented** | 10 | ⚠️ Gaps identified |
-| **Missing Features** | 4 | ❌ New tasks created |
-| **Critical Security Gaps** | 1 | 🔴 Token encryption not wired |
-| **New Tasks Created** | 4 | 08x_001 through 08x_004 |
-| **Tasks Updated** | 2 | 09h, 10d |
+| **Missing Features** | 5 | ❌ New tasks created |
+| **Critical Bugs** | 1 | 🔴 Broken provider auth (queries non-existent columns) |
+| **New Tasks Created** | 5 | 08x_000 through 08x_004 |
+| **Tasks Updated** | 3 | 08x_001, 08x_003, 09h, 10d |
 
 ---
 
@@ -213,17 +237,28 @@ Four new tasks added to fill gaps before Phase 1D:
 
 ## Appendix: Files Modified
 
-### Created:
+### Created (Initial Audit - Commit 1):
 - `codex/TASKS/08x_001_http_cache_layer.yaml`
 - `codex/TASKS/08x_002_circuit_breaker.yaml`
 - `codex/TASKS/08x_003_idempotency_redis_store.yaml`
 - `codex/TASKS/08x_004_explain_ci_integration.yaml`
 - `codex/AUDIT_REPORT.md` (this file)
 
-### Updated:
+### Created (Fine-Toothed Comb - Commit 2):
+- `codex/TASKS/08x_000_wire_token_encryption.yaml` (CRITICAL fix)
+
+### Updated (Initial Audit - Commit 1):
 - `codex/TASKS/CODEX_TODO.md` (task status + new phase 1C.5)
 - `codex/TASKS/10d_backend_oauth_callbacks.yaml` (encryption requirements)
 - `codex/TASKS/09h_tests_scaffold.yaml` (integration test details)
+
+### Updated (Fine-Toothed Comb - Commit 2):
+- `codex/TASKS/08x_001_http_cache_layer.yaml` (added package dependencies)
+- `codex/TASKS/08x_003_idempotency_redis_store.yaml` (added dependencies + runtime error handling)
+- `codex/TASKS/09h_tests_scaffold.yaml` (added vitest config + test utilities detail)
+- `codex/TASKS/10d_backend_oauth_callbacks.yaml` (clarified 08x_000 prerequisite)
+- `codex/TASKS/CODEX_TODO.md` (added 08x_000 task)
+- `codex/AUDIT_REPORT.md` (updated findings and metrics)
 
 ---
 

@@ -46,6 +46,7 @@ Spec-first, TDD, incremental. ✅ = done. New/updated items marked **← NEW**.
 - ✅ 08d_worker_jobs_migrate.yaml
 
 ### Phase 1C.5 — Infrastructure gaps & remediation **← NEW**
+- ☐ 08x_000_wire_token_encryption.yaml **← NEW CRITICAL**
 - ☐ 08x_001_http_cache_layer.yaml **← NEW**
 - ☐ 08x_002_circuit_breaker.yaml **← NEW**
 - ☐ 08x_003_idempotency_redis_store.yaml **← NEW**
@@ -92,7 +93,7 @@ Spec-first, TDD, incremental. ✅ = done. New/updated items marked **← NEW**.
 2. **Interchange**: 05a → 05b → 05c
 3. **Providers**: 06a → 06g → 06h → 06z → 06f → 06b → 06c → 06d → 06e
 4. **Routes/Jobs**: 07a → 07c → 07b → 07d → 08z → 08a → 08b → 08c → 08d
-5. **Infrastructure gaps**: 08x_001 → 08x_002 → 08x_003 → 08x_004 **← NEW**
+5. **Infrastructure gaps**: 08x_000 (CRITICAL) → 08x_001 → 08x_002 → 08x_003 → 08x_004 **← NEW**
 6. **Enrichment & Gates**: 09a → 09b → 09c → 09d → 09c/09d/09e/09f → 09g → 09h → 09k
 7. **Mobile & OAuth**: 10a → 10e → 10f → 10d → 10m → 10b → 10l → 10c → 10h → 10g → 10i → 10j → 10k
 

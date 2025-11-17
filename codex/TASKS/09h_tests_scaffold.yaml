@@ -11,8 +11,10 @@ acceptance:
   - Test fixtures and helpers organized for reuse
 artifacts_to_touch:
   - vitest.workspace.ts (or jest.config.ts)
+  - vitest.config.ts (coverage configuration)
   - apps/api/test/**/*.test.ts
   - packages/**/test/**/*.test.ts
+  - apps/api/test/utils/index.ts (test utilities module)
   - .github/workflows/ci.yml (test job + coverage summary)
 steps:
   - Configure ts-node/tsx path aliases
@@ -24,9 +26,19 @@ steps:
     * Effective playlist items view fallback (02b)
     * Feature flag 503 behavior (04d)
     * Provider factory with mocked tokens (06f)
-  - Configure coverage thresholds: branches: 70, functions: 70, lines: 70, statements: 70
-  - Add coverage reports to CI: upload to Codecov or generate HTML reports
-  - Add test utilities: createTestUser, createTestPlaylist, mockProviderAuth
+  - Configure coverage in vitest.config.ts:
+    * provider: 'v8'
+    * reporter: ['text', 'json', 'html']
+    * thresholds: branches: 70, functions: 70, lines: 70, statements: 70
+    * include: ['apps/*/src/**', 'packages/*/src/**']
+  - Add coverage reports to CI: generate HTML reports, fail if under threshold
+  - Create test utilities module (apps/api/test/utils/index.ts):
+    * createTestUser() - create user with cleanup
+    * createTestPlaylist() - create playlist with items
+    * mockProviderAuth() - mock OAuth tokens
+    * cleanupTestData() - transaction rollback or explicit cleanup
+    * seedTestDatabase() - deterministic test fixtures
+  - Add golden file comparison utilities for file exporters
 notes: |
   Audit findings showed missing test coverage for:
   - View v_playlist_item_effective snapshot fallback (02b acceptance criteria)
