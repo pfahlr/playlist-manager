@@ -34,9 +34,11 @@
   "devDependencies": {
     "@redocly/cli": "^1.25.0",
     "@stoplight/prism-cli": "^5.7.0",
+    "@types/nock": "^11.1.0",
     "concurrently": "^9.0.1",
     "dredd": "^14.0.0",
     "ioredis-mock": "^8.13.1",
+    "nock": "^14.0.10",
     "openapi-typescript": "^7.10.1",
     "tsx": "^4.16.0",
     "vitest": "^4.0.7",
