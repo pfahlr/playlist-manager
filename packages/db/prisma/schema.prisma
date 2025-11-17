@@ -43,6 +43,29 @@ model Account {
   @@map("account")
 }
 
+model OAuthAttempt {
+  id                String    @id @default(cuid())
+  provider          String
+  code_challenge    String
+  code_verifier     String?
+  redirect_uri      String
+  state             String?
+  nonce             String?
+  status            String    @default("pending") // pending|succeeded|failed|expired
+  user_id           Int?
+  access_token      String?
+  refresh_token     String?
+  expires_in        Int?
+  error             String?
+  error_description String?
+  expires_at        DateTime  @db.Timestamptz
+  created_at        DateTime  @default(now()) @db.Timestamptz
+  updated_at        DateTime  @default(now()) @db.Timestamptz
+
+  @@index([status, expires_at])
+  @@map("oauth_attempt")
+}
+
 // ===================== Playlists =====================
 
 model Playlist {
