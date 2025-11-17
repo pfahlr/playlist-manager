@@ -1,4 +1,22 @@
-# playlist-manager
+# Playlist Manager
+
+> A secure, type-safe playlist aggregation and migration platform with multi-provider OAuth support
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Fastify](https://img.shields.io/badge/Fastify-000000?logo=fastify&logoColor=white)](https://www.fastify.io/)
+[![React Native](https://img.shields.io/badge/React_Native-20232A?logo=react&logoColor=61DAFB)](https://reactnative.dev/)
+[![Prisma](https://img.shields.io/badge/Prisma-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
+
+## 📚 Documentation
+
+**Quick Links**:
+- **[Architecture Overview](./docs/ARCHITECTURE.md)** - System design, data flow, technology stack
+- **[Authentication & Security](./docs/AUTHENTICATION.md)** - OAuth PKCE flow, session management, encryption
+- **[Development Setup](./docs/DEVELOPMENT.md)** - Getting started, workflow, troubleshooting
+
+**See Also**: [OpenAPI Spec](./openapi.yaml) | [Database Schema](./packages/db/prisma/schema.prisma) | [Scripts](./scripts/)
+
+---
 
 ## Spec workflow
 
