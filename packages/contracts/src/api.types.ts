@@ -4,6 +4,87 @@
  */
 
 export interface paths {
+    "/auth/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List enabled auth providers */
+        get: operations["authProviders_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/mobile/authorize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Initiate mobile OAuth PKCE flow
+         * @description Creates an OAuth authorization attempt for mobile clients using PKCE.
+         *     Returns an attempt_id to track the flow and an authorization_url to open in the browser.
+         */
+        post: operations["auth_mobile_authorize"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/mobile/attempts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check OAuth attempt status
+         * @description Poll this endpoint to check if the OAuth flow has completed.
+         *     Status transitions: pending → succeeded (with tokens) or failed/expired.
+         */
+        get: operations["auth_mobile_attempt_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/callback/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * OAuth callback handler
+         * @description OAuth provider redirects here after user authorization.
+         *     This endpoint exchanges the authorization code for tokens and updates the attempt status.
+         *     For mobile flows, the user will be redirected back to the app via the redirect_uri.
+         */
+        get: operations["auth_callback_handler"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/playlists": {
         parameters: {
             query?: never;
@@ -158,6 +239,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/imports/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview a playlist file import */
+        post: operations["imports_file_preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/exports/file": {
         parameters: {
             query?: never;
@@ -238,10 +336,55 @@ export interface components {
             code: string;
             /** @example TIDAL is disabled */
             message: string;
+            /**
+             * @description Additional metadata for debugging, always includes request_id.
+             * @example {
+             *       "request_id": "req_abc123"
+             *     }
+             */
             details: {
+                /** @description Correlates the server log entry for this error. */
                 request_id: string | null;
+            } & {
                 [key: string]: unknown;
             };
+        };
+        FileImportPreviewResponse: {
+            preview: components["schemas"]["PIFDocument"];
+            counts: {
+                tracks: number;
+            };
+        };
+        PIFDocument: {
+            name: string;
+            description?: string | null;
+            source_service?: ("spotify" | "deezer" | "tidal" | "youtube" | "amazon") | null;
+            source_playlist_id?: string | null;
+            tracks: components["schemas"]["PIFTrack"][];
+        };
+        PIFTrack: {
+            position: number;
+            title: string;
+            artists: string[];
+            album?: string | null;
+            duration_ms?: number | null;
+            explicit?: boolean | null;
+            release_date?: string | null;
+            isrc?: string | null;
+            mb_recording_id?: string | null;
+            mb_release_id?: string | null;
+            provider_ids?: components["schemas"]["PIFProviderIds"] | null;
+        };
+        PIFProviderIds: {
+            spotify_track_id?: string | null;
+            deezer_track_id?: string | null;
+            tidal_track_id?: string | null;
+            youtube_video_id?: string | null;
+            amazon_track_id?: string | null;
+        };
+        AuthProvider: {
+            /** @enum {string} */
+            name: "spotify" | "deezer" | "tidal" | "youtube";
         };
         PagedPlaylists: {
             data?: components["schemas"]["Playlist"][];
@@ -338,15 +481,6 @@ export interface components {
         };
     };
     responses: {
-        /** @description Not found */
-        NotFound: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["Error"];
-            };
-        };
         /** @description Bad request */
         BadRequest: {
             headers: {
@@ -356,8 +490,44 @@ export interface components {
                 "application/json": components["schemas"]["Error"];
             };
         };
+        /** @description Not found */
+        NotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description Too many requests */
+        TooManyRequests: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
         /** @description Unauthorized */
         Unauthorized: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description Service unavailable */
+        ServiceUnavailable: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description Idempotency fingerprint conflict */
+        IdempotencyConflict: {
             headers: {
                 [name: string]: unknown;
             };
@@ -382,6 +552,173 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    authProviders_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AuthProvider"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
+        };
+    };
+    auth_mobile_authorize: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description OAuth provider to authenticate with
+                     * @enum {string}
+                     */
+                    provider: "spotify" | "deezer" | "tidal" | "youtube";
+                    /** @description PKCE code challenge (SHA256 hash of code_verifier) */
+                    code_challenge: string;
+                    /**
+                     * Format: uri
+                     * @description Redirect URI (must match app scheme, e.g., pm://auth/callback)
+                     * @example pm://auth/callback
+                     */
+                    redirect_uri: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Authorization attempt created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Unique attempt identifier to poll for completion
+                         * @example att_abc123def456
+                         */
+                        attempt_id: string;
+                        /**
+                         * Format: uri
+                         * @description URL to open in browser for user authentication
+                         * @example https://accounts.spotify.com/authorize?client_id=...
+                         */
+                        authorization_url: string;
+                        /**
+                         * Format: date-time
+                         * @description Expiration time for this attempt (typically 10 minutes)
+                         */
+                        expires_at: string;
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            429: components["responses"]["TooManyRequests"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    auth_mobile_attempt_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The attempt_id returned from /auth/mobile/authorize */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Attempt status */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example att_abc123def456 */
+                        attempt_id: string;
+                        /**
+                         * @description - pending: User has not completed authorization yet
+                         *     - succeeded: Authorization complete, tokens available
+                         *     - failed: Authorization was denied or encountered an error
+                         *     - expired: Attempt expired (typically after 10 minutes)
+                         * @enum {string}
+                         */
+                        status: "pending" | "succeeded" | "failed" | "expired";
+                        /** @description Bearer token for API requests (only present when status=succeeded) */
+                        access_token?: string | null;
+                        /** @description Refresh token to obtain new access tokens (only present when status=succeeded) */
+                        refresh_token?: string | null;
+                        /** @description Access token lifetime in seconds (only present when status=succeeded) */
+                        expires_in?: number | null;
+                        /** @description Error code if status=failed */
+                        error?: string | null;
+                        /** @description Human-readable error description if status=failed */
+                        error_description?: string | null;
+                        /** Format: date-time */
+                        created_at: string;
+                        updated_at?: string | null;
+                    };
+                };
+            };
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
+        };
+    };
+    auth_callback_handler: {
+        parameters: {
+            query?: {
+                /** @description Authorization code from OAuth provider (present on success) */
+                code?: string;
+                /** @description State parameter to match the attempt (contains attempt_id for mobile flows) */
+                state?: string;
+                /** @description Error code if authorization failed */
+                error?: string;
+                /** @description Human-readable error description */
+                error_description?: string;
+            };
+            header?: never;
+            path: {
+                /** @description OAuth provider handling this callback */
+                provider: "spotify" | "deezer" | "tidal" | "youtube";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redirect back to application */
+            302: {
+                headers: {
+                    /** @description Redirect URI (mobile app scheme or web URL) */
+                    Location?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
     playlists_list: {
         parameters: {
             query?: {
@@ -406,6 +743,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     playlists_get: {
@@ -413,6 +751,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
+                /** @example 101 */
                 id: number;
             };
             cookie?: never;
@@ -430,6 +769,7 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     playlists_items_list: {
@@ -442,6 +782,7 @@ export interface operations {
             };
             header?: never;
             path: {
+                /** @example 101 */
                 id: number;
             };
             cookie?: never;
@@ -461,6 +802,7 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
             422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     activePlaylist_get: {
@@ -483,6 +825,7 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     activePlaylist_set: {
@@ -509,6 +852,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     activePlaylist_addItem: {
@@ -557,6 +901,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     activePlaylist_removeItem: {
@@ -564,6 +909,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
+                /** @example 4001 */
                 itemId: number;
             };
             cookie?: never;
@@ -579,12 +925,20 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     jobs_requestMigration: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /**
+                 * @description Optional key to deduplicate POST attempts for 15 minutes. Reusing the same key with
+                 *     the same request payload returns the original job reference; mismatched payloads
+                 *     return HTTP 422 with code `idempotency_conflict`.
+                 */
+                "Idempotency-Key"?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -612,6 +966,9 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            422: components["responses"]["IdempotencyConflict"];
+            429: components["responses"]["TooManyRequests"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     jobs_get: {
@@ -619,6 +976,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
+                /** @example 5001 */
                 id: number;
             };
             cookie?: never;
@@ -636,6 +994,7 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     jobs_events_stream: {
@@ -643,6 +1002,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
+                /** @example 5001 */
                 id: number;
             };
             cookie?: never;
@@ -663,10 +1023,47 @@ export interface operations {
             429: components["responses"]["TooManyRequests"];
         };
     };
-    exports_enqueueFile: {
+    imports_file_preview: {
         parameters: {
             query?: never;
             header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "text/csv": string;
+                "audio/x-mpegurl": string;
+                "application/xspf+xml": string;
+                "audio/x-scpls": string;
+                "application/vnd.ms-wpl": string;
+            };
+        };
+        responses: {
+            /** @description Parsed playlist preview */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FileImportPreviewResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            429: components["responses"]["TooManyRequests"];
+        };
+    };
+    exports_enqueueFile: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Optional key to deduplicate POST attempts for 15 minutes. Reusing the same key with
+                 *     the same request payload returns the original job reference; mismatched payloads
+                 *     return HTTP 422 with code `idempotency_conflict`.
+                 */
+                "Idempotency-Key"?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -696,6 +1093,8 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            422: components["responses"]["IdempotencyConflict"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     artists_follow: {
@@ -703,6 +1102,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
+                /** @example 123e4567-e89b-12d3-a456-426614174000 */
                 mbid: string;
             };
             cookie?: never;
@@ -718,6 +1118,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     artists_unfollow: {
@@ -725,6 +1126,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
+                /** @example 123e4567-e89b-12d3-a456-426614174000 */
                 mbid: string;
             };
             cookie?: never;
@@ -740,6 +1142,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     artists_get: {
@@ -747,6 +1150,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
+                /** @example 123e4567-e89b-12d3-a456-426614174000 */
                 mbid: string;
             };
             cookie?: never;
@@ -764,6 +1168,7 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     artists_relations: {
@@ -773,6 +1178,7 @@ export interface operations {
             };
             header?: never;
             path: {
+                /** @example 123e4567-e89b-12d3-a456-426614174000 */
                 mbid: string;
             };
             cookie?: never;
@@ -792,6 +1198,7 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
 }

@@ -53,6 +53,238 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/TooManyRequests' }
 
+  /auth/mobile/authorize:
+    post:
+      summary: Initiate mobile OAuth PKCE flow
+      operationId: auth_mobile_authorize
+      tags: [auth]
+      description: |
+        Creates an OAuth authorization attempt for mobile clients using PKCE.
+        Returns an attempt_id to track the flow and an authorization_url to open in the browser.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [provider, code_challenge, redirect_uri]
+              properties:
+                provider:
+                  type: string
+                  enum: [spotify, deezer, tidal, youtube]
+                  description: OAuth provider to authenticate with
+                code_challenge:
+                  type: string
+                  description: PKCE code challenge (SHA256 hash of code_verifier)
+                  minLength: 43
+                  maxLength: 128
+                redirect_uri:
+                  type: string
+                  format: uri
+                  description: Redirect URI (must match app scheme, e.g., pm://auth/callback)
+                  example: 'pm://auth/callback'
+            examples:
+              spotify:
+                value:
+                  provider: spotify
+                  code_challenge: 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM'
+                  redirect_uri: 'pm://auth/callback'
+      responses:
+        '201':
+          description: Authorization attempt created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [attempt_id, authorization_url, expires_at]
+                properties:
+                  attempt_id:
+                    type: string
+                    description: Unique attempt identifier to poll for completion
+                    example: 'att_abc123def456'
+                  authorization_url:
+                    type: string
+                    format: uri
+                    description: URL to open in browser for user authentication
+                    example: 'https://accounts.spotify.com/authorize?client_id=...'
+                  expires_at:
+                    type: string
+                    format: date-time
+                    description: Expiration time for this attempt (typically 10 minutes)
+              examples:
+                created:
+                  value:
+                    attempt_id: 'att_abc123def456'
+                    authorization_url: 'https://accounts.spotify.com/authorize?client_id=xyz&response_type=code&redirect_uri=pm://auth/callback&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256&state=att_abc123def456'
+                    expires_at: '2024-01-15T12:30:00Z'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /auth/mobile/attempts/{id}:
+    get:
+      summary: Check OAuth attempt status
+      operationId: auth_mobile_attempt_get
+      tags: [auth]
+      description: |
+        Poll this endpoint to check if the OAuth flow has completed.
+        Status transitions: pending → succeeded (with tokens) or failed/expired.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: 'att_abc123def456'
+          description: The attempt_id returned from /auth/mobile/authorize
+      responses:
+        '200':
+          description: Attempt status
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [attempt_id, status, created_at]
+                properties:
+                  attempt_id:
+                    type: string
+                    example: 'att_abc123def456'
+                  status:
+                    type: string
+                    enum: [pending, succeeded, failed, expired]
+                    description: |
+                      - pending: User has not completed authorization yet
+                      - succeeded: Authorization complete, tokens available
+                      - failed: Authorization was denied or encountered an error
+                      - expired: Attempt expired (typically after 10 minutes)
+                  access_token:
+                    oneOf:
+                      - { type: string }
+                      - { type: 'null' }
+                    description: Bearer token for API requests (only present when status=succeeded)
+                  refresh_token:
+                    oneOf:
+                      - { type: string }
+                      - { type: 'null' }
+                    description: Refresh token to obtain new access tokens (only present when status=succeeded)
+                  expires_in:
+                    oneOf:
+                      - { type: integer }
+                      - { type: 'null' }
+                    description: Access token lifetime in seconds (only present when status=succeeded)
+                  error:
+                    oneOf:
+                      - { type: string }
+                      - { type: 'null' }
+                    description: Error code if status=failed
+                  error_description:
+                    oneOf:
+                      - { type: string }
+                      - { type: 'null' }
+                    description: Human-readable error description if status=failed
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    oneOf:
+                      - { type: string, format: date-time }
+                      - { type: 'null' }
+              examples:
+                pending:
+                  summary: Authorization pending
+                  value:
+                    attempt_id: 'att_abc123def456'
+                    status: pending
+                    access_token: null
+                    refresh_token: null
+                    expires_in: null
+                    error: null
+                    error_description: null
+                    created_at: '2024-01-15T12:20:00Z'
+                    updated_at: null
+                succeeded:
+                  summary: Authorization succeeded
+                  value:
+                    attempt_id: 'att_abc123def456'
+                    status: succeeded
+                    access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+                    refresh_token: 'refresh_xyz789'
+                    expires_in: 3600
+                    error: null
+                    error_description: null
+                    created_at: '2024-01-15T12:20:00Z'
+                    updated_at: '2024-01-15T12:21:30Z'
+                failed:
+                  summary: Authorization failed
+                  value:
+                    attempt_id: 'att_abc123def456'
+                    status: failed
+                    access_token: null
+                    refresh_token: null
+                    expires_in: null
+                    error: 'access_denied'
+                    error_description: 'User denied authorization'
+                    created_at: '2024-01-15T12:20:00Z'
+                    updated_at: '2024-01-15T12:21:15Z'
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /auth/callback/{provider}:
+    get:
+      summary: OAuth callback handler
+      operationId: auth_callback_handler
+      tags: [auth]
+      description: |
+        OAuth provider redirects here after user authorization.
+        This endpoint exchanges the authorization code for tokens and updates the attempt status.
+        For mobile flows, the user will be redirected back to the app via the redirect_uri.
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema:
+            type: string
+            enum: [spotify, deezer, tidal, youtube]
+          description: OAuth provider handling this callback
+        - in: query
+          name: code
+          required: false
+          schema:
+            type: string
+          description: Authorization code from OAuth provider (present on success)
+        - in: query
+          name: state
+          required: false
+          schema:
+            type: string
+          description: State parameter to match the attempt (contains attempt_id for mobile flows)
+        - in: query
+          name: error
+          required: false
+          schema:
+            type: string
+          description: Error code if authorization failed
+        - in: query
+          name: error_description
+          required: false
+          schema:
+            type: string
+          description: Human-readable error description
+      responses:
+        '302':
+          description: Redirect back to application
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+                example: 'pm://auth/callback?status=success'
+              description: Redirect URI (mobile app scheme or web URL)
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
   /playlists:
     get:
       summary: List user playlists

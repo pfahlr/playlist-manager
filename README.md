@@ -26,6 +26,62 @@ transaction so you can safely run it multiple times; it always upserts the demo 
 reference artists/albums, six recordings, and a `Seed Playlist` with track metadata that
 contract tests rely on. Follow-up with `pnpm db:health` to confirm the database is reachable.
 
+## OAuth flow
+
+The mobile app uses OAuth 2.0 with PKCE for secure authentication. The flow follows these steps:
+
+```mermaid
+sequenceDiagram
+    participant App as Mobile App
+    participant API as Backend API
+    participant Browser as System Browser
+    participant Provider as OAuth Provider (Spotify/etc)
+
+    Note over App,Provider: 1. Initiate OAuth
+    App->>App: Generate code_verifier + code_challenge (PKCE)
+    App->>API: POST /auth/mobile/authorize<br/>{provider, code_challenge, redirect_uri}
+    API->>API: Create attempt record with state
+    API-->>App: 201: {attempt_id, authorization_url, expires_at}
+
+    Note over App,Provider: 2. User Authorization
+    App->>Browser: Open authorization_url in system browser
+    Browser->>Provider: Redirect to OAuth authorize endpoint
+    Provider->>Provider: User signs in & grants permission
+    Provider->>API: Redirect to /auth/callback/{provider}<br/>?code=xyz&state=attempt_id
+
+    Note over App,Provider: 3. Token Exchange
+    API->>API: Verify state matches attempt
+    API->>Provider: Exchange code for tokens (with code_verifier from attempt)
+    Provider-->>API: {access_token, refresh_token, expires_in}
+    API->>API: Encrypt tokens & update attempt status=succeeded
+    API->>Browser: 302 Redirect to pm://auth/callback?status=success
+    Browser->>App: Deep link back to app
+
+    Note over App,Provider: 4. Poll & Retrieve Tokens
+    App->>API: GET /auth/mobile/attempts/{attempt_id}
+    API-->>App: 200: {status: succeeded, access_token, refresh_token}
+    App->>App: Store tokens in SecureStore
+    App->>App: Navigate to authenticated screen
+
+    Note over App,API: 5. Authenticated Requests
+    App->>API: GET /playlists<br/>Authorization: Bearer {access_token}
+    API-->>App: 200: {data: [...]}
+```
+
+### OAuth endpoints
+
+- **POST /auth/mobile/authorize** - Initiate PKCE flow, returns attempt_id and authorization_url
+- **GET /auth/mobile/attempts/{id}** - Poll for completion (pending → succeeded/failed/expired)
+- **GET /auth/callback/{provider}** - OAuth provider redirects here after authorization
+
+### Security features
+
+- **PKCE (Proof Key for Code Exchange)**: Protects against authorization code interception
+- **State parameter**: Prevents CSRF attacks by linking callback to original attempt
+- **Token encryption at rest**: All tokens encrypted before storage (see Token encryption section)
+- **Attempt expiration**: Authorization attempts expire after 10 minutes
+- **Secure deep linking**: Uses custom URL scheme (pm://) for secure app returns
+
 ## Token encryption
 
 Provider access and refresh tokens are sealed with libsodium (TweetNaCl) before hitting the
