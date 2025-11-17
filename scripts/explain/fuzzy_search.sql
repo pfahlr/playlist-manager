@@ -1,13 +1,15 @@
-\echo 'EXPLAIN fuzzy artist/title lookup'
+\echo 'EXPLAIN fuzzy artist lookup'
 
-EXPLAIN (ANALYZE, BUFFERS)
+EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)
 SELECT a.id, a.name
 FROM artist a
 WHERE a.name % 'Aphex Twin'
 ORDER BY similarity(a.name, 'Aphex Twin') DESC
 LIMIT 5;
 
-EXPLAIN (ANALYZE, BUFFERS)
+\echo 'EXPLAIN fuzzy recording title lookup'
+
+EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)
 SELECT r.id, r.title
 FROM recording r
 WHERE r.title % 'Roygbiv'

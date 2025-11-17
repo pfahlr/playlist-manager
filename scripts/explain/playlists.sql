@@ -1,6 +1,6 @@
 \echo 'EXPLAIN playlists by user scope'
 
-EXPLAIN (ANALYZE, BUFFERS)
+EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)
 SELECT id, name, updated_at
 FROM playlist
 WHERE user_id = (
