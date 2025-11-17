@@ -1,6 +1,6 @@
 \echo 'EXPLAIN playlist items join to recordings'
 
-EXPLAIN (ANALYZE, BUFFERS)
+EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)
 SELECT pi.id, pi.position, r.title
 FROM playlist_item pi
 JOIN recording r ON r.id = pi.recording_id

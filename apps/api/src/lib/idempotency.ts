@@ -1,7 +1,8 @@
-import { IDEMPOTENCY_TTL_SECONDS } from '../config/env';
+import { env, IDEMPOTENCY_TTL_SECONDS } from '../config/env';
 import { problem } from './problem';
+import { createIdempotencyStore, type IdempotencyStore, type IdempotencyEntry } from './idempotencyStore';
+import { getRedisClient, checkRedisHealth } from './redis/client';
 
-type Entry = { fingerprint: string; jobId: number; expiresAt: number };
 type FingerprintInput = { method: string; path: string; body: unknown };
 type RequestHeaders = Record<string, unknown>;
 
@@ -10,30 +11,74 @@ export type RequestWithIdempotency = {
   getIdempotencyKey?: () => string | null | undefined;
 };
 
-const STORE = new Map<string, Entry>();
-const TTL_MS = IDEMPOTENCY_TTL_SECONDS * 1000;
+// Global store instance (initialized on first use)
+let storeInstance: IdempotencyStore | null = null;
 
-function now() {
-  return Date.now();
-}
+/**
+ * Get or initialize the idempotency store
+ */
+function getStore(): IdempotencyStore {
+  if (!storeInstance) {
+    const backend = env.IDEMPOTENCY_STORE_BACKEND;
+    const isDevelopment = env.NODE_ENV === 'development';
 
-function sweepExpired() {
-  const cutoff = now();
-  for (const [key, entry] of STORE) {
-    if (entry.expiresAt < cutoff) {
-      STORE.delete(key);
+    if (backend === 'redis' && env.REDIS_URL) {
+      try {
+        const redisClient = getRedisClient({ url: env.REDIS_URL });
+        storeInstance = createIdempotencyStore({
+          backend: 'redis',
+          redisClient,
+          isDevelopment,
+        });
+      } catch (error) {
+        console.error('[Idempotency] Failed to initialize Redis store:', error);
+        if (!isDevelopment) {
+          throw new Error('Failed to initialize Redis idempotency store in production');
+        }
+        console.warn('[Idempotency] Falling back to in-memory store');
+        storeInstance = createIdempotencyStore({ backend: 'memory', isDevelopment });
+      }
+    } else {
+      storeInstance = createIdempotencyStore({ backend: 'memory', isDevelopment });
     }
   }
+
+  return storeInstance;
 }
 
-export function remember(key: string, fingerprint: string, jobId: number) {
-  sweepExpired();
-  STORE.set(key, { fingerprint, jobId, expiresAt: now() + TTL_MS });
+export async function remember(key: string, fingerprint: string, jobId: number): Promise<void> {
+  const store = getStore();
+  const entry: IdempotencyEntry = {
+    fingerprint,
+    jobId,
+    createdAt: Date.now(),
+  };
+  await store.set(key, entry, IDEMPOTENCY_TTL_SECONDS);
 }
 
-export function lookup(key: string): Entry | undefined {
-  sweepExpired();
-  return STORE.get(key);
+export async function lookup(key: string): Promise<IdempotencyEntry | null> {
+  const store = getStore();
+  return store.get(key);
+}
+
+/**
+ * Check idempotency store health (for API startup checks)
+ */
+export async function checkIdempotencyStoreHealth(): Promise<boolean> {
+  const backend = env.IDEMPOTENCY_STORE_BACKEND;
+
+  if (backend === 'redis' && env.REDIS_URL) {
+    try {
+      const redisClient = getRedisClient({ url: env.REDIS_URL });
+      return await checkRedisHealth(redisClient);
+    } catch (error) {
+      console.error('[Idempotency] Health check failed:', error);
+      return false;
+    }
+  }
+
+  // In-memory store is always healthy
+  return true;
 }
 
 export function fingerprintRequest(input: FingerprintInput): string {
@@ -64,12 +109,12 @@ export function resolveRequestIdempotencyKey(request: RequestWithIdempotency): s
   return normalizeIdempotencyKey(raw);
 }
 
-export function reuseJobIdIfPresent(key: string | null, fingerprint: string): number | null {
+export async function reuseJobIdIfPresent(key: string | null, fingerprint: string): Promise<number | null> {
   if (!key) {
     return null;
   }
 
-  const entry = lookup(key);
+  const entry = await lookup(key);
   if (!entry) {
     return null;
   }
@@ -86,11 +131,11 @@ export function reuseJobIdIfPresent(key: string | null, fingerprint: string): nu
   return entry.jobId;
 }
 
-export function storeJobForKey(key: string | null, fingerprint: string, jobId: number): void {
+export async function storeJobForKey(key: string | null, fingerprint: string, jobId: number): Promise<void> {
   if (!key) {
     return;
   }
-  remember(key, fingerprint, jobId);
+  await remember(key, fingerprint, jobId);
 }
 
 function getHeaderValue(headers: RequestHeaders | undefined, name: string): string | string[] | undefined {

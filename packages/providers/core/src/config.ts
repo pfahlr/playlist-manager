@@ -26,10 +26,32 @@ export interface CacheConfig {
   redisUrl?: string;
 }
 
+/**
+ * Circuit breaker configuration
+ */
+export interface CircuitBreakerConfig {
+  /**
+   * Number of consecutive failures before opening circuit
+   * @default 5
+   */
+  failureThreshold: number;
+
+  /**
+   * Cooldown period in milliseconds before transitioning to half-open
+   * @default 30000 (30 seconds)
+   */
+  cooldownMs: number;
+}
+
 export const DEFAULT_CACHE_CONFIG: CacheConfig = {
   backend: 'memory',
   ttlMs: 60000, // 1 minute
   maxSize: 1000,
+};
+
+export const DEFAULT_CIRCUIT_BREAKER_CONFIG: CircuitBreakerConfig = {
+  failureThreshold: 5,
+  cooldownMs: 30000, // 30 seconds
 };
 
 /**
@@ -57,6 +79,33 @@ export function resolveCacheConfig(
   return {
     ...DEFAULT_CACHE_CONFIG,
     ...getCacheConfigFromEnv(),
+    ...overrides,
+  };
+}
+
+/**
+ * Get circuit breaker configuration from environment variables
+ */
+export function getCircuitBreakerConfigFromEnv(): Partial<CircuitBreakerConfig> {
+  return {
+    failureThreshold: process.env.PROVIDER_CIRCUIT_BREAKER_THRESHOLD
+      ? Number(process.env.PROVIDER_CIRCUIT_BREAKER_THRESHOLD)
+      : undefined,
+    cooldownMs: process.env.PROVIDER_CIRCUIT_BREAKER_COOLDOWN_MS
+      ? Number(process.env.PROVIDER_CIRCUIT_BREAKER_COOLDOWN_MS)
+      : undefined,
+  };
+}
+
+/**
+ * Merge circuit breaker config with defaults
+ */
+export function resolveCircuitBreakerConfig(
+  overrides: Partial<CircuitBreakerConfig> = {}
+): CircuitBreakerConfig {
+  return {
+    ...DEFAULT_CIRCUIT_BREAKER_CONFIG,
+    ...getCircuitBreakerConfigFromEnv(),
     ...overrides,
   };
 }

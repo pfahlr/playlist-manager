@@ -3,22 +3,28 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 describe('idempotency store', () => {
   afterEach(() => {
     vi.resetModules();
-    vi.useRealTimers();
     delete process.env.IDEMPOTENCY_TTL_SECONDS;
+    delete process.env.IDEMPOTENCY_STORE_BACKEND;
+    delete process.env.NODE_ENV;
   });
 
   it('expires remembered keys after the configured TTL', async () => {
-    vi.useFakeTimers();
     process.env.IDEMPOTENCY_TTL_SECONDS = '1';
+    process.env.IDEMPOTENCY_STORE_BACKEND = 'memory';
+    process.env.NODE_ENV = 'development';
     vi.resetModules();
 
     const { remember, lookup } = await import('../idempotency');
 
-    remember('ttl-key', 'fingerprint-a', 77);
-    expect(lookup('ttl-key')?.jobId).toBe(77);
+    await remember('ttl-key', 'fingerprint-a', 77);
+    const entry = await lookup('ttl-key');
+    expect(entry?.jobId).toBe(77);
 
-    vi.advanceTimersByTime(1000);
-    expect(lookup('ttl-key')).toBeUndefined();
+    // Wait for TTL (1 second)
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+
+    const expired = await lookup('ttl-key');
+    expect(expired).toBeNull();
   });
 
   it('computes identical fingerprints for the same payload regardless of key order', async () => {

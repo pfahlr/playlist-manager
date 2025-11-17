@@ -45,3 +45,41 @@ columns, all prefixed with `pmse-v1.<keyId>.<payload>`. To rotate keys without d
    ```
 3. Re-run without `--dry-run` to apply the rotation; the script is idempotent and skips rows
    already sealed with the new key.
+
+## Performance regression testing
+
+The project includes EXPLAIN-based performance regression checks to ensure critical queries use
+appropriate indexes. These checks run automatically in CI after database migrations and seeding.
+
+### Running EXPLAIN checks locally
+
+After migrating and seeding your database, run:
+
+```bash
+bash scripts/run-explain-checks.sh
+```
+
+The script validates that all queries in `scripts/explain/*.sql` are using index scans rather
+than sequential scans. It parses `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)` output and fails if:
+
+- Any query performs a sequential scan on a table
+- Index usage cannot be verified from the query plan
+
+### EXPLAIN scripts
+
+Current performance checks:
+
+- **playlists.sql**: Verifies playlist lookups by user use `playlist_user_scope_idx`
+- **items.sql**: Verifies playlist item queries use `playlist_item_recording_id_idx`
+- **fuzzy_search.sql**: Verifies trigram fuzzy search on artist/title uses GIN indexes
+
+### Adding new EXPLAIN checks
+
+To add a new performance regression test:
+
+1. Create a new `.sql` file in `scripts/explain/` with your query
+2. Use `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)` format for parseable output
+3. Ensure the query runs against seeded data (see "Database seeding" above)
+4. Run `bash scripts/run-explain-checks.sh` locally to validate
+
+The CI workflow will automatically pick up new scripts and validate them on every PR.

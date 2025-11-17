@@ -210,6 +210,12 @@ jobs:
       - name: DB healthcheck
         run: pnpm db:health
 
+      - name: Seed database for EXPLAIN checks
+        run: pnpm --filter @app/db exec prisma db seed
+
+      - name: Run EXPLAIN performance regression checks
+        run: bash scripts/run-explain-checks.sh
+
       - name: Smoke SELECT 1
         run: |
           node --input-type=module <<'NODE'
