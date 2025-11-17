@@ -34,5 +34,29 @@ export default defineConfig({
         inline: ['fastify', '@app/contracts', 'nanoid'],
       },
     },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      include: [
+        'apps/*/src/**',
+        'packages/*/src/**',
+      ],
+      exclude: [
+        '**/__tests__/**',
+        '**/test/**',
+        '**/tests/**',
+        '**/*.test.ts',
+        '**/*.spec.ts',
+        '**/node_modules/**',
+        '**/dist/**',
+      ],
+      thresholds: {
+        lines: 70,
+        functions: 70,
+        branches: 70,
+        statements: 70,
+      },
+      all: false, // Only report coverage for tested files
+    },
   },
 });
