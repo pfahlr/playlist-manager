@@ -59,6 +59,7 @@ const EnvSchema = z.object({
 
   // ========== Storage & Backups ==========
   S3_BUCKET: z.string().optional(),
+  S3_ENDPOINT: z.string().url().optional(), // For MinIO local development
   AWS_REGION: z.string().default('us-east-1'),
   AWS_ACCESS_KEY_ID: z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
