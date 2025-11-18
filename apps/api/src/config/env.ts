@@ -236,10 +236,12 @@ function loadEnv(): Env {
     } catch (error) {
       if (error instanceof z.ZodError) {
         console.error('❌ Environment validation failed:');
+
         const validationErrors = Array.isArray(error.errors) ? error.errors : [];
         validationErrors.forEach((err) => {
           console.error(`  - ${err.path.join('.')}: ${err.message}`);
         });
+
         console.error('\n💡 Check .env.example for required variables');
         process.exit(1);
       }
