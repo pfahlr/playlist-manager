@@ -2,11 +2,11 @@
   "name": "@app/db",
   "private": true,
   "type": "module",
-  "main": "./src/index.ts",
+  "main": "src/client.ts",
   "exports": {
-    "./": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
+    ".": {
+      "types": "./src/client.ts",
+      "default": "./src/client.ts"
     },
     "./encryption": {
       "types": "./src/encryption/index.ts",
