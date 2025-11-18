@@ -17,6 +17,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.playlistmanager.app',
+    associatedDomains: ['applinks:api.playlistmanager.com', 'applinks:localhost:3101'],
   },
   android: {
     adaptiveIcon: {
@@ -32,6 +33,23 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           {
             scheme: 'pm',
             host: '*',
+          },
+        ],
+        category: ['BROWSABLE', 'DEFAULT'],
+      },
+      {
+        action: 'VIEW',
+        autoVerify: true,
+        data: [
+          {
+            scheme: 'https',
+            host: 'api.playlistmanager.com',
+            pathPrefix: '/auth/callback',
+          },
+          {
+            scheme: 'https',
+            host: 'localhost',
+            pathPrefix: '/auth/callback',
           },
         ],
         category: ['BROWSABLE', 'DEFAULT'],
