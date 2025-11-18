@@ -1,4 +1,78 @@
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
+
+const configDir = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(configDir, '../../../..');
+
+const envFilePaths = [
+  path.join(repoRoot, '.env.example'),
+  path.join(repoRoot, '.env'),
+  path.join(repoRoot, '.env.local'),
+  path.join(repoRoot, 'apps/api/.env.example'),
+  path.join(repoRoot, 'apps/api/.env'),
+];
+
+const parseEnvFile = (filePath: string): Record<string, string> => {
+  if (!existsSync(filePath)) {
+    return {};
+  }
+
+  const content = readFileSync(filePath, 'utf8');
+  return content.split(/\r?\n/).reduce((acc, rawLine) => {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) {
+      return acc;
+    }
+
+    const equalsIndex = line.indexOf('=');
+    if (equalsIndex === -1) {
+      return acc;
+    }
+
+    const key = line.slice(0, equalsIndex).trim();
+    let value = line.slice(equalsIndex + 1).trim();
+
+    if (value.startsWith('"') && value.endsWith('"') && value.length > 1) {
+      value = value.slice(1, -1);
+    }
+
+    acc[key] = value;
+    return acc;
+  }, {} as Record<string, string>);
+};
+
+const loadEnvFiles = (): Record<string, string> =>
+  envFilePaths.reduce((combined, filePath) => ({
+    ...combined,
+    ...parseEnvFile(filePath),
+  }), {} as Record<string, string>);
+
+const MASTER_KEY_DEFAULT = Buffer.alloc(32).toString('base64');
+const JWT_SECRET_DEFAULT = 'a'.repeat(32);
+export const ENV_DEFAULTS: Record<string, string> = {
+  NODE_ENV: 'test',
+  PORT: '3101',
+  API_BASE_URL: 'http://localhost:3101',
+  DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/playlistmgr?schema=public',
+  MASTER_KEY: MASTER_KEY_DEFAULT,
+  JWT_SECRET: JWT_SECRET_DEFAULT,
+  JWT_EXPIRES_IN: '7d',
+  ENABLE_SPOTIFY: 'false',
+  ENABLE_DEEZER: 'false',
+  ENABLE_TIDAL: 'false',
+  ENABLE_YOUTUBE: 'false',
+  CORS_ORIGINS: 'http://localhost:3000,http://localhost:19006',
+  WEB_APP_URL: 'http://localhost:3000',
+  IDEMPOTENCY_STORE_BACKEND: 'memory',
+  IDEMPOTENCY_TTL_SECONDS: String(15 * 60),
+  AWS_REGION: 'us-east-1',
+  MUSICBRAINZ_USER_AGENT: 'playlist-manager/1.0.0 (https://github.com/example/playlist-manager)',
+  LOG_LEVEL: 'info',
+  ENABLE_METRICS: 'true',
+  API_FAKE_ENQUEUE: 'false',
+};
 
 /**
  * Environment configuration schema with validation
@@ -151,11 +225,19 @@ let envCache: Env | null = null;
 function loadEnv(): Env {
   if (!envCache) {
     try {
-      envCache = EnvSchema.parse(process.env);
+      const fileEnv = loadEnvFiles();
+      const envInput = {
+        ...ENV_DEFAULTS,
+        ...fileEnv,
+        ...process.env,
+      };
+
+      envCache = EnvSchema.parse(envInput);
     } catch (error) {
       if (error instanceof z.ZodError) {
         console.error('❌ Environment validation failed:');
-        error.errors.forEach((err) => {
+        const validationErrors = Array.isArray(error.errors) ? error.errors : [];
+        validationErrors.forEach((err) => {
           console.error(`  - ${err.path.join('.')}: ${err.message}`);
         });
         console.error('\n💡 Check .env.example for required variables');
@@ -176,6 +258,10 @@ export const env: Env = new Proxy({} as Env, {
     return loadEnv()[prop as keyof Env];
   },
 });
+
+export function resetEnvCache(): void {
+  envCache = null;
+}
 
 /**
  * Parse CORS origins from comma-separated string

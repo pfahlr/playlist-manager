@@ -2,6 +2,17 @@
   "name": "@app/db",
   "private": true,
   "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    "./": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./encryption": {
+      "types": "./src/encryption/index.ts",
+      "default": "./src/encryption/index.ts"
+    }
+  },
   "scripts": {
     "prisma": "prisma",
     "prisma:generate": "prisma generate",
