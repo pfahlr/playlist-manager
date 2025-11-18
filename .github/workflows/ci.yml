@@ -43,6 +43,31 @@ jobs:
           # If using oasdiff CLI, ensure it's available in your image; otherwise switch to Redocly diff
           pnpm check:breaking || (echo "Breaking-change detected. If intended, follow deprecation/versioning policy." && exit 1)
 
+  mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install deps
+        run: pnpm -w install --frozen-lockfile
+
+      - name: TypeScript check (mobile)
+        run: pnpm --filter @app/mobile run type-check
+
+      - name: ESLint (mobile)
+        run: pnpm --filter @app/mobile run lint
+
+      - name: Validate Expo config
+        run: pnpm --filter @app/mobile exec npx expo prebuild --no-install --dry-run
+
   unit-tests:
     runs-on: ubuntu-latest
     container: node:20-bookworm-slim     # ⬅️ run the job in a container

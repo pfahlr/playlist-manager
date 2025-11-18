@@ -1,0 +1,19 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAM_ID.com.playlistmanager.app",
+        "paths": [
+          "/auth/callback/*",
+          "/auth/callback"
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "TEAM_ID.com.playlistmanager.app"
+    ]
+  }
+}

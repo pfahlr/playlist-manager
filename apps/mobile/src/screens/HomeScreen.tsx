@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { startMobileOauth } from '../auth/startMobileOauth';
 
-export default function HomeScreen() {
+interface HomeScreenProps {
+  onSignInSuccess: () => void;
+}
+
+export default function HomeScreen({ onSignInSuccess }: HomeScreenProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSignIn = async () => {
@@ -14,9 +18,8 @@ export default function HomeScreen() {
         Alert.alert(
           'Success!',
           'You are now signed in. Session token has been stored securely.',
-          [{ text: 'OK' }]
+          [{ text: 'OK', onPress: onSignInSuccess }]
         );
-        // TODO: Navigate to authenticated screen (task 10c)
       } else {
         Alert.alert(
           'Authentication Failed',
