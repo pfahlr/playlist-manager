@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@app/db';
 import { nanoid } from 'nanoid';
-
-const prisma = new PrismaClient();
 
 export interface CreateAttemptParams {
   provider: 'spotify' | 'deezer' | 'tidal' | 'youtube';

@@ -1,8 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import { createKeystore, encryptProviderTokens } from '@app/db/encryption';
+import { prisma, createKeystore, encryptProviderTokens } from '@app/db';
 import { env } from '../../config/env';
-
-const prisma = new PrismaClient();
 
 export interface CreateUserParams {
   email: string;
