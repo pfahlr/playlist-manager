@@ -44,10 +44,17 @@ export interface OAuthAttempt {
 /**
  * Create a new OAuth attempt
  * Returns attempt_id to track the authorization flow
+ * Generates cryptographic state and nonce for CSRF protection
  */
 export async function createAttempt(params: CreateAttemptParams): Promise<OAuthAttempt> {
   const attemptId = `att_${nanoid(24)}`;
   const expiresAt = new Date(Date.now() + (params.expiresInMinutes || 10) * 60 * 1000);
+
+  // Generate cryptographically secure state and nonce if not provided
+  // State: CSRF protection for OAuth flow (prevents authorization code injection)
+  // Nonce: Additional replay protection for OpenID Connect flows
+  const state = params.state || `state_${nanoid(32)}`;
+  const nonce = params.nonce || `nonce_${nanoid(32)}`;
 
   const attempt = await prisma.oAuthAttempt.create({
     data: {
@@ -55,8 +62,8 @@ export async function createAttempt(params: CreateAttemptParams): Promise<OAuthA
       provider: params.provider,
       code_challenge: params.codeChallenge,
       redirect_uri: params.redirectUri,
-      state: params.state || attemptId, // Use attempt ID as state if not provided
-      nonce: params.nonce,
+      state,
+      nonce,
       status: 'pending',
       expires_at: expiresAt,
     },
