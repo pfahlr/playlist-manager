@@ -8,6 +8,8 @@
 import { describe, expect, it } from 'vitest';
 import { nanoid } from 'nanoid';
 
+import { ENV_DEFAULTS, env, resetEnvCache } from '../../config/env';
+
 describe('OAuth State/Nonce Generation - Task 10m', () => {
   describe('State Generation Logic', () => {
     it('should generate states with proper format', () => {
@@ -95,8 +97,8 @@ describe('OAuth State/Nonce Generation - Task 10m', () => {
     });
   });
 
-  describe('CSRF Protection Requirements', () => {
-    it('should document state parameter purpose', () => {
+describe('CSRF Protection Requirements', () => {
+  it('should document state parameter purpose', () => {
       // Task 10m: OAuth state/nonce hardening + CSRF protections
       //
       // STATE PARAMETER (RFC 6749):
@@ -121,6 +123,48 @@ describe('OAuth State/Nonce Generation - Task 10m', () => {
       // 3. Session fixation: State binds auth code to specific session
 
       expect(true).toBe(true); // Documentation test
+    });
+  });
+});
+
+describe('env loader defaults', () => {
+  const withEnvOverrides = (overrides: Record<string, string | undefined>, fn: () => void) => {
+    const previousValues: Record<string, string | undefined> = {};
+
+    for (const key of Object.keys(overrides)) {
+      previousValues[key] = process.env[key];
+      if (overrides[key] === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = overrides[key]!;
+      }
+    }
+
+    try {
+      resetEnvCache();
+      fn();
+    } finally {
+      for (const key of Object.keys(overrides)) {
+        if (previousValues[key] === undefined) {
+          delete process.env[key];
+        } else {
+          process.env[key] = previousValues[key]!;
+        }
+      }
+      resetEnvCache();
+    }
+  };
+
+  it('falls back to repository defaults when values go missing', () => {
+    const overrides = Object.fromEntries(
+      Object.keys(ENV_DEFAULTS).map((key) => [key, undefined]),
+    );
+
+    withEnvOverrides(overrides, () => {
+      expect(env.DATABASE_URL).toBe(ENV_DEFAULTS.DATABASE_URL);
+      expect(env.MASTER_KEY).toBe(ENV_DEFAULTS.MASTER_KEY);
+      expect(env.JWT_SECRET).toBe(ENV_DEFAULTS.JWT_SECRET);
+      expect(env.API_FAKE_ENQUEUE).toBe(false);
     });
   });
 });

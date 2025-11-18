@@ -8,6 +8,12 @@
       "types": "./src/client.ts",
       "default": "./src/client.ts"
     },
+  "main": "./src/index.ts",
+  "exports": {
+    "./": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
     "./encryption": {
       "types": "./src/encryption/index.ts",
       "default": "./src/encryption/index.ts"
