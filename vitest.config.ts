@@ -31,7 +31,7 @@ export default defineConfig({
     pool: 'threads',
     server: {
       deps: {
-        inline: ['fastify', '@app/contracts', 'nanoid'],
+        inline: ['fastify', '@app/contracts', 'nanoid', 'ajv', 'lru-cache'],
       },
     },
     coverage: {

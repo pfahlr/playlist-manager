@@ -1,5 +1,7 @@
 // packages/contracts/src/providers.ts
 
+import type { PIFTrack } from './pif.js';
+
 /** Canonical provider IDs used across the app & OpenAPI spec */
 export type ProviderName = 'spotify' | 'deezer' | 'tidal' | 'youtube';
 
@@ -10,26 +12,6 @@ export interface PIF {
   source_service?: ProviderName | 'amazon' | null;
   source_playlist_id?: string | null;
   tracks: PIFTrack[];
-}
-
-export interface PIFTrack {
-  position: number;                // 1-based
-  title: string;
-  artists: string[];               // primary first; features after
-  album?: string | null;
-  duration_ms?: number | null;
-  explicit?: boolean | null;
-  release_date?: string | null;    // YYYY or YYYY-MM or YYYY-MM-DD
-  isrc?: string | null;
-  mb_recording_id?: string | null; // UUID
-  mb_release_id?: string | null;   // UUID
-  provider_ids?: {
-    spotify_track_id?: string | null;
-    deezer_track_id?: string | null;
-    tidal_track_id?: string | null;
-    youtube_video_id?: string | null;
-    amazon_track_id?: string | null;
-  };
 }
 
 /** Shared errors & config */
