@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "main": "src/client.ts",
+
   "exports": {
     ".": {
       "types": "./src/client.ts",

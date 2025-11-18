@@ -138,8 +138,6 @@ describe('Wikipedia enrichment', () => {
       data: {
         mbid: 'existing-artist-uuid',
         name: 'Existing Artist',
-        created_at: new Date(),
-        updated_at: new Date(),
       },
     });
 

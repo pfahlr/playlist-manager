@@ -16,7 +16,7 @@ DECLARE
 BEGIN
   FOREACH tbl IN ARRAY ARRAY[
     'playlist','recording','album','artist',
-    'playlist_item','artist_bio','artist_link','artist_relation','job'
+    'artist_bio','artist_link','artist_relation','job','oauth_attempt','active_playlist'
   ]
   LOOP
     EXECUTE format('DROP TRIGGER IF EXISTS %I_touch ON %I;', tbl, tbl);
