@@ -1,0 +1,328 @@
+---
+id: web-ui-completion
+title: Complete Web UI for Playlist Management
+priority: high
+status: proposed
+category: frontend
+labels:
+  - web-ui
+  - react
+  - user-experience
+  - mvp
+
+description: |
+  Build a complete web application that provides an intuitive interface for all
+  playlist management features. Currently, apps/web is a stub. This needs to become
+  a full-featured SPA that makes the app accessible to non-technical users and
+  provides the foundation for all future UI features.
+
+problem: |
+  The project currently has:
+  - Mobile app (React Native/Expo) with basic functionality
+  - API server with most endpoints implemented
+  - apps/web is just a placeholder/stub
+
+  Users need a web interface to:
+  - Manage playlists without installing mobile app
+  - Export/import playlists easily
+  - View rich artist information
+  - Discover new music
+  - Use on desktop computers
+
+solution: |
+  Build a modern, responsive web application using:
+  - React 18+ with TypeScript
+  - Vite for build tooling
+  - TanStack Query for API state management
+  - TailwindCSS for styling
+  - Radix UI or shadcn/ui for components
+  - React Router for navigation
+  - Recharts for visualizations
+
+  Pages and features:
+  1. Landing page with value proposition
+  2. OAuth login/signup flow
+  3. Dashboard with overview stats
+  4. Playlists library with search/filter
+  5. Playlist detail with track list
+  6. Artist pages with rich information
+  7. Export/import wizards
+  8. Settings and preferences
+  9. Now playing widget (if applicable)
+
+technical_requirements:
+  tech_stack:
+    framework: React 18+ with TypeScript
+    build: Vite 5+
+    routing: React Router v6
+    state: TanStack Query (React Query)
+    forms: React Hook Form + Zod validation
+    styling: TailwindCSS 3+
+    components: Radix UI or shadcn/ui
+    icons: Lucide React or Heroicons
+    charts: Recharts or Chart.js
+    api_client: Generated from OpenAPI spec
+
+  pages:
+    landing:
+      route: /
+      features:
+        - Hero section with value proposition
+        - Feature highlights (export, artist info, lyrics, etc.)
+        - Supported services logos
+        - Comparison with competitors (vs TuneMyMusic)
+        - Call-to-action (Sign Up / Login)
+        - Testimonials (future)
+        - FAQ section
+
+    auth:
+      routes:
+        - /login
+        - /signup
+        - /auth/callback/{provider}
+      features:
+        - Email/password or OAuth login
+        - "Connect with Spotify/Deezer/etc." buttons
+        - OAuth flow handling
+        - Remember me option
+        - Password reset (if applicable)
+        - Terms and privacy links
+
+    dashboard:
+      route: /dashboard
+      features:
+        - Overview stats (playlists, tracks, artists)
+        - Recent activity feed
+        - Quick actions (export, create playlist)
+        - Connected services status
+        - Recently played (if available)
+        - Recommendations widget
+        - Charts/visualizations (top artists, genres)
+
+    playlists:
+      route: /playlists
+      features:
+        - Grid/list view toggle
+        - Search and filter
+        - Sort options (name, date, size, provider)
+        - Provider filter (show only Spotify playlists, etc.)
+        - Bulk selection for export
+        - Create new playlist
+        - Playlist cards with metadata
+        - Infinite scroll or pagination
+
+    playlist_detail:
+      route: /playlists/{id}
+      features:
+        - Playlist metadata (name, description, owner, etc.)
+        - Track list with search/filter
+        - Play preview (if available)
+        - Add/remove tracks
+        - Reorder tracks (drag and drop)
+        - Export this playlist
+        - Share playlist
+        - Playlist stats (duration, artists, genres)
+        - Set as active playlist (for editing)
+
+    artist_page:
+      route: /artists/{id}
+      features:
+        - Artist header with image
+        - Biography (rich text with hyperlinks)
+        - Discography browser
+        - Related artists
+        - Top tracks
+        - Social media feeds
+        - Tour dates (if available)
+        - Vinyl purchase options
+        - Merchandise
+
+    album_page:
+      route: /albums/{id}
+      features:
+        - Album cover and metadata
+        - Track list with durations
+        - Credits and liner notes
+        - Purchase options (vinyl, digital)
+        - Add all to active playlist
+
+    export:
+      route: /export
+      features:
+        - Select playlists (or all)
+        - Choose format (CSV, JSON, XSPF, M3U)
+        - Options (include metadata, zip, etc.)
+        - Progress indicator
+        - Download button
+        - Export history
+        - Schedule automatic exports (future)
+
+    import:
+      route: /import
+      features:
+        - File upload (drag & drop or browse)
+        - Format detection
+        - Field mapping (for CSV)
+        - Preview import
+        - Select target provider
+        - Conflict resolution options
+        - Dry-run mode
+        - Import and create playlists
+
+    settings:
+      route: /settings
+      sections:
+        profile:
+          - Display name
+          - Email
+          - Profile picture
+        connected_services:
+          - List of connected providers
+          - Connect/disconnect buttons
+          - Token status and expiration
+        preferences:
+          - Theme (light/dark/auto)
+          - Default export format
+          - Active playlist
+          - Notifications
+          - Privacy settings
+        billing:
+          - Subscription status (if premium)
+          - Payment method
+          - Invoice history
+
+    now_playing:
+      route: /now-playing
+      features:
+        - Current track display
+        - Album art
+        - Lyrics (synced or static)
+        - Artist information
+        - Transport controls (if available)
+        - Add to playlist buttons
+        - Queue/history
+
+  shared_components:
+    - Header with navigation
+    - Sidebar (collapsible)
+    - Search bar (global)
+    - User menu dropdown
+    - Footer with links
+    - Loading states and skeletons
+    - Error boundaries
+    - Toast notifications
+    - Modal dialogs
+    - Confirmation dialogs
+    - Progress bars
+    - Pagination controls
+    - Empty states
+    - 404/error pages
+
+  features:
+    responsive_design:
+      - Mobile-first approach
+      - Breakpoints: mobile (< 640px), tablet (640-1024px), desktop (> 1024px)
+      - Touch-friendly on mobile
+      - Keyboard navigation support
+
+    performance:
+      - Code splitting by route
+      - Lazy loading for images
+      - Virtual scrolling for long lists
+      - Debounced search
+      - Optimistic UI updates
+      - Service worker for offline support (future)
+
+    accessibility:
+      - ARIA labels
+      - Keyboard navigation
+      - Screen reader support
+      - Sufficient color contrast
+      - Focus indicators
+      - Skip links
+
+    seo:
+      - Meta tags for all pages
+      - Open Graph tags
+      - Twitter Card tags
+      - Sitemap.xml
+      - Robots.txt
+      - Structured data (JSON-LD)
+
+  api_integration:
+    - Generate TypeScript client from OpenAPI spec
+    - TanStack Query for all API calls
+    - Automatic retries with exponential backoff
+    - Optimistic updates for mutations
+    - Cache management
+    - Error handling and display
+    - Loading states
+    - WebSocket for real-time updates (exports, now playing)
+
+  state_management:
+    - TanStack Query for server state
+    - React Context for global UI state
+    - Local Storage for preferences
+    - Session Storage for temporary data
+
+  deployment:
+    - Vite build optimized for production
+    - CDN for static assets
+    - Environment variable management
+    - Docker container for hosting
+    - Reverse proxy (Nginx) configuration
+    - SSL/TLS termination
+    - Gzip/Brotli compression
+
+dependencies:
+  - Complete API backend
+  - OpenAPI specification
+  - OAuth authentication
+  - File upload/download endpoints
+
+acceptance_criteria:
+  - All pages are fully functional
+  - Responsive on mobile, tablet, desktop
+  - Page load time < 2 seconds
+  - Lighthouse score > 90 (performance, accessibility)
+  - No console errors in production
+  - Works in Chrome, Firefox, Safari, Edge (latest versions)
+  - Graceful degradation for older browsers
+  - WCAG 2.1 AA compliance
+  - All user flows tested end-to-end
+
+estimated_effort: 8-10 weeks
+risks:
+  - UI/UX design time (may need designer)
+  - Browser compatibility issues
+  - Performance with large datasets
+  - WebSocket reliability
+  - State management complexity
+  - Accessibility compliance
+
+monetization_impact: |
+  Critical for growth:
+  - Lowers barrier to entry (no app install required)
+  - Better for desktop users (primary use case)
+  - SEO brings organic traffic
+  - Easier to add ads to web than mobile
+  - Premium features more discoverable
+  - Web is easier to iterate on than mobile
+  - Can run A/B tests easily
+
+notes: |
+  - Consider using a design system (Material, Ant Design) for faster dev
+  - Or build custom with TailwindCSS + Radix UI for uniqueness
+  - Implement progressive enhancement (works without JS)
+  - Add PWA features (install to home screen, offline support)
+  - Consider SSR with Next.js for better SEO (tradeoff: complexity)
+  - Current Vite setup is simpler and good enough for SPA
+  - Phase 1: Core pages (dashboard, playlists, export)
+  - Phase 2: Rich pages (artist, album, now playing)
+  - Phase 3: Advanced features (import, recommendations)
+  - Phase 4: Polish (animations, micro-interactions, SEO)
+  - Use Storybook for component development
+  - Write unit tests for components (React Testing Library)
+  - E2E tests with Playwright or Cypress
+  - Analytics with Plausible or Google Analytics
+  - Error tracking with Sentry

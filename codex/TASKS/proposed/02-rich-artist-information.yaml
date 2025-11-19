@@ -1,0 +1,120 @@
+---
+id: rich-artist-information
+title: Rich Artist Biography and Information System
+priority: high
+status: proposed
+category: feature
+labels:
+  - artist-info
+  - biography
+  - content
+  - educational
+  - wikipedia
+  - musicbrainz
+
+description: |
+  Create a comprehensive artist information system that aggregates data from multiple
+  sources to provide extensive biographies, discographies, and contextual information
+  far exceeding what streaming services offer. This positions the app as an educational
+  and informational resource, not just a playlist manager.
+
+problem: |
+  Streaming services provide minimal artist information (short bio, top tracks).
+  Users want deeper context about artists including:
+  - Comprehensive biography with historical context
+  - Connections to music movements/scenes/labels
+  - Full discography with album details
+  - Related artists with explained relationships
+  - Social media and web presence
+  - Current activity and news
+
+solution: |
+  Build a rich artist information system that:
+  1. Aggregates data from Wikipedia, MusicBrainz, Last.fm, and streaming APIs
+  2. Stores comprehensive artist profiles with relationships
+  3. Provides hyperlinked navigation (artist → label → scene → related artists)
+  4. Allows artist contributions and edits (with moderation)
+  5. Updates dynamically with artist activity and news
+  6. Presents information in an engaging, educational format
+
+technical_requirements:
+  backend:
+    - Integrate Wikipedia API for biographies
+    - Integrate MusicBrainz API for discography and relationships
+    - Integrate Last.fm API for tags, similar artists, and statistics
+    - Create comprehensive Artist schema with all metadata
+    - Add Label, MusicGenre, Scene, and Movement entities
+    - Implement artist enrichment background jobs
+    - Create API endpoints for artist info (GET /artists/{id}/biography, /artists/{id}/discography)
+    - Build content moderation system for artist contributions
+    - Add versioning/history for artist edits
+
+  database:
+    - Extend Artist table (biography, formed_date, disbanded_date, origin, etc.)
+    - Add ArtistBiography table (long-form content with sections)
+    - Add Label table (name, description, founded, website)
+    - Add Scene table (name, description, time_period, location)
+    - Add Movement table (name, description, time_period, characteristics)
+    - Add ArtistRelationship table (artist_id, related_artist_id, relationship_type, description)
+    - Add ArtistContribution table (artist_id, user_id, content, status, moderation)
+    - Add ArtistSocialMedia table (artist_id, platform, url, follower_count)
+    - Add ArtistNews table (artist_id, title, url, published_date, source)
+
+  frontend:
+    - Design comprehensive artist profile page
+    - Implement biography display with hyperlinked entities
+    - Create discography browser with album details
+    - Build related artists graph/network view
+    - Add social media feed widget
+    - Display recent news and activity
+    - Add artist contribution form for verified artists/users
+    - Implement search within artist content
+
+  apis_to_integrate:
+    - Wikipedia API (https://www.mediawiki.org/wiki/API)
+    - MusicBrainz API (https://musicbrainz.org/doc/MusicBrainz_API)
+    - Last.fm API (https://www.last.fm/api)
+    - Bandsintown API (for tour dates)
+    - RSS feeds from artist websites/blogs
+    - Social media APIs (Instagram, Facebook, Mastodon)
+
+dependencies:
+  - Existing Artist entity and metadata
+  - Worker system for background enrichment
+  - Content moderation system (needs to be built)
+
+acceptance_criteria:
+  - Artist pages display comprehensive biography with sources cited
+  - All mentioned artists, labels, scenes, movements are hyperlinked
+  - Users can navigate through related artists easily
+  - Artist discography is complete and accurate
+  - Social media activity displays when available
+  - Verified artists can request edits to their profiles
+  - Content updates automatically from sources every 24-48 hours
+  - Biography is at least 5x more detailed than Spotify bio
+
+estimated_effort: 6-8 weeks
+risks:
+  - Wikipedia content quality varies by artist
+  - API rate limits from multiple services
+  - Maintaining data accuracy across sources
+  - Content moderation workload for contributions
+  - Copyright concerns with biography text
+
+monetization_impact: |
+  Rich content increases session time dramatically:
+  - Users spend more time exploring artists
+  - Higher engagement = more ad revenue
+  - Affiliate opportunities (vinyl, concert tickets, merch)
+  - Position as educational resource attracts grants/partnerships
+
+notes: |
+  - Consider using GPT-4 to synthesize biographies from multiple sources
+  - Implement citation system for academic credibility
+  - Add "deep dive" mode with even more detail for enthusiasts
+  - Consider partnerships with music historians/journalists
+  - Build API for other apps to access this data (monetization opportunity)
+  - Phase 1: Biography and basic info
+  - Phase 2: Full discography and relationships
+  - Phase 3: Artist contributions and moderation
+  - Phase 4: Social media and news integration

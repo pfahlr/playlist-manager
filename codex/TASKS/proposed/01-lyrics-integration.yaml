@@ -1,0 +1,92 @@
+---
+id: lyrics-integration
+title: Lyrics Display and Integration System
+priority: high
+status: proposed
+category: feature
+labels:
+  - lyrics
+  - content
+  - third-party-api
+  - user-experience
+
+description: |
+  Implement a comprehensive lyrics display system that fetches, stores, and displays
+  synchronized lyrics for tracks. This is a core differentiator from basic streaming
+  services and essential for becoming a "go-to source" for music information.
+
+problem: |
+  Users currently cannot view lyrics for tracks they're listening to. Streaming services
+  have limited lyrics support, and users want a unified place to see lyrics regardless
+  of which service they're using.
+
+solution: |
+  Build a lyrics integration system that:
+  1. Fetches lyrics from multiple providers (Genius, Musixmatch, LyricFind, etc.)
+  2. Stores lyrics in the database with proper attribution
+  3. Supports both plain and synchronized (LRC format) lyrics
+  4. Displays lyrics in the mobile app with auto-scroll for synced lyrics
+  5. Caches lyrics to reduce API calls and improve performance
+  6. Handles multiple languages and translations
+
+technical_requirements:
+  backend:
+    - Add lyrics API client packages (Genius API, Musixmatch API)
+    - Create lyrics schema in Prisma (lyrics table with track relationship)
+    - Implement lyrics search/fetch background job
+    - Add lyrics endpoints to REST API (GET /tracks/{id}/lyrics)
+    - Implement fallback mechanism (try multiple providers in order)
+    - Add lyrics copyright/attribution handling
+    - Cache lyrics with expiration policy
+
+  frontend:
+    - Design lyrics display UI component
+    - Implement auto-scroll for synchronized lyrics
+    - Add lyrics view to currently playing screen
+    - Support full-screen lyrics mode
+    - Handle lyrics not found state gracefully
+    - Add report incorrect lyrics feature
+
+  database:
+    - Add Lyrics table (id, track_id, source, language, plain_text, synced_data, timestamps)
+    - Add LyricsAttribution table for copyright info
+    - Index on track_id for fast lookup
+
+  apis_to_integrate:
+    - Genius API (https://docs.genius.com/)
+    - Musixmatch API (https://developer.musixmatch.com/)
+    - LyricFind API (commercial)
+    - LRClib (open source LRC database)
+    - Consider self-hosting lyrics for copyright compliance
+
+dependencies:
+  - Existing track metadata system
+  - Current playback system (for auto-scroll)
+  - Worker system for background fetching
+
+acceptance_criteria:
+  - User can view lyrics for any track in their playlist
+  - Lyrics display within 500ms if cached, 3s if fetching
+  - Synchronized lyrics scroll automatically with playback
+  - Lyrics are properly attributed to source
+  - System falls back to alternative providers if primary fails
+  - Admin can moderate/edit lyrics for quality control
+
+estimated_effort: 3-4 weeks
+risks:
+  - Lyrics API rate limits and costs
+  - Copyright/licensing issues with lyrics content
+  - Accuracy of lyrics matching to tracks
+  - Handling songs with no available lyrics
+
+monetization_impact: |
+  Lyrics display increases session time and engagement, leading to:
+  - More ad impressions
+  - Higher user retention
+  - Premium feature opportunity (offline lyrics, translations)
+
+notes: |
+  - Consider partnering with lyrics providers for better rates
+  - May need to implement user-contributed lyrics system
+  - Ensure DMCA compliance for lyrics content
+  - Consider adding karaoke mode as future enhancement

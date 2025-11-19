@@ -1,0 +1,220 @@
+---
+id: affiliate-monetization
+title: Affiliate Monetization System (Vinyl, Tickets, Merch)
+priority: high
+status: proposed
+category: monetization
+labels:
+  - monetization
+  - affiliate
+  - vinyl
+  - tickets
+  - merchandise
+  - e-commerce
+
+description: |
+  Implement an affiliate monetization system that generates revenue through contextual
+  recommendations for vinyl records, concert tickets, and artist merchandise. This
+  allows the app to remain FREE while generating revenue without ads, and provides
+  genuine value to users by helping them support artists directly.
+
+problem: |
+  The app needs revenue to sustain free service, but:
+  - Ads are intrusive and reduce user experience
+  - Subscriptions create barrier to entry
+  - Need monetization that aligns with user interests
+  - Want to remain neutral regarding streaming platforms
+
+  Users already spend money on music (vinyl, concerts, merch), so contextual
+  affiliate recommendations are natural and valuable.
+
+solution: |
+  Build an affiliate system that:
+  1. Shows vinyl purchase options when viewing albums
+  2. Displays upcoming tour dates with ticket purchase links
+  3. Recommends artist merchandise contextually
+  4. Uses affiliate links to earn commission
+  5. Tracks conversions and revenue
+  6. Remains tasteful and non-intrusive
+  7. Prioritizes user experience over aggressive selling
+
+technical_requirements:
+  backend:
+    - Integrate Discogs API for vinyl availability and pricing
+    - Integrate Bandsintown API for tour dates
+    - Integrate ticketing platforms (Ticketmaster, StubHub, SeeTickets)
+    - Integrate merch platforms (Merchbar, artist direct stores)
+    - Create affiliate link generation service
+    - Add click tracking and conversion attribution
+    - Build revenue analytics dashboard (admin)
+    - Implement A/B testing for placement and messaging
+    - Add API endpoints:
+      - GET /albums/{id}/vinyl-options
+      - GET /artists/{id}/tour-dates
+      - GET /artists/{id}/merchandise
+      - POST /affiliate/click (tracking)
+      - POST /affiliate/conversion (tracking)
+
+  affiliate_integrations:
+    discogs:
+      purpose: Vinyl marketplace
+      revenue: Commission on sales through marketplace
+      api: https://www.discogs.com/developers
+      commission: ~5-10%
+      features:
+        - Search for vinyl by album/artist
+        - Show prices and conditions
+        - Link to marketplace listings
+        - Track purchase conversions
+
+    bandsintown:
+      purpose: Concert discovery
+      revenue: Ticket sale commissions
+      api: https://www.artists.bandsintown.com/support/public-api
+      commission: Varies by ticketing partner
+      features:
+        - Get artist tour dates
+        - Show venue and ticket availability
+        - Link to ticket purchase
+        - "Track artist" for notifications
+
+    ticketmaster:
+      purpose: Ticket sales
+      revenue: Affiliate commission
+      api: https://developer.ticketmaster.com/
+      commission: ~3-8%
+      features:
+        - Event discovery
+        - Ticket availability
+        - Dynamic pricing info
+        - Affiliate tracking links
+
+    stubhub:
+      purpose: Secondary ticket market
+      revenue: Commission on sales
+      api: Partner program required
+      commission: ~5-10%
+      features:
+        - Resale tickets
+        - Price comparison
+        - Buyer guarantees
+
+    merchbar:
+      purpose: Artist merchandise aggregation
+      revenue: Commission on sales
+      api: https://www.merchbar.com/
+      commission: ~10-15%
+      features:
+        - Artist official merch
+        - Multiple item categories
+        - Affiliate tracking
+        - API for product catalog
+
+    amazon_music_vinyl:
+      purpose: Vinyl sales through Amazon
+      revenue: Amazon Associates commission
+      api: Amazon Product Advertising API
+      commission: ~4-8%
+      features:
+        - Wide selection
+        - Prime shipping
+        - Trusted platform
+
+  frontend:
+    - Design subtle "Buy on Vinyl" card on album pages
+    - Show upcoming concerts widget on artist pages
+    - Display merch carousel on artist pages
+    - Add "Support this Artist" section
+    - Show user-friendly messaging ("Support artists directly")
+    - Implement lazy loading for affiliate content
+    - Add user preference to hide recommendations
+    - Show shipping/availability info
+    - Display price comparison when available
+
+  database:
+    - Add AffiliateClick table (user_id, item_type, item_id, affiliate_partner, timestamp)
+    - Add AffiliateConversion table (click_id, revenue, conversion_date)
+    - Add VinylListing table (album_id, price, condition, url, last_updated)
+    - Add TourDate table (artist_id, venue, date, ticket_url, last_updated)
+    - Add MerchItem table (artist_id, name, price, image_url, affiliate_url)
+    - Index on artist_id and album_id for fast lookups
+
+  tracking_and_analytics:
+    - Click-through rate (CTR) per placement
+    - Conversion rate per affiliate partner
+    - Revenue per user
+    - Most profitable artists/albums
+    - A/B test results for different placements
+    - User engagement with affiliate content
+    - Revenue forecasting
+
+  compliance_and_disclosure:
+    - Add affiliate disclosure notice (FTC compliance)
+    - Terms of service update for affiliate links
+    - Privacy policy update for tracking
+    - Cookie consent for affiliate tracking
+    - Clear labeling of affiliate content
+
+dependencies:
+  - Rich artist information system (context for recommendations)
+  - Now playing detection (contextual recommendations)
+  - User authentication (for conversion tracking)
+
+acceptance_criteria:
+  - Vinyl options display on album pages when available
+  - Tour dates display on artist pages when available
+  - Merch recommendations are relevant and non-intrusive
+  - Affiliate links are properly tracked
+  - Conversions are attributed correctly
+  - Revenue is tracked accurately
+  - User experience is not degraded
+  - Affiliate disclosure is clear and compliant
+  - System respects user preferences to opt out
+  - Performance impact is minimal (< 200ms additional load time)
+
+estimated_effort: 4-5 weeks
+risks:
+  - Affiliate approval process (some partners require review)
+  - Commission rates may be lower than expected
+  - User backlash if perceived as too commercial
+  - Conversion rates may be low initially
+  - Partner API changes
+  - GDPR/privacy compliance complexity
+  - Affiliate link attribution complexity (cross-device, etc.)
+
+monetization_impact: |
+  Projected revenue (conservative estimates):
+  - 100K MAU (monthly active users)
+  - 5% click-through rate = 5K clicks/month
+  - 2% conversion rate = 100 conversions/month
+  - $50 average order value
+  - 10% average commission
+  - = $500/month revenue
+
+  At scale (1M MAU):
+  - $5,000/month = $60K/year
+
+  With optimization:
+  - 10% CTR, 5% conversion
+  - = $25K/month = $300K/year
+
+  Key drivers:
+  - More engaged users = higher CTR
+  - Better recommendations = higher conversion
+  - Multiple revenue streams (vinyl + tickets + merch + ads)
+  - Revenue compounds as user base grows
+
+notes: |
+  - Start with vinyl (easiest to implement and track)
+  - Add tours/tickets next (time-sensitive, higher engagement)
+  - Add merch last (most complex, varies by artist)
+  - Consider creating own merch for the app (additional revenue)
+  - Partner with indie record labels for better commission rates
+  - Implement "Fair Trade Music" badge system (which services pay artists best)
+  - Consider donation option to artists directly (take small fee)
+  - Add "support local record stores" feature (affiliate with local shops)
+  - Gamification: badges for supporting X artists or buying Y vinyl
+  - Newsletter with curated vinyl deals (additional touchpoint)
+  - "Wishlist" feature for users to save vinyl they want
+  - Price drop alerts for wishlisted items
+  - Consider record club subscription (curated vinyl delivered monthly)

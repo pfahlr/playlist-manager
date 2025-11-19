@@ -1,0 +1,127 @@
+---
+id: active-playlist-editing
+title: Active Playlist Real-Time Editing System
+priority: high
+status: proposed
+category: feature
+labels:
+  - playlist
+  - real-time
+  - sync
+  - user-experience
+  - innovation
+
+description: |
+  Implement the "Active Playlist" concept: a designated playlist that users can quickly
+  add/remove tracks to from anywhere in the app with a single click. Changes sync in
+  real-time to the streaming service. This dramatically simplifies playlist curation
+  and makes the app feel more powerful than native streaming apps.
+
+problem: |
+  Current playlist editing is clunky:
+  - Must navigate to playlist, then add tracks
+  - Can't quickly curate while browsing artists/albums
+  - No unified "working playlist" across the app
+  - Changes don't sync back to streaming services immediately
+
+  Users want ONE-CLICK adding of tracks to a playlist they're actively building,
+  with immediate sync to their streaming service.
+
+solution: |
+  Build an Active Playlist system that:
+  1. Allows user to designate one playlist as "Active" for editing
+  2. Shows [+] button next to every track/album throughout the app
+  3. Clicking [+] instantly adds to active playlist (optimistic UI)
+  4. Syncs changes to streaming service within 5-30 seconds
+  5. Shows real-time status (syncing, synced, error)
+  6. Supports bulk operations (add whole album, remove duplicates)
+  7. Works offline with sync queue when connection returns
+  8. Allows quick switching between different active playlists
+
+technical_requirements:
+  backend:
+    - Add UserActivePlaylist table (user_id, playlist_id, streaming_service)
+    - Create queue system for playlist modifications (PlaylistSyncQueue)
+    - Implement streaming service sync jobs (runs every 30s or on-demand)
+    - Add API endpoints:
+      - POST /me/active-playlist (set active playlist)
+      - GET /me/active-playlist (get current active playlist)
+      - POST /me/active-playlist/items (add tracks)
+      - DELETE /me/active-playlist/items/{id} (remove tracks)
+      - POST /me/active-playlist/sync (force immediate sync)
+    - Handle conflict resolution (track already exists, playlist deleted, etc.)
+    - Add retry logic for failed syncs with exponential backoff
+
+  frontend:
+    - Add [+] button component next to all tracks/albums
+    - Show active playlist selector in app header/menu
+    - Display sync status indicator (syncing icon, success checkmark, error badge)
+    - Implement optimistic UI updates (instant feedback)
+    - Add undo functionality for accidental additions
+    - Show notification when track is added
+    - Display sync queue status (X items pending sync)
+    - Add "Quick Add" floating action button
+
+  database:
+    - Add UserActivePlaylist table (user_id, playlist_id, last_synced_at)
+    - Add PlaylistSyncQueue table (id, playlist_id, operation, track_ids, status, attempts, created_at)
+    - Add PlaylistSyncLog table (audit trail of all sync operations)
+    - Index on user_id and status for queue processing
+
+  streaming_service_apis:
+    - Spotify: POST /playlists/{id}/tracks (add), DELETE /playlists/{id}/tracks (remove)
+    - Deezer: POST /playlist/{id}/tracks (add), DELETE /playlist/{id}/tracks (remove)
+    - Tidal: POST /playlists/{uuid}/items (add), DELETE /playlists/{uuid}/items (remove)
+    - YouTube Music: More complex, may need library management API
+
+  real_time_features:
+    - WebSocket connection for sync status updates
+    - Server-sent events as fallback
+    - Push notifications for sync completion/errors
+    - Live playlist updates when synced
+
+dependencies:
+  - Existing playlist management system
+  - OAuth tokens with playlist modification scopes
+  - Worker/queue system for background jobs
+  - WebSocket infrastructure
+
+acceptance_criteria:
+  - User can set any playlist as active with 2 clicks
+  - [+] button appears on all tracks/albums throughout app
+  - Adding track feels instant (< 100ms optimistic update)
+  - Changes sync to streaming service within 30 seconds
+  - Offline additions are queued and sync when online
+  - User receives feedback on sync status
+  - No duplicate tracks are added
+  - System handles rate limits gracefully
+  - Works reliably with playlists up to 10,000 tracks
+
+estimated_effort: 4-5 weeks
+risks:
+  - Streaming API rate limits with frequent syncs
+  - Conflict resolution complexity (user edits on both platforms)
+  - Network failures during sync
+  - Track availability differences across services
+  - Race conditions with concurrent edits
+  - API changes or restrictions
+
+monetization_impact: |
+  Core differentiator that makes app indispensable:
+  - Dramatically improves user experience vs native apps
+  - Users rely on app for all playlist management
+  - Higher daily active usage
+  - Viral feature (users show friends how easy playlist building is)
+
+notes: |
+  - Consider batching API calls (sync every 30s, not per track)
+  - Add "Smart Sync" that learns optimal sync timing
+  - Implement conflict detection and user choice dialog
+  - Add keyboard shortcuts for power users (desktop)
+  - Consider "Auto-DJ" mode that adds tracks based on listening patterns
+  - Phase 1: Basic active playlist with manual sync
+  - Phase 2: Automatic background sync
+  - Phase 3: Offline support with queue
+  - Phase 4: Conflict resolution and advanced features
+  - Add analytics on which tracks get added most (for recommendations)
+  - Consider multiple active playlists (one per service or mood)

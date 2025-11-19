@@ -1,0 +1,204 @@
+---
+id: social-media-integration
+title: Social Media Integration for Artist Activity
+priority: medium
+status: proposed
+category: feature
+labels:
+  - social-media
+  - artist-info
+  - content
+  - real-time
+  - feeds
+
+description: |
+  Integrate with social media platforms (Instagram, Facebook, Mastodon, Twitter/X)
+  to display real-time artist activity, posts, and updates within the app. This keeps
+  content fresh, increases engagement, and positions the app as a comprehensive source
+  for artist information beyond just music.
+
+problem: |
+  Users want to stay updated on artist activity without leaving the app or checking
+  multiple social platforms. Currently, there's no way to see what artists are up to
+  beyond their music releases.
+
+  Artist pages feel static without social content. Users want:
+  - Recent posts and photos
+  - Tour announcements
+  - Behind-the-scenes content
+  - Artist interactions with fans
+  - All in one place, integrated with music info
+
+solution: |
+  Build social media integration system that:
+  1. Fetches recent posts from artist social accounts
+  2. Displays posts in a unified feed on artist pages
+  3. Links to original posts for engagement
+  4. Filters relevant content (music-related)
+  5. Respects user privacy (no tracking by social platforms)
+  6. Updates content regularly (every 30-60 minutes)
+  7. Provides notifications for followed artists' posts
+
+technical_requirements:
+  backend:
+    - Integrate Instagram Graph API (business/creator accounts)
+    - Integrate Facebook Graph API
+    - Integrate Mastodon API (open, no auth required for public posts)
+    - Consider Twitter/X API (expensive, may skip initially)
+    - Create social media post aggregation service
+    - Implement content filtering (music-related only)
+    - Add content moderation (NSFW filter, spam detection)
+    - Build post caching system (reduce API calls)
+    - Create API endpoints:
+      - GET /artists/{id}/social-feed
+      - GET /artists/{id}/social-posts/{platform}
+      - POST /artists/{id}/follow (for notifications)
+      - GET /me/social-feed (followed artists)
+
+  social_platforms:
+    instagram:
+      api: https://developers.facebook.com/docs/instagram-api
+      oauth: Facebook/Instagram Business Account required
+      rate_limits: 200 calls/hour per user
+      content: Photos, videos, captions, hashtags
+      features:
+        - Recent posts (up to 25)
+        - Media (images/videos)
+        - Captions and hashtags
+        - Likes and comment counts
+        - Post timestamps
+      notes: |
+        - Requires business/creator account
+        - Limited to business accounts' content
+        - Cannot access stories via API easily
+        - Most artists have business accounts
+
+    facebook:
+      api: https://developers.facebook.com/docs/graph-api
+      oauth: Facebook App required
+      rate_limits: 200 calls/hour per app
+      content: Posts, photos, videos, events
+      features:
+        - Page posts
+        - Events (tours)
+        - Videos
+        - Live streams
+        - Engagement metrics
+      notes: |
+        - Easier for pages (most artists)
+        - Can get events (tour dates)
+        - Good engagement data
+
+    mastodon:
+      api: https://docs.joinmastodon.org/api/
+      oauth: Not required for public posts
+      rate_limits: 300 requests per 5 minutes
+      content: Posts (toots), media, hashtags
+      features:
+        - Public timeline
+        - Account posts
+        - Media attachments
+        - Boost/favorite counts
+        - Fully open API
+      notes: |
+        - Decentralized (multiple instances)
+        - Growing artist adoption
+        - No tracking, very privacy-friendly
+        - Good for indie/underground artists
+
+    twitter_x:
+      api: https://developer.twitter.com/en/docs
+      oauth: Required, expensive ($100-$5000/month)
+      rate_limits: Varies by tier
+      content: Tweets, media, engagement
+      notes: |
+        - API v2 is expensive
+        - May skip initially due to cost
+        - Consider alternative: RSS feed scraping (violates ToS)
+        - Re-evaluate if pricing changes
+
+  frontend:
+    - Design social feed widget for artist pages
+    - Implement infinite scroll for posts
+    - Display media (images/videos) in lightbox
+    - Show post engagement metrics
+    - Add "View on [Platform]" links
+    - Filter by platform (toggle IG/FB/Mastodon)
+    - Show post timestamps ("2 hours ago")
+    - Display artist profile pictures
+    - Add post sharing functionality
+
+  database:
+    - Add SocialAccount table (artist_id, platform, account_id, username, url, verified)
+    - Add SocialPost table (social_account_id, post_id, content, media_url, posted_at, likes, comments)
+    - Add SocialPostMedia table (post_id, media_type, url, thumbnail_url)
+    - Add UserArtistFollow table (user_id, artist_id, notify_on_posts)
+    - Add SocialFeedCache table (cache key, data, expires_at)
+    - Index on artist_id and posted_at for fast queries
+
+  content_moderation:
+    - NSFW content filtering (use AI/ML service like Google Cloud Vision)
+    - Spam detection (repetitive content, excessive links)
+    - Profanity filter (optional, user preference)
+    - Copyright detection (reposted content)
+    - Reported content handling
+
+  privacy_considerations:
+    - No social platform tracking pixels
+    - Proxy all media through own CDN
+    - Don't send user data to social platforms
+    - Clear disclosure of what data is displayed
+    - User opt-out of social content
+
+dependencies:
+  - Rich artist information system (artist pages)
+  - Background worker for content fetching
+  - CDN for media proxy
+  - Content moderation service
+
+acceptance_criteria:
+  - Artist pages display recent social posts (last 30 days)
+  - Posts update every 30-60 minutes
+  - Media displays correctly (images, videos)
+  - Users can click through to original posts
+  - Content is appropriately filtered/moderated
+  - Performance impact is minimal (< 500ms page load)
+  - No user tracking by social platforms
+  - Notifications work for followed artists
+  - System handles rate limits gracefully
+
+estimated_effort: 5-6 weeks
+risks:
+  - API rate limits (may not be able to serve many users)
+  - API costs (especially Twitter/X)
+  - Content moderation complexity
+  - Artist account discovery (matching artists to social accounts)
+  - Platform API changes
+  - Privacy compliance (GDPR, etc.)
+  - Some artists don't use social media
+
+monetization_impact: |
+  Indirect revenue impact:
+  - Increased session time (users browse social content)
+  - Higher engagement = more ad impressions
+  - Stickiness (users rely on app for all artist info)
+  - Viral potential (users share artist posts from app)
+  - Data on artist activity helps affiliate recommendations
+
+notes: |
+  - Start with Instagram and Facebook (most artists use these)
+  - Add Mastodon (open API, growing adoption)
+  - Skip Twitter initially (expensive API)
+  - Consider YouTube integration (artist channels, music videos)
+  - Implement artist account verification system (confirm it's the real artist)
+  - Build "Artist Account Matching" service (automatically find social accounts)
+  - Allow artists to verify/claim their accounts
+  - Add "Artist Verified" badge
+  - Consider user-submitted social account suggestions
+  - Phase 1: Instagram integration
+  - Phase 2: Facebook integration
+  - Phase 3: Mastodon integration
+  - Phase 4: Content filtering and moderation
+  - Phase 5: Notifications and followed artists feed
+  - Add "trending artists" based on social activity
+  - Show artist milestones (1M followers reached, etc.)

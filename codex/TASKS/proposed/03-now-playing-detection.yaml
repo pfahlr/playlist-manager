@@ -1,0 +1,114 @@
+---
+id: now-playing-detection
+title: Now Playing Detection and Display System
+priority: critical
+status: proposed
+category: feature
+labels:
+  - now-playing
+  - real-time
+  - notifications
+  - media-player
+  - user-experience
+
+description: |
+  Implement a system to detect what track the user is currently playing across various
+  streaming services and media players, then display rich contextual information about
+  that track/artist. This is THE core feature that makes the app a "go-to source of
+  information about music the user is listening to in real-time."
+
+problem: |
+  The app currently has no way to know what the user is listening to RIGHT NOW.
+  Users want seamless, automatic display of information about their current track
+  without manual searching. This is essential for the vision of becoming the primary
+  music information companion app.
+
+solution: |
+  Build a multi-source now playing detection system that:
+  1. Polls streaming service APIs for currently playing track (Spotify, etc.)
+  2. Reads system notifications for media player updates (Android/iOS)
+  3. Accepts manual input for tracks being played offline
+  4. Displays real-time information overlay/widget
+  5. Provides transport controls that forward to the actual player
+  6. Maintains listening history and statistics
+  7. Enables "scrobbling" to Last.fm and similar services
+
+technical_requirements:
+  backend:
+    - Add GET /me/now-playing endpoint (polls user's active service)
+    - Implement WebSocket/SSE for real-time updates to client
+    - Add listening history tracking (NowPlaying table)
+    - Create scrobbling service for Last.fm integration
+    - Add endpoints for transport controls (play/pause/skip)
+    - Implement proxy forwarding to streaming service APIs
+
+  mobile_frontend:
+    - Android: Implement NotificationListenerService to read media notifications
+    - iOS: Implement MPNowPlayingInfoCenter observer
+    - Create Now Playing widget/overlay UI
+    - Add transport controls (play, pause, next, previous)
+    - Display current track with rich info (lyrics, artist bio, etc.)
+    - Show playback progress bar
+    - Add "floating bubble" mode for overlay on other apps
+    - Implement background service for continuous detection
+
+  database:
+    - Add NowPlaying table (user_id, recording_id, service, started_at, ended_at)
+    - Add ListeningHistory table (aggregated stats)
+    - Add UserPreferences table (preferred detection method, scrobbling settings)
+
+  streaming_apis:
+    - Spotify: GET /me/player/currently-playing
+    - Deezer: GET /user/me/flow
+    - Tidal: GET /users/{userId}/playback/now
+    - YouTube Music: Limited API support, may need notification detection
+    - Apple Music: MusicKit JS for web, native APIs for mobile
+
+  native_integrations:
+    - Android MediaSession API
+    - iOS MediaPlayer framework
+    - Notification listener permissions
+    - Background service permissions
+
+dependencies:
+  - OAuth tokens for streaming services
+  - Mobile app notification permissions
+  - Rich artist information system (for display)
+  - Lyrics system (for display)
+
+acceptance_criteria:
+  - App detects current track within 2 seconds of playback start
+  - Now Playing display updates in real-time
+  - Transport controls work for all integrated services
+  - Listening history is accurately recorded
+  - Works in background/when app is not focused
+  - Minimal battery impact (<5% additional drain)
+  - Scrobbling to Last.fm works correctly
+  - User can disable detection per service
+
+estimated_effort: 5-6 weeks
+risks:
+  - Streaming API rate limits with frequent polling
+  - Battery drain from background services
+  - Permission requirements may deter users
+  - API changes breaking detection
+  - Notification access restrictions on iOS
+  - Different media players format notifications differently
+
+monetization_impact: |
+  Core feature that drives all engagement:
+  - Users keep app open/active constantly
+  - Maximizes ad impressions
+  - Enables affiliate conversions (buy vinyl of what you're listening to NOW)
+  - Creates addiction loop (always want to see info about current track)
+
+notes: |
+  - Consider using Shazam API as fallback for unrecognized audio
+  - Implement caching to reduce API calls (check for track change, not poll constantly)
+  - Add manual "I'm listening to..." override
+  - Consider desktop app with media player plugin support
+  - Phase 1: Streaming service polling (Spotify, etc.)
+  - Phase 2: Android notification detection
+  - Phase 3: iOS native integration
+  - Phase 4: Desktop media player plugins
+  - Add analytics on most played tracks/artists for recommendations
