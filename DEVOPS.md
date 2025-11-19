@@ -63,9 +63,25 @@ Complete deployment guide for development and production environments.
 ### All Environments
 
 - **Node.js**: v20.x LTS
-- **pnpm**: v8.x or later
+- **pnpm**: v8.x or later ⚠️ **REQUIRED** - This is a pnpm monorepo; npm will NOT work
 - **Docker**: v24.x or later
 - **Docker Compose**: v2.x or later
+
+### Installing pnpm
+
+This project uses pnpm workspaces with the `workspace:*` protocol, which npm does not support.
+
+```bash
+# Option 1: Using corepack (recommended - comes with Node.js 16+)
+corepack enable
+corepack prepare pnpm@latest --activate
+
+# Option 2: Using npm (one-time only)
+npm install -g pnpm
+
+# Verify installation
+pnpm --version
+```
 
 ### Production Additional Requirements
 
@@ -1834,6 +1850,37 @@ services:
 ## Troubleshooting
 
 ### Common Issues
+
+#### 0. npm install fails with "Unsupported URL Type workspace:"
+
+**Symptoms:**
+```
+npm error code EUNSUPPORTEDPROTOCOL
+npm error Unsupported URL Type "workspace:": workspace:*
+```
+
+**Cause:**
+This project is a **pnpm monorepo** that uses the `workspace:*` protocol, which npm does not support.
+
+**Solution:**
+```bash
+# Install pnpm
+corepack enable
+corepack prepare pnpm@latest --activate
+
+# Or using npm (one-time only)
+npm install -g pnpm
+
+# Then use pnpm instead of npm
+pnpm install
+
+# DO NOT USE npm - it will not work with this project
+```
+
+**Important:** Always use `pnpm` commands throughout this project:
+- `pnpm install` (NOT `npm install`)
+- `pnpm run <script>` (NOT `npm run <script>`)
+- `pnpm add <package>` (NOT `npm install <package>`)
 
 #### 1. Database Connection Errors
 

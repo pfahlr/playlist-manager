@@ -7,11 +7,13 @@
 | Tool | Minimum Version | Installation |
 |------|----------------|--------------|
 | **Node.js** | 18.18+ | https://nodejs.org |
-| **pnpm** | 9.12.3 | `npm install -g pnpm@9.12.3` |
+| **pnpm** ⚠️ | 9.12.3 | `corepack enable && corepack prepare pnpm@latest --activate` or `npm install -g pnpm@9.12.3` |
 | **Docker** | 20.10+ | https://docs.docker.com/get-docker/ |
 | **Docker Compose** | 2.0+ | Included with Docker Desktop |
 | **PostgreSQL Client** | 16 | `brew install postgresql@16` (macOS) |
 | **Git** | 2.30+ | https://git-scm.com |
+
+> ⚠️ **Important**: This is a **pnpm monorepo**. Using `npm install` will fail with errors like `Unsupported URL Type "workspace:"`. You must use `pnpm` for all package management operations.
 
 ### Optional Tools
 
