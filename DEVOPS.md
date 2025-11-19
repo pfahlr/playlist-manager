@@ -218,6 +218,128 @@ pnpm format
 ./scripts/run-explain-checks.sh  # Analyze query performance
 ```
 
+### Running Multiple Development Instances
+
+You can run multiple development instances on the same machine by configuring different ports for each instance. This is useful for working on multiple branches or projects simultaneously.
+
+**Quick Start: Using the Helper Script**
+
+The easiest way to create a new instance is using the provided helper script:
+
+```bash
+# Create instance with automatic port assignment
+./scripts/dev/create-instance.sh dev2
+
+# Or specify custom ports
+./scripts/dev/create-instance.sh feature 5433 6380 9002 9003 3102
+# Arguments: [name] [db-port] [redis-port] [minio-api-port] [minio-console-port] [api-port]
+```
+
+The script will:
+- Check port availability
+- Create a `.env` file with the configuration
+- Optionally update `apps/api/.env` with matching ports
+- Display all service URLs and next steps
+
+**Method 1: Using Environment Variables**
+
+Create a custom `.env` file for each instance:
+
+```bash
+# Instance 1: Default ports (no .env needed)
+cd ~/projects/playlist-manager-main
+docker-compose up -d
+# Uses: DB=5432, Redis=6379, MinIO=9000/9001
+
+# Instance 2: Custom ports
+cd ~/projects/playlist-manager-feature
+cat > .env <<EOF
+COMPOSE_PROJECT_NAME=plmgr-feature
+DB_PORT=5433
+REDIS_PORT=6380
+MINIO_API_PORT=9002
+MINIO_CONSOLE_PORT=9003
+EOF
+docker-compose up -d
+
+# Update apps/api/.env with matching ports
+DATABASE_URL="postgresql://postgres:postgres@localhost:5433/playlistmgr?schema=public"
+REDIS_URL="redis://localhost:6380"
+S3_ENDPOINT="http://localhost:9002"
+```
+
+**Method 2: Using Docker Compose Project Name**
+
+```bash
+# Instance 1
+COMPOSE_PROJECT_NAME=plmgr-main docker-compose up -d
+
+# Instance 2 with custom ports
+COMPOSE_PROJECT_NAME=plmgr-feature \
+  DB_PORT=5433 \
+  REDIS_PORT=6380 \
+  MINIO_API_PORT=9002 \
+  MINIO_CONSOLE_PORT=9003 \
+  docker-compose up -d
+```
+
+**Available Port Configuration Variables:**
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `COMPOSE_PROJECT_NAME` | `plmgr` | Prefix for container and volume names |
+| `DB_PORT` | `5432` | PostgreSQL host port |
+| `DB_USER` | `postgres` | PostgreSQL user |
+| `DB_PASSWORD` | `postgres` | PostgreSQL password |
+| `DB_NAME` | `playlistmgr` | PostgreSQL database name |
+| `REDIS_PORT` | `6379` | Redis host port |
+| `MINIO_API_PORT` | `9000` | MinIO API host port |
+| `MINIO_CONSOLE_PORT` | `9001` | MinIO console host port |
+| `MINIO_ROOT_USER` | `minio` | MinIO admin username |
+| `MINIO_ROOT_PASSWORD` | `minio12345` | MinIO admin password |
+
+**Managing Multiple Instances:**
+
+```bash
+# List all running instances
+docker ps --filter "name=plmgr"
+
+# Stop specific instance
+docker-compose -p plmgr-feature down
+
+# View logs for specific instance
+docker-compose -p plmgr-feature logs -f
+
+# Remove volumes for specific instance
+docker volume ls | grep plmgr-feature
+docker volume rm plmgr-feature_pgdata plmgr-feature_minio
+```
+
+**Complete Example - Two Instances Side by Side:**
+
+```bash
+# Terminal 1: Main development (default ports)
+cd ~/playlist-manager-main
+docker-compose up -d
+pnpm api:dev
+
+# Terminal 2: Feature branch (custom ports)
+cd ~/playlist-manager-feature
+export COMPOSE_PROJECT_NAME=plmgr-feature
+export DB_PORT=5433
+export REDIS_PORT=6380
+export MINIO_API_PORT=9002
+export MINIO_CONSOLE_PORT=9003
+docker-compose up -d
+
+# Update feature branch .env
+echo 'DATABASE_URL="postgresql://postgres:postgres@localhost:5433/playlistmgr?schema=public"' > apps/api/.env
+echo 'PORT=3102' >> apps/api/.env  # Different API port too!
+
+pnpm api:dev
+# API runs on port 3102 to avoid conflicts
+```
+
 ---
 
 ## Production Deployment - Single Node
