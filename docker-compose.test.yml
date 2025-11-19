@@ -1,0 +1,45 @@
+# Docker Compose for Test Environment
+# Ephemeral services for integration testing
+# Usage: docker-compose -f docker-compose.test.yml up -d
+
+version: '3.8'
+services:
+  db-test:
+    image: postgres:16
+    container_name: ${COMPOSE_PROJECT_NAME:-plmgr}-db-test
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-playlistmgr_test}
+    ports:
+      - "${DB_PORT:-5433}:5432"
+    # No volumes - ephemeral data for tests
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-playlistmgr_test}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    tmpfs:
+      - /var/lib/postgresql/data
+
+  redis-test:
+    image: redis:7-alpine
+    container_name: ${COMPOSE_PROJECT_NAME:-plmgr}-redis-test
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    command: redis-server --save ""  # Disable persistence for tests
+    tmpfs:
+      - /data
+
+  minio-test:
+    image: minio/minio:RELEASE.2024-10-02T17-50-41Z
+    container_name: ${COMPOSE_PROJECT_NAME:-plmgr}-minio-test
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio12345}
+    command: server /data --console-address ":9001"
+    ports:
+      - "${MINIO_API_PORT:-9002}:9000"
+      - "${MINIO_CONSOLE_PORT:-9003}:9001"
+    tmpfs:
+      - /data
