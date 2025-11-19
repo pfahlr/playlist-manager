@@ -1,0 +1,220 @@
+---
+id: related-artists-discovery
+title: Related Artists Discovery and Recommendation System
+priority: high
+status: proposed
+category: feature
+labels:
+  - recommendations
+  - discovery
+  - artists
+  - machine-learning
+  - user-experience
+
+description: |
+  Build a comprehensive related artists discovery system that goes beyond simple
+  "similar artists" to show nuanced relationships, influences, collaborations, and
+  sonic similarities. This becomes a powerful music discovery tool and keeps users
+  engaged exploring new artists.
+
+problem: |
+  Streaming services show basic "similar artists" but don't explain WHY artists are
+  related or show the depth of connections in the music world. Users want:
+  - Deeper understanding of artist relationships
+  - Discovery of artists they might not find otherwise
+  - Explanation of WHY artists are related
+  - Visual representation of artist networks
+  - Multiple ways to discover (genre, mood, influence, collaboration, etc.)
+
+solution: |
+  Build a multi-faceted related artists system that:
+  1. Aggregates relationships from multiple sources (Last.fm, Spotify, MusicBrainz)
+  2. Explains relationship types (influence, similar sound, collaboration, same label, etc.)
+  3. Calculates relationship strength scores
+  4. Visualizes artist networks as interactive graphs
+  5. Enables "deep discovery" by traversing artist connections
+  6. Learns from user behavior to personalize recommendations
+  7. Shows historical influences and contemporary peers
+
+technical_requirements:
+  backend:
+    - Integrate Last.fm API for similar artists
+    - Integrate Spotify API for related artists
+    - Integrate MusicBrainz for collaborations and labels
+    - Build relationship scoring algorithm
+    - Create artist similarity calculation service
+    - Implement collaborative filtering based on user listening
+    - Add graph database for artist networks (Neo4j or similar)
+    - Create API endpoints:
+      - GET /artists/{id}/related
+      - GET /artists/{id}/similar
+      - GET /artists/{id}/influences
+      - GET /artists/{id}/influenced-by
+      - GET /artists/{id}/collaborators
+      - GET /artists/{id}/network (graph data)
+      - GET /artists/{id}/recommended-for-user
+
+  relationship_types:
+    similar_sound:
+      description: Artists that sound alike
+      sources: [Last.fm, Spotify, audio analysis]
+      weight: high
+
+    influence:
+      description: Artist A influenced Artist B
+      sources: [MusicBrainz, Wikipedia, artist statements]
+      weight: high
+      directional: true
+
+    collaboration:
+      description: Artists who worked together
+      sources: [MusicBrainz, album credits]
+      weight: medium
+
+    same_genre:
+      description: Artists in same genre/subgenre
+      sources: [Last.fm tags, MusicBrainz genres]
+      weight: low
+
+    same_label:
+      description: Artists on same record label
+      sources: [MusicBrainz, Discogs]
+      weight: low
+
+    same_scene:
+      description: Part of same music scene/movement
+      sources: [Wikipedia, editorial data]
+      weight: medium
+
+    covered_by:
+      description: Artist B covered Artist A's song
+      sources: [MusicBrainz, SecondHandSongs.com]
+      weight: low
+
+  data_sources:
+    lastfm:
+      endpoint: artist.getSimilar
+      notes: Good general similarity data
+      rate_limit: 5 calls/second
+
+    spotify:
+      endpoint: GET /artists/{id}/related-artists
+      notes: Algorithm-based, limited to 20 artists
+      rate_limit: Varies
+
+    musicbrainz:
+      endpoint: Multiple (relationships, recordings, labels)
+      notes: Rich metadata, collaboration data
+      rate_limit: 1 call/second (be respectful)
+
+    everynoise:
+      url: everynoise.com
+      notes: Genre map with similarity distances
+      access: Scraping or partnership
+
+  recommendation_algorithm:
+    inputs:
+      - User listening history
+      - User playlist patterns
+      - Explicit preferences (likes/dislikes)
+      - Similar user behaviors (collaborative filtering)
+      - Artist metadata and relationships
+      - Audio features (tempo, key, energy, etc.)
+
+    scoring:
+      - Relationship strength (0-1.0)
+      - User preference alignment (0-1.0)
+      - Popularity penalty (avoid only showing popular artists)
+      - Diversity bonus (encourage discovery outside comfort zone)
+      - Recency weight (prefer recently active artists)
+
+    personalization:
+      - Learn from user clicks on recommendations
+      - Track which relationship types user explores
+      - Adjust algorithm weights per user
+      - A/B test different algorithms
+
+  frontend:
+    - Design related artists section on artist pages
+    - Show relationship type and strength
+    - Display explanation text ("Similar because...")
+    - Implement artist network graph visualization (D3.js or similar)
+    - Add filters (similar sound, influences, collaborators, etc.)
+    - Show "Deep discovery" mode (traverse multiple degrees)
+    - Highlight artists user hasn't heard yet
+    - Add "Discover from [Artist]" dedicated page
+    - Show artist thumbnails and key info
+    - Enable quick play preview or playlist creation
+
+  database:
+    - Add ArtistRelationship table (artist_id, related_artist_id, relationship_type, strength, source)
+    - Add RelationshipType enum (similar_sound, influence, collaboration, etc.)
+    - Add UserArtistInteraction table (user_id, artist_id, interaction_type, timestamp)
+    - Add RecommendationLog table (user_id, artist_id, recommended_at, clicked)
+    - Add ArtistFeatures table (artist_id, audio_features, genre_vector)
+    - Index on artist_id and strength for fast queries
+    - Consider graph database (Neo4j) for network queries
+
+  machine_learning:
+    - Audio feature extraction (use Spotify API or Essentia)
+    - Clustering algorithms (K-means, DBSCAN) for genre grouping
+    - Collaborative filtering (user-based and item-based)
+    - Matrix factorization for latent features
+    - Neural network for complex relationship prediction
+    - Regular model retraining with new data
+
+dependencies:
+  - Rich artist information system
+  - User listening history tracking
+  - Multiple provider integrations
+  - Worker system for background processing
+
+acceptance_criteria:
+  - Related artists display on every artist page
+  - At least 20 related artists per popular artist
+  - Relationship types are clearly labeled
+  - Relationship explanations are understandable
+  - Network graph is performant (renders < 2 seconds)
+  - Personalized recommendations improve with usage
+  - "Deep discovery" finds non-obvious connections
+  - System updates relationships weekly
+  - Algorithm quality measured by click-through rate (> 10%)
+  - User satisfaction survey rating > 4/5
+
+estimated_effort: 6-8 weeks
+risks:
+  - Data quality varies by artist (obscure artists have less data)
+  - Relationship calculation is computationally expensive
+  - Graph queries can be slow at scale
+  - Cold start problem (new users have no history)
+  - Bias toward popular artists
+  - API rate limits for data collection
+  - Machine learning model accuracy
+
+monetization_impact: |
+  High engagement feature:
+  - Users spend 20-30% more time exploring artists
+  - Increased music discovery = more playlist building
+  - More active users = higher ad revenue
+  - Affiliate opportunities (discover → buy vinyl)
+  - Premium feature potential (unlimited deep discovery)
+  - Data insights valuable for labels/artists (could sell)
+
+notes: |
+  - Start with simple similar artists (Last.fm + Spotify)
+  - Add relationship types incrementally
+  - Build graph visualization last (most complex)
+  - Consider partnerships with music intelligence companies
+  - Implement feedback mechanism ("Is this helpful?")
+  - Add "Surprise me" feature (random deep discovery)
+  - Show artist "family trees" (influences through time)
+  - Create "Six Degrees of [Artist]" game
+  - Generate playlist from artist network path
+  - Phase 1: Basic similar artists from Last.fm/Spotify
+  - Phase 2: Relationship types and explanations
+  - Phase 3: Personalization and ML
+  - Phase 4: Graph visualization
+  - Phase 5: Deep discovery and advanced features
+  - Consider "Discover Weekly" style curated playlist based on this data
+  - Add "Artist DNA" feature showing genre composition
+  - Show "Artist Timeline" of influences over their career

@@ -1,0 +1,203 @@
+---
+id: additional-provider-integrations
+title: Additional Streaming Service Provider Integrations
+priority: medium
+status: proposed
+category: integration
+labels:
+  - providers
+  - oauth
+  - api-integration
+  - streaming-services
+
+description: |
+  Expand platform support by integrating additional major streaming services:
+  Amazon Music, Pandora, SoundCloud, Bandcamp, Qobuz, and Apple Music.
+  This increases market reach and makes the app truly universal for playlist
+  management across all major services.
+
+problem: |
+  Currently only Spotify is fully implemented, with partial support for Deezer,
+  Tidal, and YouTube Music. Users on other platforms cannot use the app.
+
+  To achieve market dominance as a free TuneMyMusic alternative, the app must
+  support ALL major streaming services.
+
+solution: |
+  Implement full OAuth and API integration for each additional provider:
+  1. Amazon Music - Major platform, especially for Prime subscribers
+  2. Pandora - Popular in US, different model (stations vs playlists)
+  3. SoundCloud - Essential for independent artists and DJ mixes
+  4. Bandcamp - Critical for indie/underground music community
+  5. Qobuz - High-end audiophile platform
+  6. Apple Music - Massive user base, but limited API
+
+technical_requirements:
+  per_provider:
+    - Implement OAuth 2.0 flow (or API key auth where applicable)
+    - Create provider client package (@app/providers-{name})
+    - Implement API methods:
+      - getUserProfile()
+      - getUserPlaylists()
+      - getPlaylistTracks()
+      - createPlaylist()
+      - addTracksToPlaylist()
+      - removeTracksFromPlaylist()
+      - searchTracks()
+      - getNowPlaying() (if available)
+    - Add token refresh logic
+    - Implement rate limiting and error handling
+    - Add provider-specific enrichment for tracks/albums
+    - Update database schema for provider-specific IDs
+    - Add integration tests
+
+  amazon_music:
+    api: https://developer.amazon.com/docs/music/API_web_playlist.html
+    oauth: Amazon OAuth 2.0
+    notes: |
+      - Requires Amazon developer account
+      - Different API for web vs mobile
+      - Limited to Prime/Unlimited subscribers
+      - Good documentation but restrictive policies
+    scopes:
+      - music:read
+      - music:write
+
+  pandora:
+    api: https://developer.pandora.com/docs/key-concepts/apis/
+    oauth: Pandora OAuth 2.0
+    notes: |
+      - Station-based model different from playlists
+      - May need to map stations to playlists concept
+      - Limited track-level control (thumbs up/down)
+      - API access requires approval
+    unique_features:
+      - Station creation from seed tracks/artists
+      - Thumbs up/down feedback system
+      - Music Genome Project tags
+
+  soundcloud:
+    api: https://developers.soundcloud.com/docs/api/guide
+    oauth: OAuth 2.0
+    notes: |
+      - Large indie/underground catalog
+      - User-uploaded content (need moderation)
+      - Some tracks are "downloadable"
+      - API has been somewhat limited in recent years
+    unique_features:
+      - Reposts and likes (not just playlists)
+      - Comments with timestamps
+      - Downloadable tracks
+
+  bandcamp:
+    api: https://bandcamp.com/developer
+    oauth: Limited - mostly fan/collection access
+    notes: |
+      - No official public API currently
+      - May need to work directly with Bandcamp for access
+      - Strong focus on purchases, not streaming
+      - Collection is "owned" tracks, not playlists
+    unique_features:
+      - Purchase integration
+      - Direct artist support
+      - Download access for owned tracks
+
+  qobuz:
+    api: Contact api@qobuz.com (per notes)
+    oauth: To be determined
+    notes: |
+      - High-resolution audio (24-bit/192kHz)
+      - Audiophile-focused
+      - Smaller user base but highly engaged
+      - May have partnership opportunities
+    unique_features:
+      - Hi-res audio quality metadata
+      - Editorial playlists
+      - Album purchase options
+
+  apple_music:
+    api: https://developer.apple.com/documentation/applemusicapi/
+    oauth: Apple Sign In + MusicKit
+    notes: |
+      - Massive user base (100M+ subscribers)
+      - API requires Apple Developer account ($99/year)
+      - MusicKit JS for web, native APIs for iOS
+      - Limited compared to Spotify API
+      - Requires user to have active Apple Music subscription
+    unique_features:
+      - Deep iOS integration
+      - Siri integration potential
+      - iCloud library sync
+
+  backend_infrastructure:
+    - Add provider configuration to env vars
+    - Update OAuth callback routes for new providers
+    - Add provider-specific error handling
+    - Implement provider capability matrix (what each supports)
+    - Add provider feature flags for gradual rollout
+    - Create provider abstraction layer for common operations
+
+  frontend:
+    - Add provider logos and branding
+    - Update OAuth connection flow for each provider
+    - Add provider-specific UI elements (station support for Pandora, etc.)
+    - Show which features are available per provider
+    - Add provider status indicator (connected, disconnected, limited)
+
+  database:
+    - Extend Account table with provider-specific fields
+    - Add ProviderCapability table (feature support matrix)
+    - Add ProviderMetadata table (extra data per provider)
+
+dependencies:
+  - Existing OAuth infrastructure
+  - Provider abstraction in @app/providers-core
+  - Token encryption system
+  - Worker system for background sync
+
+acceptance_criteria:
+  per_provider:
+    - OAuth connection flow works end-to-end
+    - Can fetch user playlists and tracks
+    - Can create and edit playlists
+    - Token refresh works automatically
+    - Error states are handled gracefully
+    - Integration tests pass with >80% coverage
+    - Documentation exists for provider-specific quirks
+    - Rate limits are respected
+
+estimated_effort: 8-12 weeks (1-2 weeks per provider)
+priority_order:
+  1. Apple Music (largest user base)
+  2. Amazon Music (Prime subscribers)
+  3. SoundCloud (unique content)
+  4. Qobuz (partnership potential)
+  5. Pandora (different model, complex)
+  6. Bandcamp (limited API, may not be feasible initially)
+
+risks:
+  - API access approval (some require application review)
+  - API limitations (some providers have restricted APIs)
+  - Costs (Apple Developer account, potential API usage fees)
+  - Maintenance burden (more APIs to keep updated)
+  - Provider API changes breaking integrations
+  - Different capabilities make feature parity impossible
+
+monetization_impact: |
+  Each provider integration expands addressable market:
+  - Apple Music: +100M potential users
+  - Amazon Music: +75M potential users
+  - Pandora: +50M potential users
+  - SoundCloud: +175M potential users
+  - More users = more ad revenue and affiliate opportunities
+
+notes: |
+  - Start with providers that have best APIs and largest user bases
+  - Consider phased rollout (private beta per provider)
+  - Document provider comparison matrix for users
+  - Some providers may require business partnerships
+  - Consider revenue share deals with smaller providers
+  - Bandcamp might be better as "view only" integration initially
+  - Apple Music iOS integration is easiest, web is more complex
+  - SoundCloud has different content model (more like YouTube)
+  - Consider integrating Last.fm as a listening history provider (not streaming)

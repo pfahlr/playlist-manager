@@ -1,0 +1,38 @@
+{
+  "recommendations": [
+    // TypeScript & JavaScript
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+
+    // Database & Prisma
+    "prisma.prisma",
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-pg",
+
+    // API Development
+    "42crunch.vscode-openapi",
+    "humao.rest-client",
+
+    // Docker & DevOps
+    "ms-azuretools.vscode-docker",
+    "ms-vscode-remote.remote-containers",
+
+    // Git
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+
+    // React & React Native
+    "dsznajder.es7-react-js-snippets",
+    "msjsdiag.vscode-react-native",
+
+    // Testing
+    "vitest.explorer",
+
+    // Utilities
+    "editorconfig.editorconfig",
+    "christian-kohler.path-intellisense",
+    "streetsidesoftware.code-spell-checker",
+    "yzhang.markdown-all-in-one",
+    "redhat.vscode-yaml"
+  ]
+}

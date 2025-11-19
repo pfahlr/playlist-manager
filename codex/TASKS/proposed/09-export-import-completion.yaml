@@ -1,0 +1,213 @@
+---
+id: export-import-completion
+title: Complete Playlist Export/Import Core Functionality
+priority: critical
+status: proposed
+category: core
+labels:
+  - export
+  - import
+  - playlist
+  - data-portability
+  - mvp
+
+description: |
+  Complete the core playlist export/import functionality that was the original MVP
+  goal of the project. This includes CSV/JSON export, bulk operations, resumable
+  exports, and the ability to recreate playlists on target services. This is the
+  foundation that all other features build upon.
+
+problem: |
+  The project currently has:
+  - OAuth for Spotify (fully implemented)
+  - Partial implementations for Deezer, Tidal, YouTube Music
+  - Basic playlist and track models
+  - No complete export/import workflows
+
+  Missing critical functionality:
+  - Export playlists to CSV/JSON/XSPF
+  - Import playlists from files
+  - Bulk export of all playlists
+  - Recreate playlists on target services
+  - Progress tracking and resumability
+  - Conflict resolution
+
+solution: |
+  Complete the export/import system with:
+  1. Full CSV/JSON/XSPF export functionality
+  2. Import from standard playlist formats
+  3. Bulk operations with progress tracking
+  4. Resumable exports for large playlists
+  5. Playlist recreation on target services
+  6. Conflict detection and resolution
+  7. Dry-run mode for safety
+  8. Export history and audit trail
+
+technical_requirements:
+  backend:
+    export_formats:
+      csv:
+        columns:
+          - playlist_id
+          - playlist_name
+          - position
+          - added_at
+          - added_by
+          - track_id
+          - track_uri
+          - track_name
+          - artist_names
+          - album_name
+          - duration_ms
+          - isrc
+        naming: "{index:02d}_{safe_playlist_name}.csv"
+        encoding: UTF-8
+        delimiter: comma
+        quote: double-quote
+
+      json:
+        format: JSONLines (one playlist per line)
+        schema: Follows OpenAPI spec
+        fields: All playlist and track metadata
+
+      xspf:
+        format: XML Shareable Playlist Format
+        version: 1.0
+        use_case: Compatible with most media players
+
+      m3u:
+        format: Extended M3U with metadata
+        fields: EXTINF with duration and title
+        paths: Spotify URIs or URLs
+
+    import_formats:
+      - CSV (custom format)
+      - JSON/JSONLines
+      - XSPF
+      - M3U/M3U8
+      - Spotify CSV export format
+      - YouTube Music CSV format
+
+    api_endpoints:
+      - POST /export/playlists/{id} (single playlist export)
+      - POST /export/playlists (bulk export with selection)
+      - POST /export/all (export all user playlists)
+      - GET /export/jobs/{job_id} (check export status)
+      - GET /export/jobs/{job_id}/download (download result)
+      - POST /import/file (upload and parse)
+      - POST /import/playlists (create playlists from import)
+      - GET /import/jobs/{job_id} (check import status)
+
+    features:
+      - Streaming exports for large playlists (don't load all in memory)
+      - ZIP bundling for multiple playlist exports
+      - Progress tracking with WebSocket updates
+      - Resumability using checkpoint files
+      - Parallel processing (configurable concurrency)
+      - Rate limit handling with backoff
+      - Deduplication of tracks
+      - Unicode normalization (NFKC)
+      - Manifest file (JSON) with export metadata
+
+  worker_jobs:
+    - ExportPlaylistJob (single playlist)
+    - ExportAllPlaylistsJob (bulk export)
+    - ImportPlaylistJob (create from file)
+    - RecreatePlaylistJob (on target service)
+
+  database:
+    - Add ExportJob table (id, user_id, status, progress, result_url, created_at)
+    - Add ImportJob table (id, user_id, file_path, status, playlists_created, errors)
+    - Add ExportHistory table (audit trail)
+    - Add ImportHistory table (audit trail)
+    - Add PlaylistMapping table (source_playlist_id, target_playlist_id, provider, created_at)
+
+  playlist_recreation:
+    features:
+      - Match tracks by ISRC (most reliable)
+      - Fallback to name/artist/album matching
+      - Fuzzy matching for close matches
+      - Manual review for unmatched tracks
+      - Preserve track order
+      - Preserve playlist metadata (name, description)
+      - Handle unavailable tracks gracefully
+      - Dry-run mode (show what would happen)
+      - Detailed match report
+
+    conflict_resolution:
+      - Track not found on target service
+      - Track is region-locked
+      - Track is explicit (if user filters explicit)
+      - Duplicate tracks in source
+      - Playlist name already exists
+      - Playlist size limits
+
+  cli_commands:
+    - playlist-manager export --id <id> --format csv
+    - playlist-manager export --all --format json --zip
+    - playlist-manager export --resume <job-id>
+    - playlist-manager import --file <path> --provider spotify
+    - playlist-manager import --dry-run --file <path>
+    - playlist-manager recreate --source-id <id> --target spotify
+    - playlist-manager history --exports
+    - playlist-manager doctor (validate environment)
+
+  frontend:
+    - Export wizard (select playlists, format, options)
+    - Import wizard (upload file, map fields, preview)
+    - Progress display with estimated time
+    - Download result button
+    - Export history table
+    - Import history with match reports
+    - Dry-run results visualization
+    - Conflict resolution UI
+
+dependencies:
+  - OAuth for all target providers
+  - Worker system for background jobs
+  - File storage (S3 or local)
+  - Track matching service (ISRC, fuzzy match)
+
+acceptance_criteria:
+  - Can export single playlist in < 10 seconds (for 100 tracks)
+  - Can export all playlists with progress tracking
+  - Export is resumable after interruption
+  - CSV format matches specification exactly
+  - Can import CSV and recreate playlist on target
+  - Track matching achieves > 95% success rate (ISRC)
+  - Fuzzy matching achieves > 85% success rate
+  - Dry-run accurately predicts import results
+  - No data loss (all metadata preserved)
+  - Handles playlists up to 10,000 tracks
+  - Export of 1000 playlists completes in < 30 minutes
+
+estimated_effort: 4-5 weeks
+risks:
+  - Large exports may exceed memory limits
+  - Track matching accuracy varies by provider
+  - Rate limits slow down bulk operations
+  - File format compatibility issues
+  - Character encoding problems
+  - Playlist size limits vary by provider
+
+monetization_impact: |
+  Core value proposition:
+  - Free alternative to TuneMyMusic (charges $4.50/month)
+  - Attracts users with free export/import
+  - Once users are in, upsell other features
+  - Data portability positions as user-friendly
+
+notes: |
+  - This is the MVP that should be completed first
+  - All other features build on this foundation
+  - Export must be rock-solid and reliable
+  - Consider offering "backup service" (schedule automatic exports)
+  - Premium feature: Automatic sync between services
+  - Phase 1: Export to CSV/JSON
+  - Phase 2: Import and playlist recreation
+  - Phase 3: Bulk operations and automation
+  - Phase 4: Advanced matching and conflict resolution
+  - Ensure exports are deterministic (same input = same output)
+  - Add checksums to validate export integrity
+  - Consider compression for large exports
+  - Document CSV format thoroughly for user interoperability

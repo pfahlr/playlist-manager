@@ -1,2 +1,93 @@
+# Environment files
 .env
-node_modules
+.env.*
+.env.local
+.env.*.local
+!.env.example
+*.env.backup.*
+
+# Dependencies
+node_modules/
+.pnp.*
+.yarn/*
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# Testing
+coverage/
+.nyc_output/
+*.log
+
+# IDEs
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup.*
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker
+.dockerignore
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+prisma/dev.db*
+
+# Secrets and credentials
+*.pem
+*.key
+*.cert
+*.crt
+secrets/
+credentials/
+master.key
+jwt.secret
+
+# Backups
+backups/*.sql
+backups/*.tar.gz
+backups/*.zip
+
+# Local development
+.local/
+local/
+
+# Generated files
+apps/web/.next/
+apps/mobile/.expo/
+apps/mobile/dist/
+
+# Service workers
+sw.js
+workbox-*.js
