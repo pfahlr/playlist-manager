@@ -10,9 +10,10 @@
 ## 📚 Documentation
 
 **Quick Links**:
+- **[Development Setup](./docs/DEVELOPMENT.md)** - Getting started, workflow, troubleshooting
+- **[DevOps Guide](./DEVOPS.md)** - Production deployment, multi-instance setup, monitoring
 - **[Architecture Overview](./docs/ARCHITECTURE.md)** - System design, data flow, technology stack
 - **[Authentication & Security](./docs/AUTHENTICATION.md)** - OAuth PKCE flow, session management, encryption
-- **[Development Setup](./docs/DEVELOPMENT.md)** - Getting started, workflow, troubleshooting
 
 **See Also**: [OpenAPI Spec](./openapi.yaml) | [Database Schema](./packages/db/prisma/schema.prisma) | [Scripts](./scripts/)
 

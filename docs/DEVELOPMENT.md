@@ -251,7 +251,39 @@ docker-compose down -v
 - Redis (port 6379)
 - MinIO (ports 9000, 9001)
 
-### 2. Database Operations
+### 2. Running Multiple Development Instances
+
+Work on multiple branches or projects simultaneously by running multiple instances with different ports:
+
+```bash
+# Quick setup with helper script
+./scripts/dev/create-instance.sh dev2
+
+# Or manually set custom ports
+cat > .env <<EOF
+COMPOSE_PROJECT_NAME=plmgr-feature
+DB_PORT=5433
+REDIS_PORT=6380
+MINIO_API_PORT=9002
+MINIO_CONSOLE_PORT=9003
+EOF
+
+# Start the instance
+docker-compose up -d
+
+# Update apps/api/.env to match
+DATABASE_URL="postgresql://postgres:postgres@localhost:5433/playlistmgr?schema=public"
+PORT=3102
+```
+
+**Benefits**:
+- Test different branches without switching databases
+- Compare implementations side-by-side
+- Avoid port conflicts with other projects
+
+See [DEVOPS.md - Running Multiple Development Instances](../DEVOPS.md#running-multiple-development-instances) for detailed instructions.
+
+### 3. Database Operations
 
 ```bash
 # Apply pending migrations (development)
@@ -276,7 +308,7 @@ pnpm db:health
 pnpm prisma:seed
 ```
 
-### 3. Code Generation
+### 4. Code Generation
 
 ```bash
 # Generate Prisma client (after schema changes)
@@ -289,7 +321,7 @@ pnpm gen:types
 pnpm check:gen
 ```
 
-### 4. Running API
+### 5. Running API
 
 ```bash
 # Development mode (hot reload with tsx)
@@ -304,7 +336,7 @@ API_FAKE_ENQUEUE=1 pnpm api:dev
 # Metrics at http://localhost:3101/metrics
 ```
 
-### 5. Running Mobile App
+### 6. Running Mobile App
 
 ```bash
 # Install dependencies (if not done)
@@ -331,7 +363,7 @@ pnpm android
    ```
 3. Restart Metro: `pnpm start --clear`
 
-### 6. Running Tests
+### 7. Running Tests
 
 ```bash
 # Run all tests
